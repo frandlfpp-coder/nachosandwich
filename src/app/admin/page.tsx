@@ -1,7 +1,6 @@
 'use client';
 
 import AppShell from '@/components/layout/AppShell';
-import KitchenMonitor from '@/components/KitchenMonitor';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
@@ -11,7 +10,6 @@ import { useToast } from '@/hooks/use-toast';
 
 export default function AdminPage() {
   const { products, addProduct, deleteProduct, stockItems, addStockItem, deleteStockItem } = useApp();
-  const [isMonitorActive, setMonitorActive] = useState(false);
 
   const [isProductModalOpen, setProductModalOpen] = useState(false);
   const [newProductName, setNewProductName] = useState('');
@@ -51,16 +49,6 @@ export default function AdminPage() {
   return (
     <AppShell>
       <section className="space-y-8">
-        <div className="bg-zinc-950 p-10 rounded-[3rem] text-white flex justify-between items-center shadow-2xl">
-          <div>
-            <h2 className="text-2xl text-primary font-black">MODO MONITOR</h2>
-            <p className="text-[10px] opacity-40">VISUALIZACIÓN DE COCINA</p>
-          </div>
-          <Button onClick={() => setMonitorActive(true)} className="bg-primary text-primary-foreground px-10 py-4 rounded-2xl font-black shadow-lg h-auto">
-            ACTIVAR
-          </Button>
-        </div>
-
         <div className="bg-white rounded-[3rem] p-8 border border-slate-100">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-black">PRODUCTOS</h2>
@@ -91,8 +79,6 @@ export default function AdminPage() {
           </div>
         </div>
       </section>
-
-      {isMonitorActive && <KitchenMonitor onClose={() => setMonitorActive(false)} />}
 
       {/* Product Modal */}
       <Dialog open={isProductModalOpen} onOpenChange={setProductModalOpen}>

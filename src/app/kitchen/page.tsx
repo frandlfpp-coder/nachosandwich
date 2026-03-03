@@ -3,7 +3,6 @@
 import AppShell from '@/components/layout/AppShell';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
-import KitchenMonitor from '@/components/KitchenMonitor';
 
 export default function KitchenPage() {
   const { orders, completeOrder } = useApp();
@@ -38,7 +37,6 @@ export default function KitchenPage() {
           ))}
         </div>
       </section>
-      <KitchenMonitor />
     </AppShell>
   );
 }
