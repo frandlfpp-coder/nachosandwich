@@ -6,7 +6,7 @@ import { Zap, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { initializeFirebase, useUser } from '@/firebase';
+import { useFirebase } from '@/firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
@@ -15,8 +15,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
-  const { auth, firestore } = initializeFirebase();
-  const { user: firebaseUser, isUserLoading } = useUser();
+  const { auth, firestore, user: firebaseUser, isUserLoading } = useFirebase();
 
   useEffect(() => {
     if (isUserLoading) return; // Wait until user state is determined
@@ -46,7 +45,7 @@ export default function LoginPage() {
       await signInWithEmailAndPassword(auth, email, password);
       toast({ title: '¡Bienvenido de vuelta!' });
     } catch (error: any) {
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+      if (error.code === 'auth/user-not-found') {
         try {
           const { user: newUser } = await createUserWithEmailAndPassword(auth, email, password);
           const localDocRef = doc(firestore, 'locals', newUser.uid);
@@ -61,7 +60,10 @@ export default function LoginPage() {
         } catch (creationError: any) {
           toast({ title: 'Error de Creación', description: `No se pudo crear la cuenta. ${creationError.message}`, variant: 'destructive' });
         }
-      } else {
+      } else if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
+          toast({ title: 'Error', description: 'Nombre de local o contraseña incorrecta.', variant: 'destructive' });
+      }
+      else {
         toast({ title: 'Error de Autenticación', description: error.message, variant: 'destructive' });
       }
     } finally {
