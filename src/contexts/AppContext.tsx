@@ -1,9 +1,9 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Product, CartItem, Order, StockItem, Transaction, Closure } from '@/lib/types';
-import { useFirebase, useUser, useCollection, useDoc, useMemoFirebase } from '@/firebase';
+import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc, serverTimestamp, increment } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
@@ -43,27 +43,21 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const { firestore, auth, user: firebaseUser, isUserLoading } = useFirebase();
   const router = useRouter();
-  const pathname = usePathname();
   const { toast } = useToast();
 
   const [user, setUser] = useState<AppUser | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   
-  const localDocRef = useMemoFirebase(() => firebaseUser ? doc(firestore, 'locals', firebaseUser.uid) : null, [firestore, firebaseUser]);
-  const { data: localData } = useDoc<{email: string}>(localDocRef);
-
   useEffect(() => {
-    if (isUserLoading) return;
-    if (!firebaseUser) {
-      setUser(null);
-      if (pathname !== '/') {
-        router.push('/');
-      }
-    } else if (localData) {
-      const localName = localData.email.split('@')[0];
+    if (isUserLoading) return; // Wait until auth state is confirmed
+    
+    if (firebaseUser && firebaseUser.email) {
+      const localName = firebaseUser.email.split('@')[0];
       setUser({ local: localName });
+    } else {
+      setUser(null);
     }
-  }, [firebaseUser, isUserLoading, localData, pathname, router]);
+  }, [firebaseUser, isUserLoading]);
 
   const logout = () => {
     signOut(auth).then(() => {

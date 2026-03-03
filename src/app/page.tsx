@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Zap, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { initializeFirebase } from '@/firebase';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, AuthErrorCodes } from 'firebase/auth';
+import { initializeFirebase, useUser } from '@/firebase';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 export default function LoginPage() {
@@ -16,6 +16,14 @@ export default function LoginPage() {
   const { toast } = useToast();
   const router = useRouter();
   const { auth, firestore } = initializeFirebase();
+  const { user: firebaseUser, isUserLoading } = useUser();
+
+  useEffect(() => {
+    if (isUserLoading) return; // Wait until user state is determined
+    if (firebaseUser) {
+      router.push('/dashboard');
+    }
+  }, [firebaseUser, isUserLoading, router]);
 
   const handleAuthAction = async () => {
     if (!local) {
@@ -36,26 +44,22 @@ export default function LoginPage() {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      toast({ title: '¡Bienvenido!', description: 'Has iniciado sesión correctamente.' });
-      router.push('/dashboard');
+      toast({ title: '¡Bienvenido de vuelta!' });
     } catch (error: any) {
-      if (error.code === AuthErrorCodes.USER_DELETED) {
+      if (error.code === 'auth/user-not-found') {
         try {
           const { user: newUser } = await createUserWithEmailAndPassword(auth, email, password);
           const localDocRef = doc(firestore, 'locals', newUser.uid);
           
-          // We don't block for this write. It will happen in the background.
-          setDoc(localDocRef, {
+          await setDoc(localDocRef, {
               id: newUser.uid,
               email: email,
               createdAt: serverTimestamp(),
           });
           
           toast({ title: '¡Cuenta Creada!', description: 'Hemos creado una nueva cuenta para tu local.' });
-          router.push('/dashboard');
-
-        } catch (creationError) {
-          toast({ title: 'Error de Creación', description: 'No se pudo crear la cuenta.', variant: 'destructive' });
+        } catch (creationError: any) {
+          toast({ title: 'Error de Creación', description: `No se pudo crear la cuenta. ${creationError.message}`, variant: 'destructive' });
         }
       } else {
         toast({ title: 'Error de Autenticación', description: error.message, variant: 'destructive' });
@@ -64,6 +68,17 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
+  
+  if (isUserLoading || firebaseUser) {
+    return (
+      <div className="fixed inset-0 z-[9999] bg-zinc-950 flex flex-col items-center justify-center p-6 text-center">
+          <div id="loading-spinner" className="flex flex-col items-center gap-4">
+              <Loader2 className="w-10 h-10 text-primary animate-spin" />
+              <p className="text-white text-[9px] tracking-widest">CARGANDO...</p>
+          </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-[9999] bg-zinc-950 flex flex-col items-center justify-center p-6 text-center">
