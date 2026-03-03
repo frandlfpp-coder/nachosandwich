@@ -1,0 +1,389 @@
+{
+  "entities": {
+    "Local": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Local",
+      "type": "object",
+      "description": "Represents a business location, which serves as the primary organizational unit and owner of all related operational data.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Local entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address associated with the local for login and display purposes.",
+          "format": "email"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the local account was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "createdAt"
+      ]
+    },
+    "Product": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Product",
+      "type": "object",
+      "description": "Represents an item available for sale at a specific business local.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Product entity."
+        },
+        "localId": {
+          "type": "string",
+          "description": "Reference to the Local this product belongs to. (Relationship: Local 1:N Product)"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the product."
+        },
+        "price": {
+          "type": "number",
+          "description": "Selling price of the product."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the product was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the product was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "localId",
+        "name",
+        "price",
+        "createdAt"
+      ]
+    },
+    "StockItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "StockItem",
+      "type": "object",
+      "description": "Represents an inventory item or ingredient used by a specific business local.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the StockItem (Insumo) entity."
+        },
+        "localId": {
+          "type": "string",
+          "description": "Reference to the Local this stock item belongs to. (Relationship: Local 1:N StockItem)"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the stock item or ingredient."
+        },
+        "unit": {
+          "type": "string",
+          "description": "Unit of measure for the stock item (e.g., KG, UNID, LITER)."
+        },
+        "stock": {
+          "type": "number",
+          "description": "Current quantity of the stock item in inventory."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the stock item was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the stock item was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "localId",
+        "name",
+        "unit",
+        "stock",
+        "createdAt"
+      ]
+    },
+    "Order": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Order",
+      "type": "object",
+      "description": "Represents a customer's sales order containing multiple products, managed by the kitchen.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Order entity."
+        },
+        "localId": {
+          "type": "string",
+          "description": "Reference to the Local this order belongs to. (Relationship: Local 1:N Order)"
+        },
+        "customerName": {
+          "type": "string",
+          "description": "Name of the customer for this order, or 'SIN NOMBRE' if not provided."
+        },
+        "items": {
+          "type": "array",
+          "description": "List of products and their quantities included in this order.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the order was created.",
+          "format": "date-time"
+        },
+        "orderNumber": {
+          "type": "number",
+          "description": "A unique, randomly generated number used for identifying the order in the kitchen display."
+        },
+        "status": {
+          "type": "string",
+          "description": "Current status of the order, 'pending' upon creation and 'completed' once delivered.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "localId",
+        "customerName",
+        "items",
+        "createdAt",
+        "orderNumber",
+        "status"
+      ]
+    },
+    "Transaction": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Transaction",
+      "type": "object",
+      "description": "Represents a single financial movement (income or expense) recorded for a business local.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Transaction entity."
+        },
+        "localId": {
+          "type": "string",
+          "description": "Reference to the Local this transaction belongs to. (Relationship: Local 1:N Transaction)"
+        },
+        "concept": {
+          "type": "string",
+          "description": "Description or concept of the financial transaction (e.g., 'VENTA: CLIENTE A', 'PAGO A PROVEEDOR')."
+        },
+        "amount": {
+          "type": "number",
+          "description": "Monetary amount of the transaction."
+        },
+        "paymentMethod": {
+          "type": "string",
+          "description": "Method of payment for the transaction.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "type": {
+          "type": "string",
+          "description": "Type of transaction: 'ingreso' (income) or 'egreso' (expense).",
+          "items": {
+            "type": "string"
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the transaction was recorded.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "localId",
+        "concept",
+        "amount",
+        "paymentMethod",
+        "type",
+        "createdAt"
+      ]
+    },
+    "Closure": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Closure",
+      "type": "object",
+      "description": "Represents a financial summary at the end of a shift or operating period for a business local.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Closure entity."
+        },
+        "localId": {
+          "type": "string",
+          "description": "Reference to the Local this closure belongs to. (Relationship: Local 1:N Closure)"
+        },
+        "closureDate": {
+          "type": "string",
+          "description": "Timestamp marking the end of the financial shift/period.",
+          "format": "date-time"
+        },
+        "cashTotal": {
+          "type": "number",
+          "description": "Total cash balance for the closed period."
+        },
+        "transferTotal": {
+          "type": "number",
+          "description": "Total transfer balance for the closed period."
+        },
+        "netTotal": {
+          "type": "number",
+          "description": "Net total balance (cash + transfer) for the period."
+        },
+        "transactionCount": {
+          "type": "number",
+          "description": "Number of transactions included in this closure report."
+        }
+      },
+      "required": [
+        "id",
+        "localId",
+        "closureDate",
+        "cashTotal",
+        "transferTotal",
+        "netTotal",
+        "transactionCount"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/locals/{localId}",
+        "definition": {
+          "entityName": "Local",
+          "schema": {
+            "$ref": "#/backend/entities/Local"
+          },
+          "description": "Top-level collection for business locals. Each document's ID (`localId`) corresponds to the Firebase Authentication UID of the local's manager/owner. This document serves as the primary authorization context for all nested data."
+        }
+      },
+      {
+        "path": "/locals/{localId}/products/{productId}",
+        "definition": {
+          "entityName": "Product",
+          "schema": {
+            "$ref": "#/backend/entities/Product"
+          },
+          "description": "Subcollection for products belonging to a specific local. Includes denormalized 'localId' for authorization independence.",
+          "params": [
+            {
+              "name": "localId",
+              "description": "The unique identifier of the owning Local, matching request.auth.uid."
+            },
+            {
+              "name": "productId",
+              "description": "The unique identifier of the Product."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/locals/{localId}/stockItems/{stockItemId}",
+        "definition": {
+          "entityName": "StockItem",
+          "schema": {
+            "$ref": "#/backend/entities/StockItem"
+          },
+          "description": "Subcollection for inventory stock items belonging to a specific local. Includes denormalized 'localId' for authorization independence.",
+          "params": [
+            {
+              "name": "localId",
+              "description": "The unique identifier of the owning Local, matching request.auth.uid."
+            },
+            {
+              "name": "stockItemId",
+              "description": "The unique identifier of the StockItem."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/locals/{localId}/orders/{orderId}",
+        "definition": {
+          "entityName": "Order",
+          "schema": {
+            "$ref": "#/backend/entities/Order"
+          },
+          "description": "Subcollection for customer orders placed at a specific local. Includes denormalized 'localId' for authorization independence.",
+          "params": [
+            {
+              "name": "localId",
+              "description": "The unique identifier of the owning Local, matching request.auth.uid."
+            },
+            {
+              "name": "orderId",
+              "description": "The unique identifier of the Order."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/locals/{localId}/transactions/{transactionId}",
+        "definition": {
+          "entityName": "Transaction",
+          "schema": {
+            "$ref": "#/backend/entities/Transaction"
+          },
+          "description": "Subcollection for financial transactions (income/expense) recorded for a specific local. Includes denormalized 'localId' for authorization independence.",
+          "params": [
+            {
+              "name": "localId",
+              "description": "The unique identifier of the owning Local, matching request.auth.uid."
+            },
+            {
+              "name": "transactionId",
+              "description": "The unique identifier of the Transaction."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/locals/{localId}/closures/{closureId}",
+        "definition": {
+          "entityName": "Closure",
+          "schema": {
+            "$ref": "#/backend/entities/Closure"
+          },
+          "description": "Subcollection for financial closure reports for a specific local. Includes denormalized 'localId' for authorization independence.",
+          "params": [
+            {
+              "name": "localId",
+              "description": "The unique identifier of the owning Local, matching request.auth.uid."
+            },
+            {
+              "name": "closureId",
+              "description": "The unique identifier of the Closure report."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed around a clear, hierarchical, and user-centric ownership model, where each 'Local' represents the primary organizational unit and the owner of all its associated operational data. This design strictly adheres to the core principles, especially Authorization Independence and QAPs.\n\n**Authorization Independence:** The central strategy for achieving authorization independence is denormalization. Each `Local` entity is stored at `/locals/{localId}`, where `{localId}` directly corresponds to the `request.auth.uid` of the authenticated manager for that local. All subsequent operational data entities (Products, Stock Items, Orders, Transactions, Closures) are stored as subcollections under their respective parent `local` (e.g., `/locals/{localId}/products/{productId}`). Critically, every document within these subcollections (`Product`, `StockItem`, `Order`, `Transaction`, `Closure`) **MUST** include a `localId` field in its data payload, which explicitly duplicates the `{localId}` from its path. This allows security rules to evaluate access by comparing `request.auth.uid` directly with `resource.data.localId` without needing to perform `get()` operations on parent documents. This prevents rule complexity, avoids breaking atomic operations (like transactions or batched writes that create parent and child documents simultaneously), and enhances debuggability.\n\n**QAPs (Queries as Authorization Primitives):** This structure naturally supports QAPs through structural segregation. All data related to a specific local (products, stock items, orders, etc.) resides within that local's dedicated path, e.g., `/locals/{localId}/products`. Because all documents within a given `/locals/{localId}/...` subtree share the exact same security posture (i.e., they are owned and managed solely by `localId`), any `list` operation performed by the authenticated `localId` on any of these subcollections will inherently only retrieve data to which that user is authorized. The security rules will simply check `request.auth.uid == localId` (or `request.auth.uid == resource.data.localId`) for any read access, ensuring that rules are not used as filters and only authorized data is ever returned. This makes rule writing straightforward and highly performant for all query types.\n\nIn summary, the design provides distinct, self-contained data silos for each business local, enforced by path-based ownership and reinforced by denormalized `localId` fields within documents. This ensures robust security, simplifies rule development, and maximizes scalability and debuggability."
+  }
+}

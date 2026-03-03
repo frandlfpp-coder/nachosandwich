@@ -1,0 +1,172 @@
+/**
+ * Core Philosophy: This ruleset enforces a strict, hierarchical ownership model where all data is siloed under a primary 'local' entity. Each 'local' corresponds to a single authenticated user (the business owner/manager), and only that user can read or write data within their own data tree. This ensures complete data isolation between different business locals.
+ *
+ * Data Structure: The entire database is structured under a top-level `locals` collection. Each document in this collection, `/locals/{localId}`, represents a unique business and serves as the root for all its related data, such as products, orders, and transactions, which are stored in subcollections. The `{localId}` in the path is always the Firebase Auth UID of the owning user.
+ *
+ * Key Security Decisions:
+ * - Local Enumeration is Disallowed: Listing the top-level `/locals` collection is forbidden to prevent malicious actors from discovering all businesses on the platform.
+ * - Strict Ownership: All access control decisions are based on the authenticated user's UID matching the `{localId}` in the document path. There is no concept of shared or public data.
+ * - Self-Service Onboarding: A newly authenticated user is permitted to create their own root `local` document, establishing their data silo.
+ *
+ * Denormalization for Authorization: To ensure fast and secure access control, every document within a subcollection (e.g., a Product or an Order) contains a denormalized `localId` field. This field is validated against the path on creation and made immutable on update, ensuring that a document's ownership can never be changed and that authorization checks do not require expensive `get` calls to parent documents.
+ *
+ * Structural Segregation: The use of a `/locals/{localId}` path structure provides a natural and highly secure form of data segregation. This allows for simple and performant list queries within a user's own data tree without any risk of leaking data from other locals.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper Functions
+    // =================================
+
+    /**
+     * Checks if a user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the currently signed-in user is the owner of the document,
+     * based on the provided user ID (typically from the path).
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Checks if a document exists and if the requester is the owner.
+     * CRITICAL for all update and delete operations to prevent modifying non-existent data.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * On create, validates that the 'id' field inside a new Local document
+     * matches the document's ID in the path ({localId}).
+     */
+    function isRootLocalConsistentOnCreate(localId) {
+      return request.resource.data.id == localId;
+    }
+
+    /**
+     * On update, ensures the 'id' field of a Local document is immutable.
+     */
+    function isRootLocalIdImmutable() {
+      return request.resource.data.id == resource.data.id;
+    }
+
+    /**
+     * On create, validates that the denormalized 'localId' field inside a new subcollection
+     * document matches the owner's ID from the path.
+     */
+    function isSubcollectionDataConsistentOnCreate(localId) {
+      return request.resource.data.localId == localId;
+    }
+
+    /**
+     * On update, ensures the denormalized 'localId' field of a subcollection document
+     * is immutable, preventing it from being moved to another owner.
+     */
+    function isSubcollectionRelationshipImmutable() {
+      return request.resource.data.localId == resource.data.localId;
+    }
+
+    /**
+     * @description Rules for the primary 'Local' entity documents.
+     * @path /locals/{localId}
+     * @allow (create) An authenticated user with UID 'local123' creating their own document at `/locals/local123`.
+     * @deny (list) Any user attempting to list all documents in the `/locals` collection.
+     * @deny (update) User 'local123' trying to update a document for 'local456'.
+     * @principle Enforces self-creation and strict ownership of a user's root data document, while preventing enumeration of all users.
+     */
+    match /locals/{localId} {
+      allow get: if isOwner(localId);
+      allow list: if false;
+      allow create: if isOwner(localId) && isRootLocalConsistentOnCreate(localId);
+      allow update: if isExistingOwner(localId) && isRootLocalIdImmutable();
+      allow delete: if isExistingOwner(localId);
+
+      /**
+       * @description Rules for Products, which belong to a specific Local.
+       * @path /locals/{localId}/products/{productId}
+       * @allow (create) The owner of 'local123' creating a new product document under `/locals/local123/products`.
+       * @allow (list) The owner of 'local123' listing all products within their own `/locals/local123/products` subcollection.
+       * @deny (get) User 'local456' attempting to read a product document from `/locals/local123/products/prod_abc`.
+       * @principle Restricts all data access to the owner of the parent 'Local' document, enforcing a strict data silo.
+       */
+      match /products/{productId} {
+        allow get: if isOwner(localId);
+        allow list: if isOwner(localId);
+        allow create: if isOwner(localId) && isSubcollectionDataConsistentOnCreate(localId);
+        allow update: if isExistingOwner(localId) && isSubcollectionRelationshipImmutable();
+        allow delete: if isExistingOwner(localId);
+      }
+
+      /**
+       * @description Rules for StockItems (inventory), which belong to a specific Local.
+       * @path /locals/{localId}/stockItems/{stockItemId}
+       * @allow (update) The owner of 'local123' updating a stock item at `/locals/local123/stockItems/item_xyz`.
+       * @allow (list) The owner of 'local123' listing all stock items within their own `/locals/local123/stockItems` subcollection.
+       * @deny (create) User 'local456' attempting to create a stock item in 'local123's inventory.
+       * @principle Restricts all data access to the owner of the parent 'Local' document, enforcing a strict data silo.
+       */
+      match /stockItems/{stockItemId} {
+        allow get: if isOwner(localId);
+        allow list: if isOwner(localId);
+        allow create: if isOwner(localId) && isSubcollectionDataConsistentOnCreate(localId);
+        allow update: if isExistingOwner(localId) && isSubcollectionRelationshipImmutable();
+        allow delete: if isExistingOwner(localId);
+      }
+
+      /**
+       * @description Rules for Orders, which belong to a specific Local.
+       * @path /locals/{localId}/orders/{orderId}
+       * @allow (delete) The owner of 'local123' deleting an order at `/locals/local123/orders/order_abc`.
+       * @allow (list) The owner of 'local123' listing all orders within their own `/locals/local123/orders` subcollection.
+       * @deny (get) A non-authenticated user trying to read any order.
+       * @principle Restricts all data access to the owner of the parent 'Local' document, enforcing a strict data silo.
+       */
+      match /orders/{orderId} {
+        allow get: if isOwner(localId);
+        allow list: if isOwner(localId);
+        allow create: if isOwner(localId) && isSubcollectionDataConsistentOnCreate(localId);
+        allow update: if isExistingOwner(localId) && isSubcollectionRelationshipImmutable();
+        allow delete: if isExistingOwner(localId);
+      }
+
+      /**
+       * @description Rules for financial Transactions, which belong to a specific Local.
+       * @path /locals/{localId}/transactions/{transactionId}
+       * @allow (create) The owner of 'local123' creating a transaction at `/locals/local123/transactions/trans_xyz`.
+       * @allow (list) The owner of 'local123' listing all transactions within their own `/locals/local123/transactions` subcollection.
+       * @deny (update) User 'local456' attempting to modify a transaction belonging to 'local123'.
+       * @principle Restricts all data access to the owner of the parent 'Local' document, enforcing a strict data silo.
+       */
+      match /transactions/{transactionId} {
+        allow get: if isOwner(localId);
+        allow list: if isOwner(localId);
+        allow create: if isOwner(localId) && isSubcollectionDataConsistentOnCreate(localId);
+        allow update: if isExistingOwner(localId) && isSubcollectionRelationshipImmutable();
+        allow delete: if isExistingOwner(localId);
+      }
+
+      /**
+       * @description Rules for financial Closures, which belong to a specific Local.
+       * @path /locals/{localId}/closures/{closureId}
+       * @allow (get) The owner of 'local123' reading a closure report at `/locals/local123/closures/close_abc`.
+       * @allow (list) The owner of 'local123' listing all closures within their own `/locals/local123/closures` subcollection.
+       * @deny (delete) User 'local456' attempting to delete a closure report belonging to 'local123'.
+       * @principle Restricts all data access to the owner of the parent 'Local' document, enforcing a strict data silo.
+       */
+      match /closures/{closureId} {
+        allow get: if isOwner(localId);
+        allow list: if isOwner(localId);
+        allow create: if isOwner(localId) && isSubcollectionDataConsistentOnCreate(localId);
+        allow update: if isExistingOwner(localId) && isSubcollectionRelationshipImmutable();
+        allow delete: if isExistingOwner(localId);
+      }
+    }
+  }
+}
