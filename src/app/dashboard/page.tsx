@@ -9,9 +9,10 @@ import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Plus, Minus, X } from 'lucide-react';
+import { Product } from '@/lib/types';
 
 export default function DashboardPage() {
-  const { products, cart, addToCart, updateCartQty, clearCart, cartTotal, cartCount, addTransaction } = useApp();
+  const { products, cart, addToCart, updateCartQty, clearCart, cartTotal, cartCount, addTransaction, addOrder } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [isCheckoutOpen, setCheckoutOpen] = useState(false);
   const [customerName, setCustomerName] = useState('');
@@ -23,7 +24,7 @@ export default function DashboardPage() {
     p.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAddToCart = (product) => {
+  const handleAddToCart = (product: Product) => {
     addToCart(product);
     toast({ title: `LISTO: ${product.name}` });
   };
@@ -33,10 +34,17 @@ export default function DashboardPage() {
       toast({ variant: 'destructive', title: "Carrito vacío" });
       return;
     }
-    const name = customerName.toUpperCase() || "SIN NOMBRE";
-    // Mock adding an order
-    console.log(`New order for ${name}`, cart);
+    const name = customerName.trim().toUpperCase() || "SIN NOMBRE";
     
+    // Create a new order
+    addOrder({
+      customerName: name,
+      items: cart,
+      orderNumber: Math.floor(Math.random() * 90) + 10, // Random 2-digit number
+      status: 'pending'
+    });
+    
+    // Add a financial transaction
     addTransaction({
       concept: `VENTA: ${name}`,
       amount: cartTotal,

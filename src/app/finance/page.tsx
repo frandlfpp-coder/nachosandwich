@@ -24,6 +24,8 @@ export default function FinancePage() {
   const [concept, setConcept] = useState('');
   const [amount, setAmount] = useState('');
 
+  // Note: This calculation is now for ALL transactions in the history for the current local.
+  // A real app might filter this by date (e.g., today's transactions).
   const cash = transactions.filter(t => t.paymentMethod === 'Efectivo').reduce((s,t)=>s+(t.type==='ingreso'?t.amount:-t.amount), 0);
   const trans = transactions.filter(t => t.paymentMethod === 'Transferencia').reduce((s,t)=>s+(t.type==='ingreso'?t.amount:-t.amount), 0);
   const total = cash + trans;
@@ -41,7 +43,7 @@ export default function FinancePage() {
       addTransaction({
         concept: concept.toUpperCase(),
         amount: parsedAmount,
-        paymentMethod: 'Efectivo',
+        paymentMethod: 'Efectivo', // Manual transactions are cash for now
         type: modalType
       });
       setModalOpen(false);
@@ -49,8 +51,11 @@ export default function FinancePage() {
   };
 
   const handleCloseDay = () => {
-    if (transactions.length === 0) return alert("SIN VENTAS");
-    if(!confirm("¿CERRAR JORNADA?")) return;
+    if (transactions.length === 0) {
+        alert("SIN TRANSACCIONES PARA CERRAR");
+        return;
+    }
+    if(!confirm("¿CERRAR JORNADA? Esto creará un reporte de cierre con las transacciones actuales.")) return;
     closeDay();
   };
 
@@ -58,7 +63,7 @@ export default function FinancePage() {
     <AppShell>
       <section>
         <div className="flex gap-8 mb-8 border-b text-[10px] tracking-widest font-black">
-          <button onClick={() => setMode('hoy')} className={cn('pb-4', mode === 'hoy' ? 'border-b-4 border-primary text-primary' : 'opacity-40')}>TURNO ACTUAL</button>
+          <button onClick={() => setMode('hoy')} className={cn('pb-4', mode === 'hoy' ? 'border-b-4 border-primary text-primary' : 'opacity-40')}>MOVIMIENTOS</button>
           <button onClick={() => setMode('historial')} className={cn('pb-4', mode === 'historial' ? 'border-b-4 border-primary text-primary' : 'opacity-40')}>HISTORIAL DE CIERRES</button>
         </div>
 
@@ -66,15 +71,15 @@ export default function FinancePage() {
           <div id="finance-today">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100">
-                <p className="text-[10px] opacity-40 mb-2 font-black">EFECTIVO</p>
+                <p className="text-[10px] opacity-40 mb-2 font-black">EFECTIVO (HISTÓRICO)</p>
                 <h3 className="text-4xl tracking-tighter text-green-600 font-black">${cash.toLocaleString('es-AR')}</h3>
               </div>
               <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100">
-                <p className="text-[10px] opacity-40 mb-2 font-black">TRANSFE</p>
+                <p className="text-[10px] opacity-40 mb-2 font-black">TRANSFERENCIA (HISTÓRICO)</p>
                 <h3 className="text-4xl tracking-tighter text-blue-600 font-black">${trans.toLocaleString('es-AR')}</h3>
               </div>
               <div className="bg-zinc-900 text-white p-8 rounded-[2.5rem] shadow-xl">
-                <p className="text-[10px] text-lime-400 mb-2 font-black">TOTAL NETO</p>
+                <p className="text-[10px] text-lime-400 mb-2 font-black">NETO TOTAL (HISTÓRICO)</p>
                 <h3 className="text-4xl tracking-tighter text-lime-500 font-black">${total.toLocaleString('es-AR')}</h3>
               </div>
             </div>
@@ -86,7 +91,10 @@ export default function FinancePage() {
             <div className="space-y-3">
               {transactions.map(t => (
                 <div key={t.id} className="flex justify-between p-4 bg-white rounded-2xl border text-[10px] animate-pop font-black">
-                  <span>{t.concept}</span>
+                  <div className='flex flex-col'>
+                    <span>{t.concept}</span>
+                    <span className='text-[8px] opacity-50 font-normal normal-case'>{t.createdAt?.toLocaleString('es-AR')}</span>
+                  </div>
                   <span className={t.type === 'ingreso' ? 'text-lime-600' : 'text-red-600'}>
                     {t.type === 'ingreso' ? '+' : '-'}${t.amount.toLocaleString('es-AR')}
                   </span>
@@ -102,13 +110,14 @@ export default function FinancePage() {
               <div key={c.id} className="bg-white p-6 rounded-3xl border border-slate-100 animate-pop">
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-[10px] opacity-40 capitalize font-black">
-                    {c.date.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric' })}
+                    {c.closureDate?.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'short' })}
                   </span>
-                  <span className="text-xl text-lime-600 font-black">${c.total.toLocaleString('es-AR')}</span>
+                  <span className="text-xl text-lime-600 font-black">${c.netTotal.toLocaleString('es-AR')}</span>
                 </div>
                 <div className="flex gap-4 text-[9px] opacity-60 font-black">
-                  <span>💵 ${c.cash.toLocaleString('es-AR')}</span>
-                  <span>📱 ${c.trans.toLocaleString('es-AR')}</span>
+                  <span>VENTAS: {c.transactionCount}</span>
+                  <span>💵 ${c.cashTotal.toLocaleString('es-AR')}</span>
+                  <span>📱 ${c.transferTotal.toLocaleString('es-AR')}</span>
                 </div>
               </div>
             ))}

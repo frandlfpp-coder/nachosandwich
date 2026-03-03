@@ -1,17 +1,20 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Product, CartItem, Order, StockItem, Transaction, Closure } from '@/lib/types';
-import { MOCK_PRODUCTS, MOCK_ORDERS, MOCK_STOCK_ITEMS, MOCK_TRANSACTIONS, MOCK_CLOSURES } from '@/lib/data';
+import { useFirebase, useUser, useCollection, useDoc, useMemoFirebase } from '@/firebase';
+import { collection, doc, serverTimestamp, increment } from 'firebase/firestore';
+import { signOut } from 'firebase/auth';
+import { addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { useToast } from '@/hooks/use-toast';
 
-type User = {
+type AppUser = {
   local: string;
 };
 
 type AppContextType = {
-  user: User | null;
-  login: (user: User) => void;
+  user: AppUser | null;
   logout: () => void;
   products: Product[];
   cart: CartItem[];
@@ -21,47 +24,91 @@ type AppContextType = {
   cartTotal: number;
   cartCount: number;
   orders: Order[];
+  addOrder: (orderData: Omit<Order, 'id' | 'createdAt' | 'localId'>) => void,
   completeOrder: (orderId: string) => void;
   stockItems: StockItem[];
   updateStock: (itemId: string, delta: number) => void;
   transactions: Transaction[];
   closures: Closure[];
-  addTransaction: (transaction: Omit<Transaction, 'id' | 'createdAt'>) => void;
+  addTransaction: (transaction: Omit<Transaction, 'id' | 'createdAt' | 'localId'>) => void;
   closeDay: () => void;
-  addProduct: (product: Omit<Product, 'id' | 'emoji'>) => void;
+  addProduct: (product: Omit<Product, 'id' | 'emoji' | 'localId' | 'createdAt' | 'updatedAt'>) => void;
   deleteProduct: (id: string) => void;
-  addStockItem: (item: Omit<StockItem, 'id' | 'stock'>) => void;
+  addStockItem: (item: Omit<StockItem, 'id' | 'stock'| 'localId' | 'createdAt' | 'updatedAt'>) => void;
   deleteStockItem: (id: string) => void;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [orders, setOrders] = useState<Order[]>(MOCK_ORDERS);
-  const [stockItems, setStockItems] = useState<StockItem[]>(MOCK_STOCK_ITEMS);
-  const [transactions, setTransactions] = useState<Transaction[]>(MOCK_TRANSACTIONS);
-  const [closures, setClosures] = useState<Closure[]>(MOCK_CLOSURES);
-
+  const { firestore, auth, user: firebaseUser, isUserLoading } = useFirebase();
   const router = useRouter();
   const pathname = usePathname();
+  const { toast } = useToast();
+
+  const [user, setUser] = useState<AppUser | null>(null);
+  const [cart, setCart] = useState<CartItem[]>([]);
+  
+  const localDocRef = useMemoFirebase(() => firebaseUser ? doc(firestore, 'locals', firebaseUser.uid) : null, [firestore, firebaseUser]);
+  const { data: localData } = useDoc<{email: string}>(localDocRef);
 
   useEffect(() => {
-    // This is a simple auth guard.
-    if (!user && pathname !== '/') {
-      router.push('/');
+    if (isUserLoading) return;
+    if (!firebaseUser) {
+      setUser(null);
+      if (pathname !== '/') {
+        router.push('/');
+      }
+    } else if (localData) {
+      const localName = localData.email.split('@')[0];
+      setUser({ local: localName });
     }
-  }, [user, pathname, router]);
+  }, [firebaseUser, isUserLoading, localData, pathname, router]);
 
-
-  const login = (user: User) => setUser(user);
   const logout = () => {
-    setUser(null);
-    router.push('/');
+    signOut(auth).then(() => {
+      router.push('/');
+    });
   };
 
+  // Data fetching
+  const productsQuery = useMemoFirebase(() => firebaseUser ? collection(firestore, 'locals', firebaseUser.uid, 'products') : null, [firestore, firebaseUser]);
+  const { data: products } = useCollection<Product>(productsQuery);
+
+  const stockItemsQuery = useMemoFirebase(() => firebaseUser ? collection(firestore, 'locals', firebaseUser.uid, 'stockItems') : null, [firestore, firebaseUser]);
+  const { data: stockItems } = useCollection<StockItem>(stockItemsQuery);
+  
+  const ordersQuery = useMemoFirebase(() => firebaseUser ? collection(firestore, 'locals', firebaseUser.uid, 'orders') : null, [firestore, firebaseUser]);
+  const { data: rawOrders } = useCollection<Order>(ordersQuery);
+
+  const orders = useMemo(() => {
+    if (!rawOrders) return [];
+    return rawOrders
+      .filter(o => o.status === 'pending')
+      .map(o => ({
+        ...o,
+        createdAt: o.createdAt?.toDate(),
+      })).sort((a,b) => a.createdAt - b.createdAt);
+  }, [rawOrders]);
+
+  const transactionsQuery = useMemoFirebase(() => firebaseUser ? collection(firestore, 'locals', firebaseUser.uid, 'transactions') : null, [firestore, firebaseUser]);
+  const { data: rawTransactions } = useCollection<Transaction>(transactionsQuery);
+  
+  const transactions = useMemo(() => {
+    if (!rawTransactions) return [];
+    return rawTransactions.map(t => ({...t, createdAt: t.createdAt?.toDate()})).sort((a,b) => b.createdAt - a.createdAt);
+  }, [rawTransactions]);
+
+  const closuresQuery = useMemoFirebase(() => firebaseUser ? collection(firestore, 'locals', firebaseUser.uid, 'closures') : null, [firestore, firebaseUser]);
+  const { data: rawClosures } = useCollection<Closure>(closuresQuery);
+
+  const closures = useMemo(() => {
+    if (!rawClosures) return [];
+    return rawClosures.map(c => ({...c, closureDate: c.closureDate?.toDate()})).sort((a,b) => b.closureDate - a.closureDate);
+  }, [rawClosures]);
+
+
+  // Cart logic
   const addToCart = (product: Product) => {
     setCart(prevCart => {
       const existingItem = prevCart.find(item => item.id === product.id);
@@ -91,85 +138,116 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const cartTotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
   const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
 
+  // Data mutations
+  const addOrder = (orderData: Omit<Order, 'id' | 'createdAt' | 'localId'>) => {
+    if (!firebaseUser) return;
+    const newOrder = {
+      ...orderData,
+      localId: firebaseUser.uid,
+      createdAt: serverTimestamp(),
+      status: 'pending',
+    };
+    addDocumentNonBlocking(collection(firestore, 'locals', firebaseUser.uid, 'orders'), newOrder);
+  };
+
   const completeOrder = (orderId: string) => {
-    setOrders(prev => prev.filter(order => order.id !== orderId));
+    if (!firebaseUser) return;
+    updateDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'orders', orderId), { status: 'completed' });
   };
 
   const updateStock = (itemId: string, delta: number) => {
-    setStockItems(prev =>
-      prev.map(item =>
-        item.id === itemId ? { ...item, stock: Math.max(0, item.stock + delta) } : item
-      )
-    );
+    if (!firebaseUser) return;
+    const item = stockItems?.find(i => i.id === itemId);
+    if(item && item.stock + delta < 0) {
+        toast({variant: 'destructive', title: 'Stock no puede ser negativo'});
+        return;
+    }
+    updateDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'stockItems', itemId), { stock: increment(delta), updatedAt: serverTimestamp() });
   };
   
-  const addTransaction = (transaction: Omit<Transaction, 'id'|'createdAt'>) => {
-    const newTransaction: Transaction = {
+  const addTransaction = (transaction: Omit<Transaction, 'id' | 'createdAt' | 'localId'>) => {
+    if (!firebaseUser) return;
+    const newTransaction = {
         ...transaction,
-        id: Date.now().toString(),
-        createdAt: new Date(),
+        localId: firebaseUser.uid,
+        createdAt: serverTimestamp(),
     };
-    setTransactions(prev => [newTransaction, ...prev]);
+    addDocumentNonBlocking(collection(firestore, 'locals', firebaseUser.uid, 'transactions'), newTransaction);
   };
 
   const closeDay = () => {
-    const cash = transactions.filter(t => t.paymentMethod === 'Efectivo').reduce((s,t)=>s+(t.type==='ingreso'?t.amount:-t.amount), 0);
-    const trans = transactions.filter(t => t.paymentMethod === 'Transferencia').reduce((s,t)=>s+(t.type==='ingreso'?t.amount:-t.amount), 0);
-    const newClosure: Closure = {
-        id: Date.now().toString(),
-        date: new Date(),
-        cash,
-        trans,
-        total: cash + trans,
-        count: transactions.filter(t => t.type === 'ingreso').length,
+    if (!firebaseUser || transactions.length === 0) {
+      toast({ title: 'No hay transacciones para cerrar.'});
+      return;
+    }
+    const cashTotal = transactions.filter(t => t.paymentMethod === 'Efectivo').reduce((s,t)=>s+(t.type==='ingreso'?t.amount:-t.amount), 0);
+    const transferTotal = transactions.filter(t => t.paymentMethod === 'Transferencia').reduce((s,t)=>s+(t.type==='ingreso'?t.amount:-t.amount), 0);
+    const newClosure = {
+        localId: firebaseUser.uid,
+        closureDate: serverTimestamp(),
+        cashTotal,
+        transferTotal,
+        netTotal: cashTotal + transferTotal,
+        transactionCount: transactions.filter(t => t.type === 'ingreso').length,
     };
-    setClosures(prev => [newClosure, ...prev]);
-    setTransactions([]);
+    addDocumentNonBlocking(collection(firestore, 'locals', firebaseUser.uid, 'closures'), newClosure);
+    // Ideally, we'd mark transactions as part of a closure instead of assuming they all get wiped.
+    // For this app, we will filter transactions on client side by day or other period.
+    // We are not deleting transactions.
+    toast({title: "Caja cerrada con éxito"});
   };
 
-  const addProduct = (product: Omit<Product, 'id'|'emoji'>) => {
-    const newProduct: Product = {
+  const addProduct = (product: Omit<Product, 'id' | 'emoji' | 'localId' | 'createdAt' | 'updatedAt'>) => {
+    if (!firebaseUser) return;
+    const newProduct = {
       ...product,
-      id: Date.now().toString(),
-      emoji: '🍔' // Default emoji
+      localId: firebaseUser.uid,
+      emoji: '🍔', // Default emoji
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     };
-    setProducts(prev => [newProduct, ...prev]);
+    addDocumentNonBlocking(collection(firestore, 'locals', firebaseUser.uid, 'products'), newProduct);
   };
 
   const deleteProduct = (id: string) => {
-    setProducts(prev => prev.filter(p => p.id !== id));
+    if (!firebaseUser) return;
+    deleteDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'products', id));
   };
 
-  const addStockItem = (item: Omit<StockItem, 'id'|'stock'>) => {
-    const newStockItem: StockItem = {
+  const addStockItem = (item: Omit<StockItem, 'id' | 'stock'|'localId'|'createdAt'|'updatedAt'>) => {
+    if (!firebaseUser) return;
+    const newStockItem = {
       ...item,
-      id: Date.now().toString(),
-      stock: 0
+      localId: firebaseUser.uid,
+      stock: 0,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     };
-    setStockItems(prev => [newStockItem, ...prev]);
+    addDocumentNonBlocking(collection(firestore, 'locals', firebaseUser.uid, 'stockItems'), newStockItem);
   };
 
   const deleteStockItem = (id: string) => {
-    setStockItems(prev => prev.filter(s => s.id !== id));
+    if (!firebaseUser) return;
+    deleteDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'stockItems', id));
   };
 
   const value = {
     user,
-    login,
     logout,
-    products,
+    products: products || [],
     cart,
     addToCart,
     updateCartQty,
     clearCart,
     cartTotal,
     cartCount,
-    orders,
+    orders: orders || [],
+    addOrder,
     completeOrder,
-    stockItems,
+    stockItems: stockItems || [],
     updateStock,
-    transactions,
-    closures,
+    transactions: transactions || [],
+    closures: closures || [],
     addTransaction,
     closeDay,
     addProduct,

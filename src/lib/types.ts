@@ -1,8 +1,11 @@
 export type Product = {
   id: string;
+  localId: string;
   name: string;
   price: number;
   emoji: string;
+  createdAt: any;
+  updatedAt: any;
 };
 
 export type CartItem = Product & {
@@ -10,34 +13,41 @@ export type CartItem = Product & {
 };
 
 export type Order = {
-  id: string;
-  name: string;
-  caller: number;
+  id:string;
+  localId: string;
+  customerName: string;
   items: CartItem[];
-  createdAt: Date;
+  createdAt: any;
+  orderNumber: number;
+  status: 'pending' | 'completed';
 };
 
 export type StockItem = {
   id: string;
+  localId: string;
   name: string;
   unit: string;
   stock: number;
+  createdAt: any;
+  updatedAt: any;
 };
 
 export type Transaction = {
   id: string;
+  localId: string;
   concept: string;
   amount: number;
   paymentMethod: 'Efectivo' | 'Transferencia';
   type: 'ingreso' | 'egreso';
-  createdAt: Date;
+  createdAt: any;
 };
 
 export type Closure = {
   id: string;
-  date: Date;
-  cash: number;
-  trans: number;
-  total: number;
-  count: number;
+  localId: string;
+  closureDate: any;
+  cashTotal: number;
+  transferTotal: number;
+  netTotal: number;
+  transactionCount: number;
 };

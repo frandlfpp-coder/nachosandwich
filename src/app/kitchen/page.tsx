@@ -21,10 +21,10 @@ export default function KitchenPage() {
             <div key={o.id} className="bg-white rounded-[3rem] p-8 border border-slate-100 shadow-xl animate-pop">
               <div className="flex justify-between items-start mb-6">
                 <div>
-                  <h3 className="text-xl font-black">{o.name}</h3>
+                  <h3 className="text-xl font-black">{o.customerName}</h3>
                 </div>
                 <span className="bg-primary text-primary-foreground text-3xl px-6 py-2 rounded-2xl font-black">
-                  #{o.caller}
+                  #{o.orderNumber}
                 </span>
               </div>
               <ul className="text-xs space-y-2 mb-8 border-l-4 border-primary pl-4 font-black">
