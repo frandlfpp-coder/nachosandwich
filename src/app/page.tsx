@@ -9,17 +9,15 @@ import { useToast } from '@/hooks/use-toast';
 import { useApp } from '@/contexts/AppContext';
 
 export default function LoginPage() {
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [local, setLocal] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useApp();
   const { toast } = useToast();
   const router = useRouter();
 
   const handleAuthAction = async () => {
-    if (!email || !password) {
-      toast({ title: 'Falta Info', description: 'Por favor, completa ambos campos.', variant: 'destructive' });
+    if (!local) {
+      toast({ title: 'Falta Info', description: 'Por favor, ingresa el nombre del local.', variant: 'destructive' });
       return;
     }
     setIsLoading(true);
@@ -27,24 +25,15 @@ export default function LoginPage() {
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500));
 
-    if (authMode === 'login') {
-      if (email === 'test@nacho.plus' && password === 'password') {
-        login({ email });
-        toast({ title: '¡Bienvenido!', description: 'Has iniciado sesión correctamente.' });
-        router.push('/dashboard');
-      } else {
-        toast({ title: 'Error', description: 'Credenciales incorrectas. Inténtalo de nuevo.', variant: 'destructive' });
-        setIsLoading(false);
-      }
-    } else {
-      login({ email });
-      toast({ title: '¡Local Registrado!', description: 'Tu cuenta ha sido creada.' });
+    const localLower = local.trim().toLowerCase();
+    if (localLower === 'nacho1' || localLower === 'nacho2') {
+      login({ local: localLower });
+      toast({ title: '¡Bienvenido!', description: 'Has iniciado sesión correctamente.' });
       router.push('/dashboard');
+    } else {
+      toast({ title: 'Error', description: 'Local incorrecto. Debe ser "nacho1" o "nacho2".', variant: 'destructive' });
+      setIsLoading(false);
     }
-  };
-
-  const toggleMode = () => {
-    setAuthMode(prev => (prev === 'login' ? 'register' : 'login'));
   };
 
   return (
@@ -55,25 +44,17 @@ export default function LoginPage() {
         </div>
         <h1 className="text-4xl text-white tracking-tighter mb-1">NACHO+ PRO</h1>
         <p className="text-primary text-[9px] tracking-[0.4em] mb-10 opacity-60">
-          {authMode === 'login' ? 'SISTEMA MULTI-LOCAL' : 'CREAR CUENTA DE LOCAL'}
+          SISTEMA MULTI-LOCAL
         </p>
 
         {!isLoading ? (
           <div id="auth-inputs" className="space-y-3">
             <Input
-              id="auth-email"
-              type="email"
-              placeholder="EMAIL DEL LOCAL"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              className="w-full p-5 bg-zinc-900 border-2 border-zinc-800 rounded-2xl outline-none text-white text-center text-sm focus:border-primary transition-all font-black h-auto"
-            />
-            <Input
-              id="auth-pass"
-              type="password"
-              placeholder="CONTRASEÑA"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
+              id="auth-local"
+              type="text"
+              placeholder="NOMBRE DEL LOCAL"
+              value={local}
+              onChange={e => setLocal(e.target.value)}
               className="w-full p-5 bg-zinc-900 border-2 border-zinc-800 rounded-2xl outline-none text-white text-center text-sm focus:border-primary transition-all font-black h-auto"
             />
             <div className="flex flex-col gap-3 pt-4">
@@ -82,15 +63,7 @@ export default function LoginPage() {
                 onClick={handleAuthAction}
                 className="w-full bg-primary hover:bg-lime-400 text-primary-foreground py-5 rounded-2xl text-lg shadow-xl active:scale-95 transition-all font-black h-auto"
               >
-                {authMode === 'login' ? 'ENTRAR' : 'REGISTRAR LOCAL'}
-              </Button>
-              <Button
-                id="btn-toggle-mode"
-                variant="link"
-                onClick={toggleMode}
-                className="text-zinc-500 text-[10px] hover:text-lime-400 font-black"
-              >
-                {authMode === 'login' ? '¿NUEVO LOCAL? REGÍSTRATE AQUÍ' : '¿YA TIENES CUENTA? ENTRA AQUÍ'}
+                ENTRAR
               </Button>
             </div>
           </div>

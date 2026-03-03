@@ -6,7 +6,7 @@ import { Product, CartItem, Order, StockItem, Transaction, Closure } from '@/lib
 import { MOCK_PRODUCTS, MOCK_ORDERS, MOCK_STOCK_ITEMS, MOCK_TRANSACTIONS, MOCK_CLOSURES } from '@/lib/data';
 
 type User = {
-  email: string;
+  local: string;
 };
 
 type AppContextType = {

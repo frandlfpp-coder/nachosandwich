@@ -27,8 +27,8 @@ export default function Sidebar() {
         </div>
         <div className="flex flex-col overflow-hidden">
           <span className="text-xl tracking-tighter text-primary">NACHO+</span>
-          <span className="text-[8px] opacity-40 truncate lowercase" style={{ fontStyle: 'normal' }}>
-            {user?.email}
+          <span className="text-[8px] opacity-40 truncate" style={{ fontStyle: 'normal' }}>
+            {user?.local}
           </span>
         </div>
       </div>
