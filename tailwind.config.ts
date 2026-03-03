@@ -88,10 +88,15 @@ export default {
             height: '0',
           },
         },
+        pop: {
+          '0%': { transform: 'scale(0.92)', opacity: '0' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        }
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'pop': 'pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
       },
     },
   },
