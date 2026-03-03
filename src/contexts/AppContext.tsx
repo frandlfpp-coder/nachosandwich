@@ -46,20 +46,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
   const { toast } = useToast();
 
-  const [user, setUser] = useState<AppUser | null>(null);
-  const [cart, setCart] = useState<CartItem[]>([]);
-  
-  useEffect(() => {
-    if (isUserLoading) return; // Wait until auth state is confirmed
-    
+  const user: AppUser | null = useMemo(() => {
     if (firebaseUser && firebaseUser.email) {
       const localName = firebaseUser.email.split('@')[0];
-      setUser({ local: localName });
-    } else {
-      setUser(null);
+      return { local: localName };
     }
-  }, [firebaseUser, isUserLoading]);
+    return null;
+  }, [firebaseUser]);
 
+  const [cart, setCart] = useState<CartItem[]>([]);
+  
   const logout = () => {
     signOut(auth).then(() => {
       router.push('/');

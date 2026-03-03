@@ -40,13 +40,13 @@ export default function LoginPage() {
     }
 
     const email = `${localLower}@local.com`;
-    const password = 'password'; // This is a fixed password for simplicity
+    const password = '1234'; // This is a fixed password for simplicity
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
       toast({ title: '¡Bienvenido de vuelta!' });
     } catch (error: any) {
-      if (error.code === 'auth/user-not-found') {
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
         try {
           const { user: newUser } = await createUserWithEmailAndPassword(auth, email, password);
           const localDocRef = doc(firestore, 'locals', newUser.uid);
