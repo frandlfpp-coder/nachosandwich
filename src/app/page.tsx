@@ -9,37 +9,47 @@ import { useToast } from '@/hooks/use-toast';
 import { useFirebase } from '@/firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function LoginPage() {
   const [local, setLocal] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
   const { auth, firestore, user: firebaseUser, isUserLoading } = useFirebase();
 
   useEffect(() => {
-    if (isUserLoading) return; // Wait until user state is determined
-    if (firebaseUser) {
+    if (!isUserLoading && firebaseUser) {
       router.push('/dashboard');
     }
   }, [firebaseUser, isUserLoading, router]);
 
   const handleAuthAction = async () => {
-    if (!local) {
-      toast({ title: 'Falta Info', description: 'Por favor, ingresa el nombre del local.', variant: 'destructive' });
+    if (!local || !password) {
+      toast({ title: 'Falta Info', description: 'Por favor, selecciona un local e ingresa la contraseña.', variant: 'destructive' });
       return;
     }
     setIsLoading(true);
 
-    const localLower = local.trim().toLowerCase();
-    if (localLower !== 'nacho1' && localLower !== 'nacho2') {
-        toast({ title: 'Error', description: 'Local incorrecto. Debe ser "nacho1" o "nacho2".', variant: 'destructive' });
-        setIsLoading(false);
-        return;
+    const requiredPasswords: { [key: string]: string } = {
+      nacho1: 'ignacio369',
+      nacho2: '1234',
+    };
+
+    if (password !== requiredPasswords[local]) {
+      toast({ title: 'Error', description: 'Contraseña incorrecta.', variant: 'destructive' });
+      setIsLoading(false);
+      return;
     }
 
-    const email = `${localLower}@local.com`;
-    const password = '1234'; // This is a fixed password for simplicity
+    const email = `${local}@local.com`;
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
@@ -61,10 +71,10 @@ export default function LoginPage() {
           toast({ title: 'Error de Creación', description: `No se pudo crear la cuenta. ${creationError.message}`, variant: 'destructive' });
         }
       } else if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
-          toast({ title: 'Error', description: 'Nombre de local o contraseña incorrecta.', variant: 'destructive' });
+          toast({ title: 'Error', description: 'Local o contraseña incorrecta.', variant: 'destructive' });
       }
       else {
-        toast({ title: 'Error de Autenticación', description: error.message, variant: 'destructive' });
+        toast({ title: 'Error de Autenticación', description: `Ocurrió un error inesperado: ${error.message}`, variant: 'destructive' });
       }
     } finally {
       setIsLoading(false);
@@ -93,33 +103,37 @@ export default function LoginPage() {
           SISTEMA MULTI-LOCAL
         </p>
 
-        {!isLoading ? (
-          <div id="auth-inputs" className="space-y-3">
+        <div id="auth-inputs" className="space-y-3">
+            <Select onValueChange={setLocal} value={local}>
+              <SelectTrigger className="w-full p-5 bg-zinc-900 border-2 border-zinc-800 rounded-2xl outline-none text-white text-center text-sm focus:border-primary transition-all font-black h-auto">
+                <SelectValue placeholder="SELECCIONA UN LOCAL" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="nacho1">NACHO1</SelectItem>
+                <SelectItem value="nacho2">NACHO2</SelectItem>
+              </SelectContent>
+            </Select>
             <Input
-              id="auth-local"
-              type="text"
-              placeholder="NOMBRE DEL LOCAL"
-              value={local}
-              onChange={e => setLocal(e.target.value)}
+              id="auth-password"
+              type="password"
+              placeholder="CONTRASEÑA"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAuthAction()}
               className="w-full p-5 bg-zinc-900 border-2 border-zinc-800 rounded-2xl outline-none text-white text-center text-sm focus:border-primary transition-all font-black h-auto"
+              disabled={isLoading}
             />
             <div className="flex flex-col gap-3 pt-4">
               <Button
                 id="btn-auth-action"
                 onClick={handleAuthAction}
                 className="w-full bg-primary hover:bg-lime-400 text-primary-foreground py-5 rounded-2xl text-lg shadow-xl active:scale-95 transition-all font-black h-auto"
+                disabled={isLoading}
               >
-                ENTRAR
+                {isLoading ? <Loader2 className="animate-spin" /> : 'ENTRAR'}
               </Button>
             </div>
-          </div>
-        ) : (
-          <div id="loading-spinner" className="flex flex-col items-center gap-4 mt-8">
-            <Loader2 className="w-10 h-10 text-primary animate-spin" />
-            <p className="text-white text-[9px] tracking-widest">VERIFICANDO...</p>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );
