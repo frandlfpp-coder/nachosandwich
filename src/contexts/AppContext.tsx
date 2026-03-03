@@ -15,6 +15,7 @@ type AppUser = {
 
 type AppContextType = {
   user: AppUser | null;
+  isUserLoading: boolean;
   logout: () => void;
   products: Product[];
   cart: CartItem[];
@@ -227,6 +228,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const value = {
     user,
+    isUserLoading,
     logout,
     products: products || [],
     cart,

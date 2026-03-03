@@ -7,26 +7,33 @@ import Sidebar from './Sidebar';
 import MobileHeader from './MobileHeader';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { Loader2 } from 'lucide-react';
 
 interface AppShellProps {
   children: ReactNode;
 }
 
 export default function AppShell({ children }: AppShellProps) {
-  const { user } = useApp();
+  const { user, isUserLoading } = useApp();
   const router = useRouter();
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    if (user === null) {
+    // Only redirect once loading is complete and we know there's no user
+    if (!isUserLoading && !user) {
       router.push('/');
     }
-  }, [user, router]);
+  }, [user, isUserLoading, router]);
 
-  if (!user) {
+  // Show a loading screen while authentication is in progress.
+  // This prevents a flicker of the protected content before the redirect happens.
+  if (isUserLoading || !user) {
     return (
       <div className="fixed inset-0 bg-zinc-950 flex items-center justify-center">
-        {/* Optional: Add a loading spinner here */}
+        <div id="loading-spinner" className="flex flex-col items-center gap-4">
+          <Loader2 className="w-10 h-10 text-primary animate-spin" />
+          <p className="text-white text-[9px] tracking-widest">CARGANDO...</p>
+        </div>
       </div>
     );
   }
