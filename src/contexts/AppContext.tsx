@@ -55,7 +55,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
     const requiredPasswords: { [key: string]: string } = {
       nacho1: 'ignacio369',
-      nacho2: '1234',
+      nacho2: 'ignacio369',
     };
     const password = requiredPasswords[local];
     const email = `${local}@local.com`;
