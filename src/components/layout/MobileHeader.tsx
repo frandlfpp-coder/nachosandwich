@@ -66,9 +66,9 @@ export default function MobileHeader() {
             <Zap className="h-5 w-5" />
           </div>
           <div className="flex flex-col">
-            <span className="text-lg tracking-tighter text-primary font-black leading-none">NACHO+</span>
+            <span className="text-lg tracking-tighter text-primary font-black leading-none uppercase">NACHO+</span>
             {currentLocal && (
-            <span className="text-[9px] text-muted-foreground font-bold leading-none normal-case" style={{ fontStyle: 'normal' }}>
+            <span className="text-[9px] text-muted-foreground font-bold leading-none uppercase">
                 {currentLocal}
             </span>
             )}
@@ -92,11 +92,11 @@ export default function MobileHeader() {
             </SheetTrigger>
             <SheetContent>
                 <SheetHeader>
-                <SheetTitle>TU PEDIDO</SheetTitle>
+                <SheetTitle className="uppercase">Tu Pedido</SheetTitle>
                 </SheetHeader>
                 {/* Cart content will be rendered on the dashboard page via a portal or separate logic */}
-                <div className="py-20 text-center opacity-40 text-xs font-black">
-                VE A LA PESTAÑA 'VENTAS' PARA GESTIONAR TU CARRITO.
+                <div className="py-20 text-center opacity-40 text-xs font-black uppercase">
+                Ve a la pestaña 'Ventas' para gestionar tu carrito.
                 </div>
             </SheetContent>
             </Sheet>
@@ -104,32 +104,32 @@ export default function MobileHeader() {
       </header>
        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t p-1 flex justify-around z-40">
         {navItems.map(item => (
-           <Link key={item.href} href={item.href} className={`flex flex-1 flex-col items-center justify-center text-center p-2 rounded-lg ${pathname === item.href ? 'text-primary' : 'text-muted-foreground'}`}>
+           <Link key={item.href} href={item.href} className={`flex flex-1 flex-col items-center justify-center text-center px-1 py-2 rounded-lg ${pathname === item.href ? 'text-primary' : 'text-muted-foreground'}`}>
               <item.icon className="h-5 w-5 mb-1" />
-              <span className="text-[9px] non-italic font-semibold normal-case tracking-normal">{item.label}</span>
+              <span className="text-[9px] font-semibold tracking-normal">{item.label}</span>
            </Link>
         ))}
-         <button onClick={() => setSwitchLocalOpen(true)} className="flex flex-1 flex-col items-center justify-center text-center p-2 rounded-lg text-muted-foreground">
+         <button onClick={() => setSwitchLocalOpen(true)} className="flex flex-1 flex-col items-center justify-center text-center px-1 py-2 rounded-lg text-muted-foreground">
           <GitBranch className="h-5 w-5 mb-1" />
-          <span className="text-[9px] non-italic font-semibold normal-case tracking-normal">Cambiar</span>
+          <span className="text-[9px] font-semibold tracking-normal">Cambiar</span>
         </button>
-         <button onClick={() => { if (confirm('¿Cerrar sesión?')) logout(); }} className="flex flex-1 flex-col items-center justify-center text-center p-2 rounded-lg text-muted-foreground">
+         <button onClick={() => { if (confirm('¿Cerrar sesión?')) logout(); }} className="flex flex-1 flex-col items-center justify-center text-center px-1 py-2 rounded-lg text-muted-foreground">
           <LogOut className="h-5 w-5 mb-1" />
-          <span className="text-[9px] non-italic font-semibold normal-case tracking-normal">Salir</span>
+          <span className="text-[9px] font-semibold tracking-normal">Salir</span>
         </button>
       </nav>
 
       <Dialog open={isSwitchLocalOpen} onOpenChange={setSwitchLocalOpen}>
         <DialogContent className="bg-card w-full max-w-sm rounded-[3.5rem] p-10 animate-pop">
-          <DialogHeader><DialogTitle className="text-2xl tracking-tighter mb-6 text-center font-black">CAMBIAR DE LOCAL</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="text-2xl tracking-tighter mb-6 text-center font-black uppercase">Cambiar de Local</DialogTitle></DialogHeader>
           <Select onValueChange={handleLocalChange} value={currentLocal}>
-              <SelectTrigger className="w-full p-5 bg-slate-100 dark:bg-zinc-800 border-2 border-slate-200 dark:border-zinc-700 rounded-2xl outline-none text-center text-sm focus:border-primary transition-all font-black h-auto">
+              <SelectTrigger className="w-full p-5 bg-slate-100 dark:bg-zinc-800 border-2 border-slate-200 dark:border-zinc-700 rounded-2xl outline-none text-center text-sm focus:border-primary transition-all font-black h-auto uppercase">
                   <SelectValue placeholder="SELECCIONAR LOCAL" />
               </SelectTrigger>
               <SelectContent>
-                  <SelectItem value="nacho1">NACHO1</SelectItem>
-                  <SelectItem value="nacho2">NACHO2</SelectItem>
-                  <SelectItem value="prueba">PRUEBA</SelectItem>
+                  <SelectItem value="nacho1" className="uppercase font-black">NACHO1</SelectItem>
+                  <SelectItem value="nacho2" className="uppercase font-black">NACHO2</SelectItem>
+                  <SelectItem value="prueba" className="uppercase font-black">PRUEBA</SelectItem>
               </SelectContent>
           </Select>
         </DialogContent>

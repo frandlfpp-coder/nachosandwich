@@ -9,8 +9,7 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
-  style: ['normal', 'italic'],
-  weight: ['400', '700', '900'],
+  weight: ['400', '600', '900'],
   variable: '--font-inter',
 });
 
@@ -25,11 +24,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es-AR" className={inter.variable} suppressHydrationWarning>
+    <html lang="es-AR" className={`${inter.variable} bg-background`} suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
       </head>
-      <body className="font-body font-black uppercase italic overflow-x-hidden antialiased bg-background text-foreground">
+      <body className="font-body overflow-x-hidden antialiased text-foreground">
         <ThemeProvider>
           <FirebaseClientProvider>
             <AppProvider>

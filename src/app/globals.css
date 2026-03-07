@@ -61,11 +61,12 @@
   body {
     @apply selection:bg-lime-300;
     -webkit-tap-highlight-color: transparent;
+    font-feature-settings: "tnum";
   }
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-  input::placeholder { @apply uppercase opacity-50; }
+  input::placeholder { @apply opacity-50 font-semibold; }
 }
 
 @layer components {
