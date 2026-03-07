@@ -66,8 +66,8 @@ export default function FinancePage() {
         return c.closureDate && isWithinInterval(c.closureDate, { start, end });
     });
     
-    const weeklyIngresos = weeklyClosures.reduce((sum, c) => sum + c.totalIngresos, 0);
-    const weeklyEgresos = weeklyClosures.reduce((sum, c) => sum + c.totalEgresos, 0);
+    const weeklyIngresos = weeklyClosures.reduce((sum, c) => sum + (c.totalIngresos || 0), 0);
+    const weeklyEgresos = weeklyClosures.reduce((sum, c) => sum + (c.totalEgresos || 0), 0);
     
     return { weeklyClosures, weeklyIngresos, weeklyEgresos };
   }, [closures]);
@@ -148,27 +148,27 @@ export default function FinancePage() {
                   </span>
                   <div className='text-right'>
                     <p className="text-[9px] opacity-60 font-black">NETO DEL TURNO</p>
-                    <p className="text-xl text-primary font-black">${c.neto.toLocaleString('es-AR')}</p>
+                    <p className="text-xl text-primary font-black">${(c.neto || 0).toLocaleString('es-AR')}</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-4 text-[9px] text-center font-black mb-4">
                     <div className='bg-slate-100 dark:bg-zinc-800 p-2 rounded-lg'>
                         <p className='opacity-60'>INGRESOS</p>
-                        <p className='text-green-600 dark:text-lime-500 text-sm'>${c.totalIngresos.toLocaleString('es-AR')}</p>
+                        <p className='text-green-600 dark:text-lime-500 text-sm'>${(c.totalIngresos || 0).toLocaleString('es-AR')}</p>
                     </div>
                     <div className='bg-slate-100 dark:bg-zinc-800 p-2 rounded-lg'>
                         <p className='opacity-60'>EGRESOS</p>
-                        <p className='text-destructive text-sm'>${c.totalEgresos.toLocaleString('es-AR')}</p>
+                        <p className='text-destructive text-sm'>${(c.totalEgresos || 0).toLocaleString('es-AR')}</p>
                     </div>
                     <div className='bg-slate-100 dark:bg-zinc-800 p-2 rounded-lg'>
                         <p className='opacity-60'>TRANSACCIONES</p>
-                        <p className='text-blue-600 text-sm'>{c.totalTransacciones}</p>
+                        <p className='text-blue-600 text-sm'>{c.totalTransacciones || 0}</p>
                     </div>
                 </div>
                 <div className="flex gap-4 text-[9px] opacity-60 font-black border-t pt-4 mt-4">
                   <span>BALANCES FINALES:</span>
-                  <span>💵 ${c.balanceEfectivo.toLocaleString('es-AR')}</span>
-                  <span>📱 ${c.balanceTransferencia.toLocaleString('es-AR')}</span>
+                  <span>💵 ${(c.balanceEfectivo || 0).toLocaleString('es-AR')}</span>
+                  <span>📱 ${(c.balanceTransferencia || 0).toLocaleString('es-AR')}</span>
                 </div>
               </div>
             ))}
