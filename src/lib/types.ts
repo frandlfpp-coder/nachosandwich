@@ -19,7 +19,7 @@ export type Order = {
   items: CartItem[];
   createdAt: any;
   orderNumber: number;
-  status: 'pending' | 'completed';
+  status: 'pending' | 'completed' | 'picked-up';
   updatedAt?: any;
   isDelivery: boolean;
   customerPhone?: string;

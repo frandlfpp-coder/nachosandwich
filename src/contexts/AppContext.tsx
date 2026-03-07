@@ -26,6 +26,7 @@ type AppContextType = {
   completedOrders: Order[];
   addOrder: (orderData: Omit<Order, 'id' | 'createdAt' | 'localId'>) => void,
   completeOrder: (orderId: string) => void;
+  pickupOrder: (orderId: string) => void;
   stockItems: StockItem[];
   updateStock: (itemId: string, delta: number) => void;
   transactions: Transaction[];
@@ -192,6 +193,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (!firebaseUser) return;
     updateDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'orders', orderId), { status: 'completed', updatedAt: serverTimestamp() });
   };
+  
+  const pickupOrder = (orderId: string) => {
+    if (!firebaseUser) return;
+    updateDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'orders', orderId), { status: 'picked-up', updatedAt: serverTimestamp() });
+    toast({title: "Pedido marcado como retirado"});
+  };
 
   const updateStock = (itemId: string, delta: number) => {
     if (!firebaseUser) return;
@@ -286,6 +293,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     completedOrders: completedOrders || [],
     addOrder,
     completeOrder,
+    pickupOrder,
     stockItems: stockItems || [],
     updateStock,
     transactions: transactions || [],

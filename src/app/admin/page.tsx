@@ -8,10 +8,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
-import { Tv } from 'lucide-react';
+import { Tv, Check } from 'lucide-react';
 
 export default function AdminPage() {
-  const { products, addProduct, deleteProduct, stockItems, addStockItem, deleteStockItem } = useApp();
+  const { products, addProduct, deleteProduct, stockItems, addStockItem, deleteStockItem, completedOrders, pickupOrder } = useApp();
 
   const [isProductModalOpen, setProductModalOpen] = useState(false);
   const [newProductName, setNewProductName] = useState('');
@@ -67,6 +67,27 @@ export default function AdminPage() {
                     </Link>
                 </Button>
             </div>
+        </div>
+
+        <div className="bg-white rounded-[3rem] p-8 border border-slate-100">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-black">LISTOS PARA RETIRAR</h2>
+          </div>
+          <div className="space-y-2">
+            {completedOrders.length > 0 ? (
+                completedOrders.map(o => (
+                  <div key={o.id} className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl text-xs font-black animate-pop">
+                    <span>#{o.orderNumber} - {o.customerName}</span>
+                    <Button onClick={() => pickupOrder(o.id)} size="sm" className="bg-primary text-primary-foreground rounded-xl text-[10px] font-black h-auto px-4 py-2">
+                      <Check className="mr-2 h-3 w-3" />
+                      MARCAR RETIRADO
+                    </Button>
+                  </div>
+                ))
+            ) : (
+              <p className="text-center text-xs opacity-50 font-black py-4">NO HAY PEDIDOS LISTOS PARA RETIRAR</p>
+            )}
+          </div>
         </div>
 
         <div className="bg-white rounded-[3rem] p-8 border border-slate-100">
