@@ -40,9 +40,9 @@ export default function CustomerDisplayPage() {
         <div className="bg-zinc-900 p-8 flex flex-col overflow-hidden">
           <h2 className="text-5xl text-center mb-8 text-primary tracking-widest">LISTO PARA RETIRAR</h2>
           <div className="flex-1 grid grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto no-scrollbar">
-             {completedForDisplay.map((order, index) => (
-              <div key={order.id} className={`rounded-3xl flex flex-col items-center justify-center p-4 shadow-2xl aspect-square ${index === 0 ? 'bg-primary text-primary-foreground animate-pulse shadow-lime-500/30' : 'bg-zinc-800 text-white'}`}>
-                <span className="text-8xl font-black tracking-tighter">
+             {completedForDisplay.map((order) => (
+              <div key={order.id} className="bg-primary text-primary-foreground animate-pulse shadow-lime-500/30 rounded-3xl flex flex-col items-center justify-center p-4 shadow-2xl aspect-square">
+                <span className="text-8xl font-black tracking-tighter [text-shadow:2px_2px_4px_rgba(0,0,0,0.2)]">
                   {order.orderNumber}
                 </span>
                  <span className="text-2xl opacity-60">
