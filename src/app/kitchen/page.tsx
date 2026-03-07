@@ -3,7 +3,7 @@
 import AppShell from '@/components/layout/AppShell';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
-import { Motorcycle } from 'lucide-react';
+import { Bike } from 'lucide-react';
 
 export default function KitchenPage() {
   const { orders, completeOrder } = useApp();
@@ -25,7 +25,7 @@ export default function KitchenPage() {
                   <h3 className="text-xl font-black">{o.customerName}</h3>
                    {o.isDelivery && (
                     <div className="flex items-center gap-2 mt-1 text-sm font-bold text-blue-600 normal-case">
-                        <Motorcycle className="w-4 h-4" />
+                        <Bike className="w-4 h-4" />
                         <span>Delivery</span>
                     </div>
                   )}
@@ -52,5 +52,3 @@ export default function KitchenPage() {
     </AppShell>
   );
 }
-
-    

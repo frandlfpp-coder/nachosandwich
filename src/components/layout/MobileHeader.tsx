@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingCart, ChefHat, Boxes, CircleDollarSign, Settings, LogOut, GitBranch, Zap, Motorcycle } from 'lucide-react';
+import { ShoppingCart, ChefHat, Boxes, CircleDollarSign, Settings, LogOut, GitBranch, Zap, Bike } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import {
   Sheet,
@@ -30,7 +30,7 @@ import { usePathname } from 'next/navigation';
 const navItems = [
   { href: '/dashboard', label: 'Ventas', icon: ShoppingCart },
   { href: '/kitchen', label: 'Cocina', icon: ChefHat },
-  { href: '/delivery', label: 'Delivery', icon: Motorcycle },
+  { href: '/delivery', label: 'Delivery', icon: Bike },
   { href: '/stock',label: 'Stock', icon: Boxes },
   { href: '/finance',label: 'Caja', icon: CircleDollarSign },
   { href: '/admin', label: 'Admin', icon: Settings },
@@ -128,5 +128,3 @@ export default function MobileHeader() {
     </>
   );
 }
-
-    

@@ -1,7 +1,7 @@
 'use client';
 
 import { useApp } from '@/contexts/AppContext';
-import { Motorcycle } from 'lucide-react';
+import { Bike } from 'lucide-react';
 
 export default function KitchenDisplayPage() {
   const { orders } = useApp(); // These are pending orders
@@ -20,7 +20,7 @@ export default function KitchenDisplayPage() {
                 <span className="text-lg font-bold block">{order.customerName}</span>
                  {order.isDelivery && (
                     <div className="flex items-center justify-end gap-2 mt-1 text-sm font-bold text-blue-600 normal-case">
-                        <Motorcycle className="w-4 h-4" />
+                        <Bike className="w-4 h-4" />
                         <span>Delivery</span>
                     </div>
                 )}
@@ -45,5 +45,3 @@ export default function KitchenDisplayPage() {
     </div>
   );
 }
-
-    

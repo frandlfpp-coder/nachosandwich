@@ -5,7 +5,7 @@ import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
 import { Order } from '@/lib/types';
 import { useMemo } from 'react';
-import { Motorcycle, Phone } from 'lucide-react';
+import { Bike, Phone } from 'lucide-react';
 
 export default function DeliveryPage() {
   const { orders, completeOrder } = useApp();
@@ -30,7 +30,7 @@ export default function DeliveryPage() {
         
         {deliveryOrders.length === 0 ? (
            <div className="text-center py-20 opacity-40">
-             <Motorcycle className="w-16 h-16 mx-auto mb-4" />
+             <Bike className="w-16 h-16 mx-auto mb-4" />
              <h3 className="text-lg font-black">SIN DELIVERIES PENDIENTES</h3>
            </div>
         ) : (
@@ -81,5 +81,3 @@ export default function DeliveryPage() {
     </AppShell>
   );
 }
-
-    
