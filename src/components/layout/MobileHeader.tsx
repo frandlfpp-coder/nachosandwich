@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingCart, ChefHat, Boxes, CircleDollarSign, Settings, LogOut, GitBranch } from 'lucide-react';
+import { ShoppingCart, ChefHat, Boxes, CircleDollarSign, Settings, LogOut, GitBranch, Zap } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import {
   Sheet,
@@ -24,7 +24,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Button } from '../ui/button';
-import { Zap } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
 
@@ -59,8 +58,18 @@ export default function MobileHeader() {
   return (
     <>
       <header className="md:hidden bg-white border-b px-6 py-4 flex justify-between items-center shrink-0 sticky top-0 z-40">
-        <Link href="/dashboard" className="text-xl tracking-tighter text-primary font-black flex items-center gap-2">
-          <Zap /> NACHO+
+        <Link href="/dashboard" className="flex items-center gap-3">
+          <div className="bg-primary p-2 rounded-xl text-primary-foreground">
+            <Zap className="h-5 w-5" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-lg tracking-tighter text-primary font-black leading-none">NACHO+</span>
+            {currentLocal && (
+            <span className="text-[9px] text-muted-foreground font-bold leading-none normal-case" style={{ fontStyle: 'normal' }}>
+                {currentLocal}
+            </span>
+            )}
+          </div>
         </Link>
         <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
