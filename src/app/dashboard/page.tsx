@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Plus, Minus, X } from 'lucide-react';
-import { Product } from '@/lib/types';
+import { Product, Order } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 
@@ -56,15 +56,20 @@ export default function DashboardPage() {
     const orderNumber = Math.floor(Math.random() * 9000) + 1000;
     
     // Create a new order
-    addOrder({
+    const orderData: Omit<Order, 'id' | 'createdAt' | 'localId'> = {
       customerName: name,
       items: cart,
       orderNumber: orderNumber,
       status: 'pending',
       isDelivery: isDelivery,
-      customerPhone: isDelivery ? customerPhone : undefined,
-      deliveryFee: isDelivery ? parsedDeliveryFee : undefined,
-    });
+    };
+    
+    if (isDelivery) {
+        orderData.customerPhone = customerPhone;
+        orderData.deliveryFee = parsedDeliveryFee;
+    }
+    
+    addOrder(orderData);
     
     // Add a financial transaction for the sale
     addTransaction({
