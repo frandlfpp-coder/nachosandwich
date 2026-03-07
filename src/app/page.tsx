@@ -67,6 +67,7 @@ export default function LoginPage() {
           toast({ title: '¡Cuenta Creada!', description: 'Hemos creado una nueva cuenta para tu local.' });
         } catch (creationError: any) {
           toast({ title: 'Error de Creación', description: `No se pudo crear la cuenta. ${creationError.message}`, variant: 'destructive' });
+          setIsLoading(false);
         }
       } else if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
           toast({ title: 'Error', description: 'Hubo un problema de autenticación. Contacta a soporte si el problema persiste.', variant: 'destructive' });
@@ -77,7 +78,7 @@ export default function LoginPage() {
         setIsLoading(false);
       }
     }
-    // No set isLoading to false here, the loading screen will persist until redirect.
+    // No set isLoading to false here on success, the loading screen will persist until redirect.
   };
   
   if (isUserLoading || isLoading || firebaseUser) {
