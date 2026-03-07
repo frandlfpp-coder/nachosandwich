@@ -44,16 +44,17 @@ export type Transaction = {
   paymentMethod: 'Efectivo' | 'Transferencia';
   type: 'ingreso' | 'egreso';
   createdAt: any;
+  closureId?: string;
 };
 
 export type Closure = {
   id: string;
   localId: string;
   closureDate: any;
-  cashTotal: number;
-  transferTotal: number;
-  netTotal: number;
-  transactionCount: number;
+  totalIngresos: number;
+  totalEgresos: number;
+  neto: number;
+  balanceEfectivo: number;
+  balanceTransferencia: number;
+  totalTransacciones: number;
 };
-
-    

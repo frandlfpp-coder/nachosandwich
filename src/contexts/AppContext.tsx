@@ -29,10 +29,10 @@ type AppContextType = {
   pickupOrder: (orderId: string) => void;
   stockItems: StockItem[];
   updateStock: (itemId: string, delta: number) => void;
-  transactions: Transaction[];
+  transactions: Transaction[]; // Represents OPEN transactions for the current shift
   closures: Closure[];
   addTransaction: (transaction: Omit<Transaction, 'id' | 'createdAt' | 'localId'>) => void;
-  closeDay: () => void;
+  closeDay: () => Promise<void>;
   addProduct: (product: Omit<Product, 'id' | 'localId' | 'createdAt' | 'updatedAt'>) => void;
   deleteProduct: (id: string) => void;
   updateProduct: (id: string, price: number) => void;
@@ -135,9 +135,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const transactionsQuery = useMemoFirebase(() => firebaseUser ? collection(firestore, 'locals', firebaseUser.uid, 'transactions') : null, [firestore, firebaseUser]);
   const { data: rawTransactions } = useCollection<Transaction>(transactionsQuery);
   
-  const transactions = useMemo(() => {
+  const openTransactions = useMemo(() => {
     if (!rawTransactions) return [];
-    return rawTransactions.map(t => ({...t, createdAt: t.createdAt?.toDate()})).sort((a,b) => b.createdAt - a.createdAt);
+    return rawTransactions
+      .filter(t => !t.closureId) // Filter for transactions not yet part of a closure
+      .map(t => ({...t, createdAt: t.createdAt?.toDate()}))
+      .sort((a,b) => b.createdAt - a.createdAt);
   }, [rawTransactions]);
 
   const closuresQuery = useMemoFirebase(() => firebaseUser ? collection(firestore, 'locals', firebaseUser.uid, 'closures') : null, [firestore, firebaseUser]);
@@ -231,26 +234,55 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     addDocumentNonBlocking(collection(firestore, 'locals', firebaseUser.uid, 'transactions'), newTransaction);
   };
 
-  const closeDay = () => {
-    if (!firebaseUser || transactions.length === 0) {
-      toast({ title: 'No hay transacciones para cerrar.'});
+  const closeDay = async () => {
+    if (!firebaseUser || !firestore) {
+      toast({ variant: 'destructive', title: 'Error de autenticación' });
       return;
     }
-    const cashTotal = transactions.filter(t => t.paymentMethod === 'Efectivo').reduce((s,t)=>s+(t.type==='ingreso'?t.amount:-t.amount), 0);
-    const transferTotal = transactions.filter(t => t.paymentMethod === 'Transferencia').reduce((s,t)=>s+(t.type==='ingreso'?t.amount:-t.amount), 0);
-    const newClosure = {
-        localId: firebaseUser.uid,
-        closureDate: serverTimestamp(),
-        cashTotal,
-        transferTotal,
-        netTotal: cashTotal + transferTotal,
-        transactionCount: transactions.filter(t => t.type === 'ingreso').length,
+    if (openTransactions.length === 0) {
+      toast({ title: 'No hay movimientos para cerrar.' });
+      return;
+    }
+    if (!confirm('¿CERRAR JORNADA? Esto creará un reporte y reiniciará los movimientos actuales.')) {
+      return;
+    }
+
+    // Calculations based on open transactions for the current shift
+    const totalIngresos = openTransactions.filter(t => t.type === 'ingreso').reduce((sum, t) => sum + t.amount, 0);
+    const totalEgresos = openTransactions.filter(t => t.type === 'egreso').reduce((sum, t) => sum + t.amount, 0);
+    const neto = totalIngresos - totalEgresos;
+    const balanceEfectivo = openTransactions.filter(t => t.paymentMethod === 'Efectivo').reduce((sum, t) => sum + (t.type === 'ingreso' ? t.amount : -t.amount), 0);
+    const balanceTransferencia = openTransactions.filter(t => t.paymentMethod === 'Transferencia').reduce((sum, t) => sum + (t.type === 'ingreso' ? t.amount : -t.amount), 0);
+
+    const newClosureData: Omit<Closure, 'id'> = {
+      localId: firebaseUser.uid,
+      closureDate: serverTimestamp(),
+      totalIngresos,
+      totalEgresos,
+      neto,
+      balanceEfectivo,
+      balanceTransferencia,
+      totalTransacciones: openTransactions.length,
     };
-    addDocumentNonBlocking(collection(firestore, 'locals', firebaseUser.uid, 'closures'), newClosure);
-    // Ideally, we'd mark transactions as part of a closure instead of assuming they all get wiped.
-    // For this app, we will filter transactions on client side by day or other period.
-    // We are not deleting transactions.
-    toast({title: "Caja cerrada con éxito"});
+
+    try {
+      const batch = writeBatch(firestore);
+      const closureRef = doc(collection(firestore, 'locals', firebaseUser.uid, 'closures'));
+      
+      batch.set(closureRef, newClosureData);
+
+      openTransactions.forEach(t => {
+        const transRef = doc(firestore, 'locals', firebaseUser.uid, 'transactions', t.id);
+        batch.update(transRef, { closureId: closureRef.id });
+      });
+      
+      await batch.commit();
+      
+      toast({ title: "Caja cerrada con éxito" });
+    } catch (error: any) {
+      console.error("Error al cerrar la caja:", error);
+      toast({ variant: "destructive", title: "Error al cerrar la caja", description: error.message });
+    }
   };
 
   const addProduct = (product: Omit<Product, 'id' | 'localId' | 'createdAt' | 'updatedAt'>) => {
@@ -349,7 +381,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     pickupOrder,
     stockItems: stockItems || [],
     updateStock,
-    transactions: transactions || [],
+    transactions: openTransactions || [],
     closures: closures || [],
     addTransaction,
     closeDay,

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import AppShell from '@/components/layout/AppShell';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { startOfWeek, endOfWeek, isWithinInterval } from 'date-fns';
 
 export default function FinancePage() {
   const { transactions, closures, addTransaction, closeDay } = useApp();
@@ -24,8 +25,7 @@ export default function FinancePage() {
   const [concept, setConcept] = useState('');
   const [amount, setAmount] = useState('');
 
-  // Note: This calculation is now for ALL transactions in the history for the current local.
-  // A real app might filter this by date (e.g., today's transactions).
+  // Calculations for the current open shift (based on open transactions)
   const cash = transactions.filter(t => t.paymentMethod === 'Efectivo').reduce((s,t)=>s+(t.type==='ingreso'?t.amount:-t.amount), 0);
   const trans = transactions.filter(t => t.paymentMethod === 'Transferencia').reduce((s,t)=>s+(t.type==='ingreso'?t.amount:-t.amount), 0);
   const total = cash + trans;
@@ -51,19 +51,34 @@ export default function FinancePage() {
   };
 
   const handleCloseDay = () => {
-    if (transactions.length === 0) {
-        alert("SIN TRANSACCIONES PARA CERRAR");
-        return;
-    }
-    if(!confirm("¿CERRAR JORNADA? Esto creará un reporte de cierre con las transacciones actuales.")) return;
     closeDay();
   };
+  
+  // Weekly report calculations
+  const { weeklyClosures, weeklyIngresos, weeklyEgresos } = useMemo(() => {
+    if (!closures) return { weeklyClosures: [], weeklyIngresos: 0, weeklyEgresos: 0 };
+    
+    const now = new Date();
+    const start = startOfWeek(now, { weekStartsOn: 1 });
+    const end = endOfWeek(now, { weekStartsOn: 1 });
+    
+    const weeklyClosures = closures.filter(c => {
+        return c.closureDate && isWithinInterval(c.closureDate, { start, end });
+    });
+    
+    const weeklyIngresos = weeklyClosures.reduce((sum, c) => sum + c.totalIngresos, 0);
+    const weeklyEgresos = weeklyClosures.reduce((sum, c) => sum + c.totalEgresos, 0);
+    
+    return { weeklyClosures, weeklyIngresos, weeklyEgresos };
+  }, [closures]);
+
 
   return (
     <AppShell>
       <section>
         <div className="flex gap-8 mb-8 border-b text-[10px] tracking-widest font-black">
-          <button onClick={() => setMode('hoy')} className={cn('pb-4', mode === 'hoy' ? 'border-b-4 border-primary text-primary' : 'opacity-40')}>MOVIMIENTOS</button>
+          <button onClick={() => setMode('hoy')} className={cn('pb-4', mode === 'hoy' ? 'border-b-4 border-primary text-primary' : 'opacity-40')}>TURNO ACTUAL</button>
+          <button onClick={() => setMode('semanal')} className={cn('pb-4', mode === 'semanal' ? 'border-b-4 border-primary text-primary' : 'opacity-40')}>REPORTE SEMANAL</button>
           <button onClick={() => setMode('historial')} className={cn('pb-4', mode === 'historial' ? 'border-b-4 border-primary text-primary' : 'opacity-40')}>HISTORIAL DE CIERRES</button>
         </div>
 
@@ -71,15 +86,15 @@ export default function FinancePage() {
           <div id="finance-today">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <div className="bg-card text-card-foreground p-8 rounded-[2.5rem] border">
-                <p className="text-[10px] opacity-40 mb-2 font-black">EFECTIVO (HISTÓRICO)</p>
+                <p className="text-[10px] opacity-40 mb-2 font-black">EFECTIVO (TURNO ACTUAL)</p>
                 <h3 className="text-4xl tracking-tighter text-primary font-black">${cash.toLocaleString('es-AR')}</h3>
               </div>
               <div className="bg-card text-card-foreground p-8 rounded-[2.5rem] border">
-                <p className="text-[10px] opacity-40 mb-2 font-black">TRANSFERENCIA (HISTÓRICO)</p>
+                <p className="text-[10px] opacity-40 mb-2 font-black">TRANSFERENCIA (TURNO ACTUAL)</p>
                 <h3 className="text-4xl tracking-tighter text-blue-600 font-black">${trans.toLocaleString('es-AR')}</h3>
               </div>
               <div className="bg-zinc-900 text-white p-8 rounded-[2.5rem] shadow-xl">
-                <p className="text-[10px] text-primary mb-2 font-black">NETO TOTAL (HISTÓRICO)</p>
+                <p className="text-[10px] text-primary mb-2 font-black">NETO (TURNO ACTUAL)</p>
                 <h3 className="text-4xl tracking-tighter text-primary font-black">${total.toLocaleString('es-AR')}</h3>
               </div>
             </div>
@@ -100,7 +115,26 @@ export default function FinancePage() {
                   </span>
                 </div>
               ))}
+               {transactions.length === 0 && (
+                <p className="text-center text-xs opacity-50 font-black py-20">NO HAY MOVIMIENTOS EN EL TURNO ACTUAL</p>
+              )}
             </div>
+          </div>
+        )}
+        
+        {mode === 'semanal' && (
+          <div id="finance-weekly">
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+               <div className="bg-card text-card-foreground p-8 rounded-[2.5rem] border">
+                <p className="text-[10px] opacity-40 mb-2 font-black">INGRESOS TOTALES (SEMANAL)</p>
+                <h3 className="text-4xl tracking-tighter text-green-600 font-black">${weeklyIngresos.toLocaleString('es-AR')}</h3>
+              </div>
+              <div className="bg-card text-card-foreground p-8 rounded-[2.5rem] border">
+                <p className="text-[10px] opacity-40 mb-2 font-black">EGRESOS TOTALES (SEMANAL)</p>
+                <h3 className="text-4xl tracking-tighter text-destructive font-black">${weeklyEgresos.toLocaleString('es-AR')}</h3>
+              </div>
+             </div>
+             <p className='text-center text-xs opacity-50 font-black mt-12'>Mostrando reportes para la semana actual. Los cierres pasados se pueden ver en "Historial de Cierres".</p>
           </div>
         )}
 
@@ -108,19 +142,39 @@ export default function FinancePage() {
           <div className="space-y-4">
              {closures.map(c => (
               <div key={c.id} className="bg-card p-6 rounded-3xl border animate-pop">
-                <div className="flex justify-between items-center mb-4">
+                <div className="flex justify-between items-start mb-4">
                   <span className="text-[10px] opacity-40 capitalize font-black">
                     {c.closureDate?.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'short' })}
                   </span>
-                  <span className="text-xl text-primary font-black">${c.netTotal.toLocaleString('es-AR')}</span>
+                  <div className='text-right'>
+                    <p className="text-[9px] opacity-60 font-black">NETO DEL TURNO</p>
+                    <p className="text-xl text-primary font-black">${c.neto.toLocaleString('es-AR')}</p>
+                  </div>
                 </div>
-                <div className="flex gap-4 text-[9px] opacity-60 font-black">
-                  <span>VENTAS: {c.transactionCount}</span>
-                  <span>💵 ${c.cashTotal.toLocaleString('es-AR')}</span>
-                  <span>📱 ${c.transferTotal.toLocaleString('es-AR')}</span>
+                <div className="grid grid-cols-3 gap-4 text-[9px] text-center font-black mb-4">
+                    <div className='bg-slate-100 dark:bg-zinc-800 p-2 rounded-lg'>
+                        <p className='opacity-60'>INGRESOS</p>
+                        <p className='text-green-600 dark:text-lime-500 text-sm'>${c.totalIngresos.toLocaleString('es-AR')}</p>
+                    </div>
+                    <div className='bg-slate-100 dark:bg-zinc-800 p-2 rounded-lg'>
+                        <p className='opacity-60'>EGRESOS</p>
+                        <p className='text-destructive text-sm'>${c.totalEgresos.toLocaleString('es-AR')}</p>
+                    </div>
+                    <div className='bg-slate-100 dark:bg-zinc-800 p-2 rounded-lg'>
+                        <p className='opacity-60'>TRANSACCIONES</p>
+                        <p className='text-blue-600 text-sm'>{c.totalTransacciones}</p>
+                    </div>
+                </div>
+                <div className="flex gap-4 text-[9px] opacity-60 font-black border-t pt-4 mt-4">
+                  <span>BALANCES FINALES:</span>
+                  <span>💵 ${c.balanceEfectivo.toLocaleString('es-AR')}</span>
+                  <span>📱 ${c.balanceTransferencia.toLocaleString('es-AR')}</span>
                 </div>
               </div>
             ))}
+             {closures.length === 0 && (
+                <p className="text-center text-xs opacity-50 font-black py-20">NO HAY CIERRES REGISTRADOS</p>
+              )}
           </div>
         )}
       </section>
