@@ -24,6 +24,7 @@ export type Order = {
   isDelivery: boolean;
   customerPhone?: string;
   deliveryFee?: number;
+  closureId?: string;
 };
 
 export type StockItem = {

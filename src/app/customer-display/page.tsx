@@ -5,11 +5,15 @@ import { Order } from '@/lib/types';
 import { useMemo } from 'react';
 
 export default function CustomerDisplayPage() {
-  const { orders: pendingOrders, completedOrders } = useApp();
+  const { orders: allPending, completedOrders: allCompleted } = useApp();
+
+  const pendingOrders = useMemo(() => {
+    return allPending.filter(o => !o.isDelivery);
+  }, [allPending]);
 
   const completedForDisplay = useMemo(() => {
-    return completedOrders.slice(0, 12);
-  }, [completedOrders]);
+    return allCompleted.filter(o => !o.isDelivery).slice(0, 12);
+  }, [allCompleted]);
 
   return (
     <div className="fixed inset-0 bg-zinc-950 flex flex-col font-body font-black uppercase antialiased">

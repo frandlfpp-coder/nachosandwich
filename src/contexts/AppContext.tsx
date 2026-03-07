@@ -24,6 +24,7 @@ type AppContextType = {
   cartCount: number;
   orders: Order[];
   completedOrders: Order[];
+  completedDeliveriesThisShift: Order[];
   addOrder: (orderData: Omit<Order, 'id' | 'createdAt' | 'localId'>) => void,
   completeOrder: (orderId: string) => void;
   pickupOrder: (orderId: string) => void;
@@ -128,6 +129,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         ...o,
         updatedAt: o.updatedAt?.toDate(),
         createdAt: o.createdAt?.toDate(),
+      }))
+      .sort((a,b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  }, [rawOrders]);
+  
+  const completedDeliveriesThisShift = useMemo(() => {
+    if (!rawOrders) return [];
+    return rawOrders
+      .filter(o => o.isDelivery && o.status === 'completed' && !o.closureId)
+      .map(o => ({
+        ...o,
+        updatedAt: o.updatedAt?.toDate(),
       }))
       .sort((a,b) => (b.updatedAt || 0) - (a.updatedAt || 0));
   }, [rawOrders]);
@@ -247,6 +259,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
+    const ordersToClose = (rawOrders || []).filter(
+      o => (o.status === 'completed' || o.status === 'picked-up') && !o.closureId
+    );
+
     // Calculations based on open transactions for the current shift
     const totalIngresos = openTransactions.filter(t => t.type === 'ingreso').reduce((sum, t) => sum + t.amount, 0);
     const totalEgresos = openTransactions.filter(t => t.type === 'egreso').reduce((sum, t) => sum + t.amount, 0);
@@ -274,6 +290,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       openTransactions.forEach(t => {
         const transRef = doc(firestore, 'locals', firebaseUser.uid, 'transactions', t.id);
         batch.update(transRef, { closureId: closureRef.id });
+      });
+
+      ordersToClose.forEach(o => {
+        const orderRef = doc(firestore, 'locals', firebaseUser.uid, 'orders', o.id);
+        batch.update(orderRef, { closureId: closureRef.id });
       });
       
       await batch.commit();
@@ -376,6 +397,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     cartCount,
     orders: orders || [],
     completedOrders: completedOrders || [],
+    completedDeliveriesThisShift,
     addOrder,
     completeOrder,
     pickupOrder,
