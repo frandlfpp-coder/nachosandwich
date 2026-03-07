@@ -36,8 +36,8 @@ export default function Sidebar() {
   }, [user]);
 
   const handleLocalChange = (value: string) => {
-    if (value === 'nacho1' || value === 'nacho2') {
-      switchLocal(value);
+    if (value === 'nacho1' || value === 'nacho2' || value === 'prueba') {
+      switchLocal(value as 'nacho1' | 'nacho2' | 'prueba');
     }
   };
 
@@ -83,6 +83,7 @@ export default function Sidebar() {
             <SelectContent>
                 <SelectItem value="nacho1">NACHO1</SelectItem>
                 <SelectItem value="nacho2">NACHO2</SelectItem>
+                <SelectItem value="prueba">PRUEBA</SelectItem>
             </SelectContent>
          </Select>
 
@@ -100,5 +101,3 @@ export default function Sidebar() {
     </aside>
   );
 }
-
-    

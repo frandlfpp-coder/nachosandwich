@@ -13,7 +13,7 @@ type AppContextType = {
   user: User | null;
   isUserLoading: boolean;
   logout: () => void;
-  switchLocal: (local: 'nacho1' | 'nacho2') => Promise<void>;
+  switchLocal: (local: 'nacho1' | 'nacho2' | 'prueba') => Promise<void>;
   isSwitchingLocal: boolean;
   products: Product[];
   cart: CartItem[];
@@ -35,6 +35,7 @@ type AppContextType = {
   closeDay: () => void;
   addProduct: (product: Omit<Product, 'id' | 'localId' | 'createdAt' | 'updatedAt'>) => void;
   deleteProduct: (id: string) => void;
+  updateProduct: (id: string, price: number) => void;
   addStockItem: (item: Omit<StockItem, 'id' | 'stock'| 'localId' | 'createdAt' | 'updatedAt'>) => void;
   deleteStockItem: (id: string) => void;
   resetData: () => Promise<void>;
@@ -50,7 +51,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [isSwitchingLocal, setIsSwitchingLocal] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
 
-  const switchLocal = async (local: 'nacho1' | 'nacho2') => {
+  const switchLocal = async (local: 'nacho1' | 'nacho2' | 'prueba') => {
     if (!auth || !firestore) return;
     if (firebaseUser?.email?.startsWith(local)) return;
 
@@ -59,6 +60,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const requiredPasswords: { [key: string]: string } = {
       nacho1: 'ignacio369',
       nacho2: 'ignacio369',
+      prueba: 'ignacio369',
     };
     const password = requiredPasswords[local];
     const email = `${local}@local.com`;
@@ -266,6 +268,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (!firebaseUser) return;
     deleteDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'products', id));
   };
+  
+  const updateProduct = (id: string, price: number) => {
+    if (!firebaseUser) return;
+    updateDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'products', id), { price, updatedAt: serverTimestamp() });
+  }
 
   const addStockItem = (item: Omit<StockItem, 'id' | 'stock'|'localId'|'createdAt'|'updatedAt'>) => {
     if (!firebaseUser) return;
@@ -348,6 +355,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     closeDay,
     addProduct,
     deleteProduct,
+    updateProduct,
     addStockItem,
     deleteStockItem,
     resetData,

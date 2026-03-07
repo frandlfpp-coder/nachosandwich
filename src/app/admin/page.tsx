@@ -8,10 +8,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
-import { Tv, Check } from 'lucide-react';
+import { Tv, Check, Edit } from 'lucide-react';
+import { Product } from '@/lib/types';
 
 export default function AdminPage() {
-  const { products, addProduct, deleteProduct, stockItems, addStockItem, deleteStockItem, completedOrders, pickupOrder, resetData } = useApp();
+  const { products, addProduct, deleteProduct, stockItems, addStockItem, deleteStockItem, completedOrders, pickupOrder, resetData, updateProduct } = useApp();
 
   const [isProductModalOpen, setProductModalOpen] = useState(false);
   const [newProductName, setNewProductName] = useState('');
@@ -22,6 +23,10 @@ export default function AdminPage() {
   const [newStockName, setNewStockName] = useState('');
   const [newStockUnit, setNewStockUnit] = useState('');
   
+  const [isEditModalOpen, setEditModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editedPrice, setEditedPrice] = useState('');
+
   const { toast } = useToast();
 
   const handleSaveProduct = () => {
@@ -47,6 +52,25 @@ export default function AdminPage() {
       toast({title: "Insumo creado"});
     } else {
       toast({variant: "destructive", title: "Datos inválidos"});
+    }
+  };
+
+  const openEditModal = (product: Product) => {
+    setEditingProduct(product);
+    setEditedPrice(product.price.toString());
+    setEditModalOpen(true);
+  };
+
+  const handleUpdateProduct = () => {
+    if (!editingProduct) return;
+    const price = parseFloat(editedPrice);
+    if (!isNaN(price) && price > 0) {
+        updateProduct(editingProduct.id, price);
+        setEditModalOpen(false);
+        setEditingProduct(null);
+        toast({ title: 'Precio actualizado' });
+    } else {
+        toast({ variant: 'destructive', title: 'Precio inválido' });
     }
   };
 
@@ -99,9 +123,14 @@ export default function AdminPage() {
           </div>
           <div className="space-y-2">
             {products.map(p => (
-              <div key={p.id} className="flex justify-between p-4 bg-slate-50 rounded-2xl text-[10px] font-black">
+              <div key={p.id} className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl text-[10px] font-black">
                 <span>{p.emoji} {p.name} - ${p.price}</span>
-                <button onClick={() => deleteProduct(p.id)} className="text-destructive font-black">✕</button>
+                <div className="flex items-center gap-2">
+                    <Button onClick={() => openEditModal(p)} size="icon" variant="ghost" className="h-auto w-auto p-1 text-muted-foreground hover:text-primary">
+                        <Edit className="h-3 w-3" />
+                    </Button>
+                    <button onClick={() => deleteProduct(p.id)} className="text-destructive font-black">✕</button>
+                </div>
               </div>
             ))}
           </div>
@@ -156,6 +185,32 @@ export default function AdminPage() {
           <DialogFooter className="flex gap-4">
             <Button variant="ghost" onClick={() => setStockModalOpen(false)} className="flex-1 py-4 opacity-40 font-black h-auto">ATRÁS</Button>
             <Button onClick={handleSaveStockItem} className="flex-1 bg-primary text-primary-foreground py-4 rounded-2xl font-black h-auto">CREAR</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Product Modal */}
+      <Dialog open={isEditModalOpen} onOpenChange={setEditModalOpen}>
+        <DialogContent className="bg-white w-full max-w-sm rounded-[3.5rem] p-10 animate-pop">
+          <DialogHeader>
+            <DialogTitle className="text-2xl tracking-tighter mb-6 text-center font-black">EDITAR PRECIO</DialogTitle>
+          </DialogHeader>
+          {editingProduct && (
+            <div className="text-center mb-4">
+                <p className="text-2xl">{editingProduct.emoji}</p>
+                <p className="font-black">{editingProduct.name}</p>
+            </div>
+          )}
+          <Input 
+            type="number" 
+            value={editedPrice} 
+            onChange={e => setEditedPrice(e.target.value)} 
+            placeholder="NUEVO PRECIO $" 
+            className="w-full p-4 rounded-xl bg-slate-50 outline-none font-black mb-6 h-auto" 
+          />
+          <DialogFooter className="flex gap-4">
+            <Button variant="ghost" onClick={() => setEditModalOpen(false)} className="flex-1 py-4 opacity-40 font-black h-auto">CANCELAR</Button>
+            <Button onClick={handleUpdateProduct} className="flex-1 bg-primary text-primary-foreground py-4 rounded-2xl font-black h-auto">GUARDAR</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
