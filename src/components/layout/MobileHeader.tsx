@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingCart, ChefHat, Boxes, CircleDollarSign, Settings, LogOut } from 'lucide-react';
+import { ShoppingCart, ChefHat, Boxes, CircleDollarSign, Settings, LogOut, GitBranch } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import {
   Sheet,
@@ -10,9 +10,22 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Button } from '../ui/button';
 import { Zap } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
 
 const navItems = [
@@ -24,9 +37,24 @@ const navItems = [
 ];
 
 export default function MobileHeader() {
-  const { cartCount, logout, user } = useApp();
+  const { cartCount, logout, user, switchLocal } = useApp();
   const [isSheetOpen, setSheetOpen] = useState(false);
+  const [isSwitchLocalOpen, setSwitchLocalOpen] = useState(false);
   const pathname = usePathname();
+
+  const currentLocal = useMemo(() => {
+    if (user?.email) {
+      return user.email.split('@')[0];
+    }
+    return '';
+  }, [user]);
+
+  const handleLocalChange = (value: string) => {
+    if (value === 'nacho1' || value === 'nacho2') {
+      switchLocal(value);
+      setSwitchLocalOpen(false);
+    }
+  };
 
   return (
     <>
@@ -56,18 +84,37 @@ export default function MobileHeader() {
           </SheetContent>
         </Sheet>
       </header>
-       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t p-2 flex justify-around z-40">
+       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t p-1 flex justify-around z-40">
         {navItems.map(item => (
-           <Link key={item.href} href={item.href} className={`flex flex-col items-center justify-center text-center p-2 rounded-lg w-1/5 ${pathname === item.href ? 'text-primary' : 'text-gray-500'}`}>
-              <item.icon className="h-6 w-6 mb-1" />
-              <span className="text-[10px] non-italic font-semibold normal-case tracking-normal">{item.label}</span>
+           <Link key={item.href} href={item.href} className={`flex flex-col items-center justify-center text-center p-2 rounded-lg w-1/6 ${pathname === item.href ? 'text-primary' : 'text-gray-500'}`}>
+              <item.icon className="h-5 w-5 mb-1" />
+              <span className="text-[9px] non-italic font-semibold normal-case tracking-normal">{item.label}</span>
            </Link>
         ))}
-         <button onClick={() => { if (confirm('¿Cerrar sesión?')) logout(); }} className="flex flex-col items-center justify-center text-center p-2 rounded-lg w-1/5 text-gray-500">
-          <LogOut className="h-6 w-6 mb-1" />
-          <span className="text-[10px] non-italic font-semibold normal-case tracking-normal">Salir</span>
+         <button onClick={() => setSwitchLocalOpen(true)} className="flex flex-col items-center justify-center text-center p-2 rounded-lg w-1/6 text-gray-500">
+          <GitBranch className="h-5 w-5 mb-1" />
+          <span className="text-[9px] non-italic font-semibold normal-case tracking-normal">Cambiar</span>
+        </button>
+         <button onClick={() => { if (confirm('¿Cerrar sesión?')) logout(); }} className="flex flex-col items-center justify-center text-center p-2 rounded-lg w-1/6 text-gray-500">
+          <LogOut className="h-5 w-5 mb-1" />
+          <span className="text-[9px] non-italic font-semibold normal-case tracking-normal">Salir</span>
         </button>
       </nav>
+
+      <Dialog open={isSwitchLocalOpen} onOpenChange={setSwitchLocalOpen}>
+        <DialogContent className="bg-white w-full max-w-sm rounded-[3.5rem] p-10 animate-pop">
+          <DialogHeader><DialogTitle className="text-2xl tracking-tighter mb-6 text-center font-black">CAMBIAR DE LOCAL</DialogTitle></DialogHeader>
+          <Select onValueChange={handleLocalChange} value={currentLocal}>
+              <SelectTrigger className="w-full p-5 bg-slate-100 border-2 border-slate-200 rounded-2xl outline-none text-center text-sm focus:border-primary transition-all font-black h-auto">
+                  <SelectValue placeholder="SELECCIONAR LOCAL" />
+              </SelectTrigger>
+              <SelectContent>
+                  <SelectItem value="nacho1">NACHO1</SelectItem>
+                  <SelectItem value="nacho2">NACHO2</SelectItem>
+              </SelectContent>
+          </Select>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

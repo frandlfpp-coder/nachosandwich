@@ -4,19 +4,17 @@ import React, { createContext, useContext, useState, ReactNode, useEffect, useMe
 import { useRouter } from 'next/navigation';
 import { Product, CartItem, Order, StockItem, Transaction, Closure } from '@/lib/types';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, serverTimestamp, increment } from 'firebase/firestore';
-import { signOut } from 'firebase/auth';
+import { collection, doc, serverTimestamp, increment, setDoc } from 'firebase/firestore';
+import { signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, User } from 'firebase/auth';
 import { addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 
-type AppUser = {
-  local: string;
-};
-
 type AppContextType = {
-  user: AppUser | null;
+  user: User | null;
   isUserLoading: boolean;
   logout: () => void;
+  switchLocal: (local: 'nacho1' | 'nacho2') => Promise<void>;
+  isSwitchingLocal: boolean;
   products: Product[];
   cart: CartItem[];
   addToCart: (product: Product) => void;
@@ -46,21 +44,56 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
   const { toast } = useToast();
 
-  const user: AppUser | null = useMemo(() => {
-    if (firebaseUser && firebaseUser.email) {
-      const localName = firebaseUser.email.split('@')[0];
-      return { local: localName };
-    }
-    return null;
-  }, [firebaseUser]);
-
+  const [isSwitchingLocal, setIsSwitchingLocal] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
+
+  const switchLocal = async (local: 'nacho1' | 'nacho2') => {
+    if (!auth || !firestore) return;
+    if (firebaseUser?.email?.startsWith(local)) return;
+
+    setIsSwitchingLocal(true);
+
+    const requiredPasswords: { [key: string]: string } = {
+      nacho1: 'ignacio369',
+      nacho2: '1234',
+    };
+    const password = requiredPasswords[local];
+    const email = `${local}@local.com`;
+
+    try {
+      await signOut(auth);
+      await signInWithEmailAndPassword(auth, email, password);
+      toast({ title: `Cambiado a ${local.toUpperCase()}` });
+    } catch (signInError: any) {
+      if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/invalid-credential') {
+        try {
+          const { user: newUser } = await createUserWithEmailAndPassword(auth, email, password);
+          await setDoc(doc(firestore, 'locals', newUser.uid), {
+              id: newUser.uid,
+              email: email,
+              createdAt: serverTimestamp(),
+          });
+          toast({ title: `¡Bienvenido a ${local.toUpperCase()}!`, description: 'Hemos creado una nueva cuenta para tu local.' });
+        } catch (signUpError: any) {
+            toast({ variant: "destructive", title: 'Error al Registrar', description: signUpError.message });
+        }
+      } else {
+        toast({ variant: "destructive", title: 'Error de Autenticación', description: signInError.message });
+      }
+    } finally {
+        setIsSwitchingLocal(false);
+    }
+  };
   
   const logout = () => {
-    signOut(auth).then(() => {
-      router.push('/');
-    });
+    signOut(auth);
   };
+
+  useEffect(() => {
+    if (!firebaseUser) {
+        clearCart();
+    }
+  }, [firebaseUser])
 
   // Data fetching
   const productsQuery = useMemoFirebase(() => firebaseUser ? collection(firestore, 'locals', firebaseUser.uid, 'products') : null, [firestore, firebaseUser]);
@@ -223,9 +256,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const value = {
-    user,
+    user: firebaseUser,
     isUserLoading,
     logout,
+    switchLocal,
+    isSwitchingLocal,
     products: products || [],
     cart,
     addToCart,
