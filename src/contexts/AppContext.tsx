@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect, useMe
 import { useRouter } from 'next/navigation';
 import { Product, CartItem, Order, StockItem, Transaction, Closure } from '@/lib/types';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, serverTimestamp, increment, setDoc } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, increment, setDoc, getDocs, writeBatch } from 'firebase/firestore';
 import { signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, User } from 'firebase/auth';
 import { addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
@@ -37,6 +37,7 @@ type AppContextType = {
   deleteProduct: (id: string) => void;
   addStockItem: (item: Omit<StockItem, 'id' | 'stock'| 'localId' | 'createdAt' | 'updatedAt'>) => void;
   deleteStockItem: (id: string) => void;
+  resetData: () => Promise<void>;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -179,13 +180,21 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   // Data mutations
   const addOrder = (orderData: Omit<Order, 'id' | 'createdAt' | 'localId'>) => {
     if (!firebaseUser) return;
-    const newOrder = {
-      ...orderData,
-      isDelivery: orderData.isDelivery || false,
+    const newOrder: any = {
       localId: firebaseUser.uid,
       createdAt: serverTimestamp(),
       status: 'pending',
+      customerName: orderData.customerName,
+      items: orderData.items,
+      orderNumber: orderData.orderNumber,
+      isDelivery: orderData.isDelivery,
     };
+
+    if (orderData.isDelivery) {
+        newOrder.customerPhone = orderData.customerPhone;
+        newOrder.deliveryFee = orderData.deliveryFee;
+    }
+
     addDocumentNonBlocking(collection(firestore, 'locals', firebaseUser.uid, 'orders'), newOrder);
   };
 
@@ -275,6 +284,44 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     deleteDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'stockItems', id));
   };
 
+  const resetData = async () => {
+    if (!firebaseUser || !firestore) {
+        toast({ variant: "destructive", title: "No estás autenticado." });
+        return;
+    }
+
+    if (!confirm("¿ESTÁS SEGURO? Esta acción borrará TODOS los productos, insumos, pedidos, transacciones y cierres del local actual. Esta acción no se puede deshacer.")) {
+        return;
+    }
+
+    setIsSwitchingLocal(true); // Reuse loading state to show a spinner
+    toast({ title: "Borrando datos, por favor espera..." });
+
+    const localId = firebaseUser.uid;
+    const collectionsToDelete = ['products', 'stockItems', 'orders', 'transactions', 'closures'];
+
+    try {
+        for (const collectionName of collectionsToDelete) {
+            const collectionRef = collection(firestore, 'locals', localId, collectionName);
+            const snapshot = await getDocs(collectionRef);
+            
+            if (snapshot.empty) continue;
+
+            const batch = writeBatch(firestore);
+            snapshot.docs.forEach(docSnapshot => {
+                batch.delete(docSnapshot.ref);
+            });
+            await batch.commit();
+        }
+        toast({ title: "¡Datos de prueba borrados con éxito!" });
+    } catch (error: any) {
+        console.error("Error al borrar datos:", error);
+        toast({ variant: "destructive", title: "Error al borrar los datos", description: error.message });
+    } finally {
+        setIsSwitchingLocal(false);
+    }
+  };
+
   const value = {
     user: firebaseUser,
     isUserLoading,
@@ -303,6 +350,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     deleteProduct,
     addStockItem,
     deleteStockItem,
+    resetData,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

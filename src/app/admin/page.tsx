@@ -11,7 +11,7 @@ import Link from 'next/link';
 import { Tv, Check } from 'lucide-react';
 
 export default function AdminPage() {
-  const { products, addProduct, deleteProduct, stockItems, addStockItem, deleteStockItem, completedOrders, pickupOrder } = useApp();
+  const { products, addProduct, deleteProduct, stockItems, addStockItem, deleteStockItem, completedOrders, pickupOrder, resetData } = useApp();
 
   const [isProductModalOpen, setProductModalOpen] = useState(false);
   const [newProductName, setNewProductName] = useState('');
@@ -122,6 +122,16 @@ export default function AdminPage() {
           </div>
         </div>
       </section>
+
+      <div className="bg-white rounded-[3rem] p-8 border-2 border-destructive/50 mt-8">
+        <h2 className="text-2xl font-black mb-4 text-destructive">ZONA PELIGROSA</h2>
+        <p className="text-xs opacity-70 font-black mb-6 normal-case" style={{fontStyle: 'normal'}}>
+            Esta acción es irreversible. Al presionar el botón se borrarán todos los productos, pedidos, stock y datos financieros únicamente del local que tengas seleccionado.
+        </p>
+        <Button onClick={resetData} variant="destructive" className="w-full h-auto py-4 text-xs font-black">
+            BORRAR TODOS LOS DATOS DE ESTE LOCAL
+        </Button>
+      </div>
 
       {/* Product Modal */}
       <Dialog open={isProductModalOpen} onOpenChange={setProductModalOpen}>
