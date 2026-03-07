@@ -79,16 +79,6 @@ export default function DashboardPage() {
       type: 'ingreso',
     });
 
-    // If it's a delivery, add an expense transaction for the delivery fee
-    if (isDelivery) {
-        addTransaction({
-            concept: `PAGO DELIVERY: ORDEN #${orderNumber}`,
-            amount: parsedDeliveryFee,
-            paymentMethod: 'Efectivo',
-            type: 'egreso',
-        });
-    }
-
     clearCart();
     setCheckoutOpen(false);
     setCustomerName('');

@@ -15,7 +15,8 @@ export default function DeliveryPage() {
   }, [orders]);
 
   const calculateOrderTotal = (order: Order) => {
-    return order.items.reduce((total, item) => total + item.price * item.qty, 0);
+    const itemsTotal = order.items.reduce((total, item) => total + item.price * item.qty, 0);
+    return itemsTotal + (order.deliveryFee || 0);
   }
 
   const totalToPayDriver = useMemo(() => {
