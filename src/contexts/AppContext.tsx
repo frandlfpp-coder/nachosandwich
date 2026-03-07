@@ -251,7 +251,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       toast({ variant: 'destructive', title: 'Error de autenticación' });
       return;
     }
-    if (openTransactions.length === 0) {
+    if (openTransactions.length === 0 && completedDeliveriesThisShift.length === 0) {
       toast({ title: 'No hay movimientos para cerrar.' });
       return;
     }
@@ -262,8 +262,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const ordersToClose = (rawOrders || []).filter(
       o => (o.status === 'completed' || o.status === 'picked-up') && !o.closureId
     );
+    
+    const totalDeliveryFees = ordersToClose
+      .filter(o => o.isDelivery && o.deliveryFee)
+      .reduce((sum, o) => sum + (o.deliveryFee || 0), 0);
 
-    // Calculations based on open transactions for the current shift
     const totalIngresos = openTransactions.filter(t => t.type === 'ingreso').reduce((sum, t) => sum + t.amount, 0);
     const totalEgresos = openTransactions.filter(t => t.type === 'egreso').reduce((sum, t) => sum + t.amount, 0);
     const neto = totalIngresos - totalEgresos;
@@ -279,6 +282,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       balanceEfectivo,
       balanceTransferencia,
       totalTransacciones: openTransactions.length,
+      totalDeliveryFees,
     };
 
     try {

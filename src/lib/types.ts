@@ -58,4 +58,5 @@ export type Closure = {
   balanceEfectivo: number;
   balanceTransferencia: number;
   totalTransacciones: number;
+  totalDeliveryFees: number;
 };

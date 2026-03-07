@@ -16,6 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { startOfWeek, endOfWeek, isWithinInterval } from 'date-fns';
+import { Bike } from 'lucide-react';
 
 export default function FinancePage() {
   const { transactions, closures, addTransaction, closeDay } = useApp();
@@ -54,9 +55,8 @@ export default function FinancePage() {
     closeDay();
   };
   
-  // Weekly report calculations
-  const { weeklyClosures, weeklyIngresos, weeklyEgresos } = useMemo(() => {
-    if (!closures) return { weeklyClosures: [], weeklyIngresos: 0, weeklyEgresos: 0 };
+  const { weeklyIngresos, weeklyEgresos, weeklyDeliveryFees } = useMemo(() => {
+    if (!closures) return { weeklyIngresos: 0, weeklyEgresos: 0, weeklyDeliveryFees: 0 };
     
     const now = new Date();
     const start = startOfWeek(now, { weekStartsOn: 1 });
@@ -68,8 +68,9 @@ export default function FinancePage() {
     
     const weeklyIngresos = weeklyClosures.reduce((sum, c) => sum + (c.totalIngresos || 0), 0);
     const weeklyEgresos = weeklyClosures.reduce((sum, c) => sum + (c.totalEgresos || 0), 0);
+    const weeklyDeliveryFees = weeklyClosures.reduce((sum, c) => sum + (c.totalDeliveryFees || 0), 0);
     
-    return { weeklyClosures, weeklyIngresos, weeklyEgresos };
+    return { weeklyIngresos, weeklyEgresos, weeklyDeliveryFees };
   }, [closures]);
 
 
@@ -124,7 +125,7 @@ export default function FinancePage() {
         
         {mode === 'semanal' && (
           <div id="finance-weekly">
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                <div className="bg-card text-card-foreground p-8 rounded-[2.5rem] border">
                 <p className="text-[10px] opacity-40 mb-2 font-black">INGRESOS TOTALES (SEMANAL)</p>
                 <h3 className="text-4xl tracking-tighter text-green-600 font-black">${weeklyIngresos.toLocaleString('es-AR')}</h3>
@@ -132,6 +133,10 @@ export default function FinancePage() {
               <div className="bg-card text-card-foreground p-8 rounded-[2.5rem] border">
                 <p className="text-[10px] opacity-40 mb-2 font-black">EGRESOS TOTALES (SEMANAL)</p>
                 <h3 className="text-4xl tracking-tighter text-destructive font-black">${weeklyEgresos.toLocaleString('es-AR')}</h3>
+              </div>
+              <div className="bg-card text-card-foreground p-8 rounded-[2.5rem] border">
+                <p className="text-[10px] opacity-40 mb-2 font-black">PAGOS DELIVERY (SEMANAL)</p>
+                <h3 className="text-4xl tracking-tighter text-blue-600 font-black">${weeklyDeliveryFees.toLocaleString('es-AR')}</h3>
               </div>
              </div>
              <p className='text-center text-xs opacity-50 font-black mt-12'>Mostrando reportes para la semana actual. Los cierres pasados se pueden ver en "Historial de Cierres".</p>
@@ -165,10 +170,17 @@ export default function FinancePage() {
                         <p className='text-blue-600 text-sm'>{c.totalTransacciones || 0}</p>
                     </div>
                 </div>
-                <div className="flex gap-4 text-[9px] opacity-60 font-black border-t pt-4 mt-4">
-                  <span>BALANCES FINALES:</span>
-                  <span>💵 ${(c.balanceEfectivo || 0).toLocaleString('es-AR')}</span>
-                  <span>📱 ${(c.balanceTransferencia || 0).toLocaleString('es-AR')}</span>
+                <div className="flex gap-4 text-[9px] opacity-60 font-black border-t pt-4 mt-4 flex-wrap">
+                  <span className="font-bold">BALANCES FINALES:</span>
+                  <span>💵 Efectivo: ${(c.balanceEfectivo || 0).toLocaleString('es-AR')}</span>
+                  <span>📱 Transfe: ${(c.balanceTransferencia || 0).toLocaleString('es-AR')}</span>
+                </div>
+                 <div className="flex gap-4 text-[9px] opacity-60 font-black border-t pt-2 mt-2 flex-wrap">
+                    <span className="font-bold">A PAGAR:</span>
+                    <span className="text-blue-600 flex items-center gap-1">
+                        <Bike className="w-3 h-3" /> 
+                        Delivery: ${(c.totalDeliveryFees || 0).toLocaleString('es-AR')}
+                    </span>
                 </div>
               </div>
             ))}
