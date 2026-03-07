@@ -20,8 +20,10 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  // isUserLoading and firebaseUser are used to show loading on initial page load or if already logged in.
   const { auth, firestore, user: firebaseUser, isUserLoading } = useFirebase();
 
+  // This effect handles redirecting an already logged-in user.
   useEffect(() => {
     if (!isUserLoading && firebaseUser) {
       router.push('/dashboard');
@@ -41,46 +43,58 @@ export default function LoginPage() {
     };
 
     const passwordForLocal = requiredPasswords[selectedLocal];
+    const email = `${selectedLocal}@local.com`;
+    
     if (!passwordForLocal) {
         toast({ title: 'Error', description: 'Local no válido.', variant: 'destructive' });
         setIsLoading(false);
         return;
     }
-    
-    const email = `${selectedLocal}@local.com`;
 
     try {
       await signInWithEmailAndPassword(auth, email, passwordForLocal);
       toast({ title: '¡Bienvenido de vuelta!' });
-    } catch (error: any) {
-      if (error.code === 'auth/user-not-found') {
+      // On success, we don't set isLoading to false. The loading screen will persist
+      // until the useEffect hook redirects, preventing a UI flicker.
+    } catch (signInError: any) {
+      if (signInError.code === 'auth/user-not-found') {
+        // If user doesn't exist, try to create a new one.
         try {
           const { user: newUser } = await createUserWithEmailAndPassword(auth, email, passwordForLocal);
-          const localDocRef = doc(firestore, 'locals', newUser.uid);
           
-          await setDoc(localDocRef, {
+          await setDoc(doc(firestore, 'locals', newUser.uid), {
               id: newUser.uid,
               email: email,
               createdAt: serverTimestamp(),
           });
           
           toast({ title: '¡Cuenta Creada!', description: 'Hemos creado una nueva cuenta para tu local.' });
-        } catch (creationError: any) {
-          toast({ title: 'Error de Creación', description: `No se pudo crear la cuenta. ${creationError.message}`, variant: 'destructive' });
-          setIsLoading(false);
+          // Let the useEffect hook handle redirection.
+        } catch (signUpError: any) {
+          // This catches errors from both createUserWithEmailAndPassword and setDoc.
+          toast({
+            variant: "destructive",
+            title: 'Error al Registrar',
+            description: `No se pudo crear la cuenta nueva. ${signUpError.message}`,
+          });
+          setIsLoading(false); // IMPORTANT: Reset loading state on failure.
         }
-      } else if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
-          toast({ title: 'Error', description: 'Hubo un problema de autenticación. Contacta a soporte si el problema persiste.', variant: 'destructive' });
-          setIsLoading(false); 
-      }
-      else {
-        toast({ title: 'Error de Autenticación', description: `Ocurrió un error inesperado: ${error.message}`, variant: 'destructive' });
-        setIsLoading(false);
+      } else {
+        // Handle all other sign-in errors (e.g., wrong password).
+        toast({
+          variant: "destructive",
+          title: 'Error de Autenticación',
+          description: "La contraseña es incorrecta o ha ocurrido un problema.",
+        });
+        setIsLoading(false); // IMPORTANT: Reset loading state on failure.
       }
     }
-    // No set isLoading to false here on success, the loading screen will persist until redirect.
   };
   
+  // Show loading screen if:
+  // 1. We are checking the initial auth state (`isUserLoading`).
+  // 2. A login attempt is in progress (`isLoading`).
+  // 3. The user has successfully logged in (`firebaseUser`) and we are waiting for redirect.
   if (isUserLoading || isLoading || firebaseUser) {
     return (
       <div className="fixed inset-0 z-[9999] bg-zinc-950 flex flex-col items-center justify-center p-6 text-center">
