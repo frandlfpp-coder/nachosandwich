@@ -53,7 +53,7 @@ export default function DashboardPage() {
     }
 
     const name = customerName.trim().toUpperCase() || "SIN NOMBRE";
-    const orderNumber = Math.floor(Math.random() * 90) + 10;
+    const orderNumber = Math.floor(Math.random() * 9000) + 1000;
     
     // Create a new order
     addOrder({
@@ -97,7 +97,7 @@ export default function DashboardPage() {
     <div className="w-full lg:w-[400px] bg-white rounded-[3rem] shadow-xl border border-slate-100 flex flex-col overflow-hidden lg:h-full">
       <div className="p-8 bg-slate-50 border-b flex justify-between items-center">
         <h2 className="text-sm tracking-widest opacity-60">TU PEDIDO</h2>
-        <Button onClick={clearCart} variant="link" className="text-xs text-red-500 underline font-black p-0 h-auto">VACIAR</Button>
+        <Button onClick={clearCart} variant="link" className="text-xs text-destructive underline font-black p-0 h-auto">VACIAR</Button>
       </div>
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
         {cart.length === 0 ? (
@@ -107,12 +107,12 @@ export default function DashboardPage() {
             <div key={item.id} className="flex items-center gap-4 bg-slate-50 p-4 rounded-3xl animate-pop border border-slate-100">
               <div className="flex-1">
                 <h4 className="text-[10px] leading-tight font-black">{item.name}</h4>
-                <span className="text-lime-600 font-bold">${(item.price * item.qty).toLocaleString('es-AR')}</span>
+                <span className="text-primary font-bold">${(item.price * item.qty).toLocaleString('es-AR')}</span>
               </div>
               <div className="flex items-center gap-3 bg-white px-3 py-1 rounded-xl border">
-                <Button onClick={() => updateCartQty(item.id, -1)} variant="ghost" className="font-black px-2 text-red-500 h-auto w-auto p-0 text-lg hover:bg-transparent">-</Button>
+                <Button onClick={() => updateCartQty(item.id, -1)} variant="ghost" className="font-black px-2 text-destructive h-auto w-auto p-0 text-lg hover:bg-transparent">-</Button>
                 <span className="text-xs font-black w-4 text-center">{item.qty}</span>
-                <Button onClick={() => updateCartQty(item.id, 1)} variant="ghost" className="font-black px-2 text-lime-600 h-auto w-auto p-0 text-lg hover:bg-transparent">+</Button>
+                <Button onClick={() => updateCartQty(item.id, 1)} variant="ghost" className="font-black px-2 text-primary h-auto w-auto p-0 text-lg hover:bg-transparent">+</Button>
               </div>
             </div>
           ))
@@ -121,7 +121,7 @@ export default function DashboardPage() {
       <div className="p-8 bg-white border-t space-y-6">
         <div className="flex justify-between items-end">
           <span className="text-[10px] opacity-40 font-black">TOTAL</span>
-          <span className="text-5xl tracking-tighter text-lime-600 font-black">${cartTotal.toLocaleString('es-AR')}</span>
+          <span className="text-5xl tracking-tighter text-primary font-black">${cartTotal.toLocaleString('es-AR')}</span>
         </div>
         <Button onClick={() => cart.length > 0 ? setCheckoutOpen(true) : toast({ title: 'CARRITO VACÍO' })} className="w-full bg-primary text-primary-foreground py-6 rounded-3xl text-xl shadow-xl active:scale-95 transition-all font-black h-auto">
           COBRAR
@@ -147,7 +147,7 @@ export default function DashboardPage() {
               <div key={p.id} onClick={() => handleAddToCart(p)} className="product-card bg-white p-6 rounded-[2.5rem] border border-slate-100 flex flex-col items-center text-center cursor-pointer shadow-sm">
                 <span className="text-4xl mb-3">{p.emoji}</span>
                 <h3 className="text-[9px] h-8 leading-tight mb-2 font-black">{p.name}</h3>
-                <p className="text-lime-600 font-bold">${p.price.toLocaleString('es-AR')}</p>
+                <p className="text-primary font-bold">${p.price.toLocaleString('es-AR')}</p>
               </div>
             ))}
           </div>
@@ -157,7 +157,7 @@ export default function DashboardPage() {
             <div className="flex justify-between items-center">
                 <div className="flex flex-col">
                     <span className="text-xs opacity-60">{cartCount} items</span>
-                    <span className="text-2xl font-black text-lime-600">${cartTotal.toLocaleString('es-AR')}</span>
+                    <span className="text-2xl font-black text-primary">${cartTotal.toLocaleString('es-AR')}</span>
                 </div>
                 <Button onClick={() => cart.length > 0 ? setCheckoutOpen(true) : toast({ title: 'CARRITO VACÍO' })} className="bg-primary text-primary-foreground py-4 px-8 rounded-2xl text-lg shadow-xl active:scale-95 transition-all font-black h-auto">
                   COBRAR
@@ -200,5 +200,3 @@ export default function DashboardPage() {
     </AppShell>
   );
 }
-
-    

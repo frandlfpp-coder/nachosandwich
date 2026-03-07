@@ -62,11 +62,11 @@ export default function DeliveryPage() {
                 <div className="grid grid-cols-2 gap-4 mb-8 text-center">
                     <div className="bg-slate-50 p-4 rounded-2xl">
                         <p className="text-[10px] opacity-40 font-black">COBRAR AL CLIENTE</p>
-                        <p className="text-lg font-black text-lime-600">${calculateOrderTotal(o).toLocaleString('es-AR')}</p>
+                        <p className="text-lg font-black text-primary">${calculateOrderTotal(o).toLocaleString('es-AR')}</p>
                     </div>
                      <div className="bg-slate-50 p-4 rounded-2xl">
                         <p className="text-[10px] opacity-40 font-black">PAGAR AL DELIVERY</p>
-                        <p className="text-lg font-black text-red-500">${o.deliveryFee?.toLocaleString('es-AR') || 0}</p>
+                        <p className="text-lg font-black text-destructive">${o.deliveryFee?.toLocaleString('es-AR') || 0}</p>
                     </div>
                 </div>
 

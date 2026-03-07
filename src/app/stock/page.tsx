@@ -21,11 +21,11 @@ export default function StockPage() {
                   <span className="text-[8px] opacity-40 font-black">{i.unit}</span>
                 </div>
                 <div className="flex items-center bg-white rounded-2xl border px-2 gap-4">
-                  <Button onClick={() => updateStock(i.id, -1)} variant="ghost" className="text-red-500 px-2 font-black text-xl h-auto hover:bg-transparent">-</Button>
-                  <span className={cn("text-lg font-black w-8 text-center", i.stock < 5 ? 'text-red-500 animate-pulse' : 'text-lime-600')}>
+                  <Button onClick={() => updateStock(i.id, -1)} variant="ghost" className="text-destructive px-2 font-black text-xl h-auto hover:bg-transparent">-</Button>
+                  <span className={cn("text-lg font-black w-8 text-center", i.stock < 5 ? 'text-destructive animate-pulse' : 'text-primary')}>
                     {i.stock}
                   </span>
-                  <Button onClick={() => updateStock(i.id, 1)} variant="ghost" className="text-lime-600 px-2 font-black text-xl h-auto hover:bg-transparent">+</Button>
+                  <Button onClick={() => updateStock(i.id, 1)} variant="ghost" className="text-primary px-2 font-black text-xl h-auto hover:bg-transparent">+</Button>
                 </div>
               </div>
             ))}

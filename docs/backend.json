@@ -49,6 +49,10 @@
           "type": "number",
           "description": "Selling price of the product."
         },
+        "emoji": {
+          "type": "string",
+          "description": "Emoji representing the product."
+        },
         "createdAt": {
           "type": "string",
           "description": "Timestamp when the product was created.",
@@ -65,6 +69,7 @@
         "localId",
         "name",
         "price",
+        "emoji",
         "createdAt"
       ]
     },

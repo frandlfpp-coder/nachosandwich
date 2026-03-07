@@ -8,7 +8,7 @@ export default function KitchenDisplayPage() {
 
   return (
     <div className="bg-zinc-900 min-h-screen text-white p-8">
-      <h1 className="text-6xl font-black text-center mb-12 text-lime-400 tracking-tighter">
+      <h1 className="text-6xl font-black text-center mb-12 text-primary tracking-tighter">
         PEDIDOS PENDIENTES
       </h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">

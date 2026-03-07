@@ -16,7 +16,8 @@ export default function AdminPage() {
   const [isProductModalOpen, setProductModalOpen] = useState(false);
   const [newProductName, setNewProductName] = useState('');
   const [newProductPrice, setNewProductPrice] = useState('');
-  
+  const [newProductEmoji, setNewProductEmoji] = useState('');
+
   const [isStockModalOpen, setStockModalOpen] = useState(false);
   const [newStockName, setNewStockName] = useState('');
   const [newStockUnit, setNewStockUnit] = useState('');
@@ -25,10 +26,11 @@ export default function AdminPage() {
 
   const handleSaveProduct = () => {
     const price = parseFloat(newProductPrice);
-    if (newProductName && !isNaN(price)) {
-      addProduct({ name: newProductName.toUpperCase(), price });
+    if (newProductName && !isNaN(price) && newProductEmoji) {
+      addProduct({ name: newProductName.toUpperCase(), price, emoji: newProductEmoji });
       setNewProductName('');
       setNewProductPrice('');
+      setNewProductEmoji('');
       setProductModalOpen(false);
       toast({title: "Producto guardado"});
     } else {
@@ -98,8 +100,8 @@ export default function AdminPage() {
           <div className="space-y-2">
             {products.map(p => (
               <div key={p.id} className="flex justify-between p-4 bg-slate-50 rounded-2xl text-[10px] font-black">
-                <span>{p.name} - ${p.price}</span>
-                <button onClick={() => deleteProduct(p.id)} className="text-red-500 font-black">✕</button>
+                <span>{p.emoji} {p.name} - ${p.price}</span>
+                <button onClick={() => deleteProduct(p.id)} className="text-destructive font-black">✕</button>
               </div>
             ))}
           </div>
@@ -114,7 +116,7 @@ export default function AdminPage() {
             {stockItems.map(i => (
               <div key={i.id} className="flex justify-between p-4 bg-slate-50 rounded-2xl text-[10px] font-black">
                 <span>{i.name} ({i.unit})</span>
-                <button onClick={() => deleteStockItem(i.id)} className="text-red-500 font-black">✕</button>
+                <button onClick={() => deleteStockItem(i.id)} className="text-destructive font-black">✕</button>
               </div>
             ))}
           </div>
@@ -125,6 +127,7 @@ export default function AdminPage() {
       <Dialog open={isProductModalOpen} onOpenChange={setProductModalOpen}>
         <DialogContent className="bg-white w-full max-w-sm rounded-[3.5rem] p-10 animate-pop">
           <DialogHeader><DialogTitle className="text-2xl tracking-tighter mb-6 text-center font-black">NUEVO PRODUCTO</DialogTitle></DialogHeader>
+          <Input value={newProductEmoji} onChange={e => setNewProductEmoji(e.target.value)} placeholder="EMOJI" className="w-full p-4 rounded-xl bg-slate-50 outline-none font-black mb-3 h-auto" />
           <Input value={newProductName} onChange={e => setNewProductName(e.target.value)} placeholder="NOMBRE" className="w-full p-4 rounded-xl bg-slate-50 outline-none uppercase font-black mb-3 h-auto" />
           <Input type="number" value={newProductPrice} onChange={e => setNewProductPrice(e.target.value)} placeholder="PRECIO $" className="w-full p-4 rounded-xl bg-slate-50 outline-none font-black mb-6 h-auto" />
           <DialogFooter className="flex gap-4">
@@ -142,7 +145,7 @@ export default function AdminPage() {
           <Input value={newStockUnit} onChange={e => setNewStockUnit(e.target.value)} placeholder="UNIDAD (KG, UNID)" className="w-full p-4 rounded-xl bg-slate-50 outline-none font-black mb-6 h-auto" />
           <DialogFooter className="flex gap-4">
             <Button variant="ghost" onClick={() => setStockModalOpen(false)} className="flex-1 py-4 opacity-40 font-black h-auto">ATRÁS</Button>
-            <Button onClick={handleSaveStockItem} className="flex-1 bg-zinc-950 text-lime-400 py-4 rounded-2xl font-black h-auto">CREAR</Button>
+            <Button onClick={handleSaveStockItem} className="flex-1 bg-primary text-primary-foreground py-4 rounded-2xl font-black h-auto">CREAR</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

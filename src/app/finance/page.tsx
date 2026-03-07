@@ -72,21 +72,21 @@ export default function FinancePage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100">
                 <p className="text-[10px] opacity-40 mb-2 font-black">EFECTIVO (HISTÓRICO)</p>
-                <h3 className="text-4xl tracking-tighter text-green-600 font-black">${cash.toLocaleString('es-AR')}</h3>
+                <h3 className="text-4xl tracking-tighter text-primary font-black">${cash.toLocaleString('es-AR')}</h3>
               </div>
               <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100">
                 <p className="text-[10px] opacity-40 mb-2 font-black">TRANSFERENCIA (HISTÓRICO)</p>
                 <h3 className="text-4xl tracking-tighter text-blue-600 font-black">${trans.toLocaleString('es-AR')}</h3>
               </div>
               <div className="bg-zinc-900 text-white p-8 rounded-[2.5rem] shadow-xl">
-                <p className="text-[10px] text-lime-400 mb-2 font-black">NETO TOTAL (HISTÓRICO)</p>
-                <h3 className="text-4xl tracking-tighter text-lime-500 font-black">${total.toLocaleString('es-AR')}</h3>
+                <p className="text-[10px] text-primary mb-2 font-black">NETO TOTAL (HISTÓRICO)</p>
+                <h3 className="text-4xl tracking-tighter text-primary font-black">${total.toLocaleString('es-AR')}</h3>
               </div>
             </div>
             <div className="flex justify-end gap-4 mb-8">
               <Button onClick={() => openFinanceModal('ingreso')} className="bg-white border-2 border-slate-100 px-6 py-3 rounded-2xl text-[10px] font-black h-auto">+ ENTRADA</Button>
-              <Button onClick={() => openFinanceModal('egreso')} className="bg-white border-2 border-slate-100 px-6 py-3 rounded-2xl text-[10px] text-red-500 font-black h-auto">- SALIDA</Button>
-              <Button onClick={handleCloseDay} className="bg-black text-lime-400 px-8 py-3 rounded-2xl text-[10px] border border-lime-500 font-black shadow-lg h-auto">CERRAR CAJA</Button>
+              <Button onClick={() => openFinanceModal('egreso')} className="bg-white border-2 border-slate-100 px-6 py-3 rounded-2xl text-[10px] text-destructive font-black h-auto">- SALIDA</Button>
+              <Button onClick={handleCloseDay} className="bg-black text-primary px-8 py-3 rounded-2xl text-[10px] border border-primary font-black shadow-lg h-auto">CERRAR CAJA</Button>
             </div>
             <div className="space-y-3">
               {transactions.map(t => (
@@ -95,7 +95,7 @@ export default function FinancePage() {
                     <span>{t.concept}</span>
                     <span className='text-[8px] opacity-50 font-normal normal-case'>{t.createdAt?.toLocaleString('es-AR')}</span>
                   </div>
-                  <span className={t.type === 'ingreso' ? 'text-lime-600' : 'text-red-600'}>
+                  <span className={t.type === 'ingreso' ? 'text-primary' : 'text-destructive'}>
                     {t.type === 'ingreso' ? '+' : '-'}${t.amount.toLocaleString('es-AR')}
                   </span>
                 </div>
@@ -112,7 +112,7 @@ export default function FinancePage() {
                   <span className="text-[10px] opacity-40 capitalize font-black">
                     {c.closureDate?.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'short' })}
                   </span>
-                  <span className="text-xl text-lime-600 font-black">${c.netTotal.toLocaleString('es-AR')}</span>
+                  <span className="text-xl text-primary font-black">${c.netTotal.toLocaleString('es-AR')}</span>
                 </div>
                 <div className="flex gap-4 text-[9px] opacity-60 font-black">
                   <span>VENTAS: {c.transactionCount}</span>

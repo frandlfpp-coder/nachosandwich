@@ -33,7 +33,7 @@ type AppContextType = {
   closures: Closure[];
   addTransaction: (transaction: Omit<Transaction, 'id' | 'createdAt' | 'localId'>) => void;
   closeDay: () => void;
-  addProduct: (product: Omit<Product, 'id' | 'emoji' | 'localId' | 'createdAt' | 'updatedAt'>) => void;
+  addProduct: (product: Omit<Product, 'id' | 'localId' | 'createdAt' | 'updatedAt'>) => void;
   deleteProduct: (id: string) => void;
   addStockItem: (item: Omit<StockItem, 'id' | 'stock'| 'localId' | 'createdAt' | 'updatedAt'>) => void;
   deleteStockItem: (id: string) => void;
@@ -242,12 +242,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     toast({title: "Caja cerrada con éxito"});
   };
 
-  const addProduct = (product: Omit<Product, 'id' | 'emoji' | 'localId' | 'createdAt' | 'updatedAt'>) => {
+  const addProduct = (product: Omit<Product, 'id' | 'localId' | 'createdAt' | 'updatedAt'>) => {
     if (!firebaseUser) return;
     const newProduct = {
       ...product,
       localId: firebaseUser.uid,
-      emoji: '🍔', // Default emoji
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
@@ -316,5 +315,3 @@ export const useApp = () => {
   }
   return context;
 };
-
-    
