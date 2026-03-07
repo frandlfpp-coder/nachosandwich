@@ -36,7 +36,7 @@ export default function DeliveryPage() {
         ) : (
           <div id="delivery-grid" className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
             {deliveryOrders.map(o => (
-              <div key={o.id} className="bg-white rounded-[3rem] p-8 border border-slate-100 shadow-xl animate-pop">
+              <div key={o.id} className="bg-card text-card-foreground rounded-[3rem] p-8 border shadow-xl animate-pop">
                 <div className="flex justify-between items-start mb-6">
                   <div>
                     <h3 className="text-xl font-black">{o.customerName}</h3>
@@ -54,23 +54,23 @@ export default function DeliveryPage() {
 
                 <div className="mb-6">
                     <p className="text-[10px] opacity-40 mb-1 font-black">ITEMS</p>
-                    <ul className="text-xs space-y-1 font-black border-l-4 border-slate-100 pl-3">
+                    <ul className="text-xs space-y-1 font-black border-l-4 border-slate-100 dark:border-zinc-800 pl-3">
                         {o.items.map(i => <li key={i.id}>{i.qty}x {i.name}</li>)}
                     </ul>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4 mb-8 text-center">
-                    <div className="bg-slate-50 p-4 rounded-2xl">
+                    <div className="bg-slate-100 dark:bg-zinc-800 p-4 rounded-2xl">
                         <p className="text-[10px] opacity-40 font-black">COBRAR AL CLIENTE</p>
                         <p className="text-lg font-black text-primary">${calculateOrderTotal(o).toLocaleString('es-AR')}</p>
                     </div>
-                     <div className="bg-slate-50 p-4 rounded-2xl">
+                     <div className="bg-slate-100 dark:bg-zinc-800 p-4 rounded-2xl">
                         <p className="text-[10px] opacity-40 font-black">PAGAR AL DELIVERY</p>
                         <p className="text-lg font-black text-destructive">${o.deliveryFee?.toLocaleString('es-AR') || 0}</p>
                     </div>
                 </div>
 
-                <Button onClick={() => completeOrder(o.id)} className="w-full bg-zinc-950 text-white py-4 rounded-2xl text-[10px] font-black h-auto hover:bg-zinc-800">
+                <Button onClick={() => completeOrder(o.id)} className="w-full bg-zinc-950 text-white dark:text-zinc-950 dark:bg-white py-4 rounded-2xl text-[10px] font-black h-auto hover:bg-zinc-800 dark:hover:bg-zinc-200">
                   MARCAR COMO ENTREGADO
                 </Button>
               </div>

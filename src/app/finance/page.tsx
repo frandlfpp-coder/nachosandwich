@@ -70,11 +70,11 @@ export default function FinancePage() {
         {mode === 'hoy' && (
           <div id="finance-today">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100">
+              <div className="bg-card text-card-foreground p-8 rounded-[2.5rem] border">
                 <p className="text-[10px] opacity-40 mb-2 font-black">EFECTIVO (HISTÓRICO)</p>
                 <h3 className="text-4xl tracking-tighter text-primary font-black">${cash.toLocaleString('es-AR')}</h3>
               </div>
-              <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100">
+              <div className="bg-card text-card-foreground p-8 rounded-[2.5rem] border">
                 <p className="text-[10px] opacity-40 mb-2 font-black">TRANSFERENCIA (HISTÓRICO)</p>
                 <h3 className="text-4xl tracking-tighter text-blue-600 font-black">${trans.toLocaleString('es-AR')}</h3>
               </div>
@@ -84,13 +84,13 @@ export default function FinancePage() {
               </div>
             </div>
             <div className="flex justify-end gap-4 mb-8">
-              <Button onClick={() => openFinanceModal('ingreso')} className="bg-white border-2 border-slate-100 px-6 py-3 rounded-2xl text-[10px] font-black h-auto">+ ENTRADA</Button>
-              <Button onClick={() => openFinanceModal('egreso')} className="bg-white border-2 border-slate-100 px-6 py-3 rounded-2xl text-[10px] text-destructive font-black h-auto">- SALIDA</Button>
+              <Button onClick={() => openFinanceModal('ingreso')} className="bg-card border-2 px-6 py-3 rounded-2xl text-[10px] font-black h-auto">+ ENTRADA</Button>
+              <Button onClick={() => openFinanceModal('egreso')} className="bg-card border-2 px-6 py-3 rounded-2xl text-[10px] text-destructive font-black h-auto">- SALIDA</Button>
               <Button onClick={handleCloseDay} className="bg-black text-primary px-8 py-3 rounded-2xl text-[10px] border border-primary font-black shadow-lg h-auto">CERRAR CAJA</Button>
             </div>
             <div className="space-y-3">
               {transactions.map(t => (
-                <div key={t.id} className="flex justify-between p-4 bg-white rounded-2xl border text-[10px] animate-pop font-black">
+                <div key={t.id} className="flex justify-between p-4 bg-card rounded-2xl border text-[10px] animate-pop font-black">
                   <div className='flex flex-col'>
                     <span>{t.concept}</span>
                     <span className='text-[8px] opacity-50 font-normal normal-case'>{t.createdAt?.toLocaleString('es-AR')}</span>
@@ -107,7 +107,7 @@ export default function FinancePage() {
         {mode === 'historial' && (
           <div className="space-y-4">
              {closures.map(c => (
-              <div key={c.id} className="bg-white p-6 rounded-3xl border border-slate-100 animate-pop">
+              <div key={c.id} className="bg-card p-6 rounded-3xl border animate-pop">
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-[10px] opacity-40 capitalize font-black">
                     {c.closureDate?.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'short' })}
@@ -125,7 +125,7 @@ export default function FinancePage() {
         )}
       </section>
       <Dialog open={isModalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="bg-white w-full max-w-sm rounded-[3.5rem] p-10 animate-pop">
+        <DialogContent className="bg-card w-full max-w-sm rounded-[3.5rem] p-10 animate-pop">
           <DialogHeader>
             <DialogTitle className="text-2xl tracking-tighter mb-6 text-center font-black">
               {modalType === 'ingreso' ? 'NUEVA ENTRADA' : 'NUEVA SALIDA'}
@@ -134,11 +134,11 @@ export default function FinancePage() {
           <div className="space-y-4">
             <div>
               <Label htmlFor="concept" className="text-xs non-italic normal-case opacity-70">Concepto</Label>
-              <Input id="concept" value={concept} onChange={e => setConcept(e.target.value)} placeholder="EJ: PAGO PROVEEDOR" className="w-full p-4 rounded-xl bg-slate-50 outline-none uppercase font-black mb-3 h-auto" />
+              <Input id="concept" value={concept} onChange={e => setConcept(e.target.value)} placeholder="EJ: PAGO PROVEEDOR" className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none uppercase font-black mb-3 h-auto" />
             </div>
             <div>
               <Label htmlFor="amount" className="text-xs non-italic normal-case opacity-70">Monto</Label>
-              <Input id="amount" type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="$" className="w-full p-4 rounded-xl bg-slate-50 outline-none font-black h-auto" />
+              <Input id="amount" type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="$" className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black h-auto" />
             </div>
           </div>
           <DialogFooter className="flex gap-4 pt-6">

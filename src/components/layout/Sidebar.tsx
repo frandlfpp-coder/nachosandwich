@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Zap } from 'lucide-react';
+import { Zap, Sun, Moon } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useTheme } from '@/contexts/ThemeContext';
 
 const navItems = [
   { href: '/dashboard', label: 'Ventas' },
@@ -27,6 +28,7 @@ const navItems = [
 export default function Sidebar() {
   const pathname = usePathname();
   const { user, logout, switchLocal } = useApp();
+  const { theme, toggleTheme } = useTheme();
 
   const currentLocal = useMemo(() => {
     if (user?.email) {
@@ -75,7 +77,7 @@ export default function Sidebar() {
           </Button>
         ))}
       </nav>
-      <div className="space-y-4">
+      <div className="space-y-2">
          <Select onValueChange={handleLocalChange} value={currentLocal}>
             <SelectTrigger className="w-full bg-zinc-900 border-zinc-800 focus:ring-primary">
                 <SelectValue placeholder="SELECCIONAR LOCAL" />
@@ -86,17 +88,26 @@ export default function Sidebar() {
                 <SelectItem value="prueba">PRUEBA</SelectItem>
             </SelectContent>
          </Select>
-
-        <Button
-          onClick={() => {
-            if (confirm('¿Cerrar sesión del local actual?')) logout();
-          }}
-          variant="ghost"
-          disabled={!user}
-          className="w-full p-4 text-zinc-500 text-xs hover:text-red-400 font-black h-auto disabled:opacity-50 disabled:hover:text-zinc-500"
-        >
-          Cerrar Sesión
-        </Button>
+         <div className="flex items-center gap-2">
+            <Button
+              onClick={toggleTheme}
+              variant="ghost"
+              className="w-full justify-center p-4 text-zinc-500 text-xs hover:text-white font-black h-auto flex-1"
+            >
+              {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+              <span className="sr-only">Cambiar tema</span>
+            </Button>
+            <Button
+              onClick={() => {
+                if (confirm('¿Cerrar sesión del local actual?')) logout();
+              }}
+              variant="ghost"
+              disabled={!user}
+              className="w-full p-4 text-zinc-500 text-xs hover:text-red-400 font-black h-auto disabled:opacity-50 disabled:hover:text-zinc-500 flex-1"
+            >
+              Cerrar Sesión
+            </Button>
+        </div>
       </div>
     </aside>
   );

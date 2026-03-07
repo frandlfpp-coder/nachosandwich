@@ -4,6 +4,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { AppProvider } from '@/contexts/AppContext';
 import { FirebaseClientProvider } from '@/firebase';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -24,17 +25,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es-AR" className={inter.variable}>
+    <html lang="es-AR" className={inter.variable} suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
       </head>
-      <body className="font-body font-black uppercase italic overflow-x-hidden antialiased">
-        <FirebaseClientProvider>
-          <AppProvider>
-            {children}
-            <Toaster />
-          </AppProvider>
-        </FirebaseClientProvider>
+      <body className="font-body font-black uppercase italic overflow-x-hidden antialiased bg-background text-foreground">
+        <ThemeProvider>
+          <FirebaseClientProvider>
+            <AppProvider>
+              {children}
+              <Toaster />
+            </AppProvider>
+          </FirebaseClientProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

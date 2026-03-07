@@ -99,8 +99,8 @@ export default function DashboardPage() {
   };
 
   const CartComponent = () => (
-    <div className="w-full lg:w-[400px] bg-white rounded-[3rem] shadow-xl border border-slate-100 flex flex-col overflow-hidden lg:h-full">
-      <div className="p-8 bg-slate-50 border-b flex justify-between items-center">
+    <div className="w-full lg:w-[400px] bg-card text-card-foreground rounded-[3rem] shadow-xl border flex flex-col overflow-hidden lg:h-full">
+      <div className="p-8 bg-slate-100 dark:bg-zinc-800/50 border-b flex justify-between items-center">
         <h2 className="text-sm tracking-widest opacity-60">TU PEDIDO</h2>
         <Button onClick={clearCart} variant="link" className="text-xs text-destructive underline font-black p-0 h-auto">VACIAR</Button>
       </div>
@@ -109,12 +109,12 @@ export default function DashboardPage() {
           <div className="py-20 text-center opacity-20 text-xs font-black">CARRITO VACÍO</div>
         ) : (
           cart.map(item => (
-            <div key={item.id} className="flex items-center gap-4 bg-slate-50 p-4 rounded-3xl animate-pop border border-slate-100">
+            <div key={item.id} className="flex items-center gap-4 bg-slate-100 dark:bg-zinc-800 p-4 rounded-3xl animate-pop border">
               <div className="flex-1">
                 <h4 className="text-[10px] leading-tight font-black">{item.name}</h4>
                 <span className="text-primary font-bold">${(item.price * item.qty).toLocaleString('es-AR')}</span>
               </div>
-              <div className="flex items-center gap-3 bg-white px-3 py-1 rounded-xl border">
+              <div className="flex items-center gap-3 bg-background px-3 py-1 rounded-xl border">
                 <Button onClick={() => updateCartQty(item.id, -1)} variant="ghost" className="font-black px-2 text-destructive h-auto w-auto p-0 text-lg hover:bg-transparent">-</Button>
                 <span className="text-xs font-black w-4 text-center">{item.qty}</span>
                 <Button onClick={() => updateCartQty(item.id, 1)} variant="ghost" className="font-black px-2 text-primary h-auto w-auto p-0 text-lg hover:bg-transparent">+</Button>
@@ -123,7 +123,7 @@ export default function DashboardPage() {
           ))
         )}
       </div>
-      <div className="p-8 bg-white border-t space-y-6">
+      <div className="p-8 bg-card border-t space-y-6">
         <div className="flex justify-between items-end">
           <span className="text-[10px] opacity-40 font-black">TOTAL</span>
           <span className="text-5xl tracking-tighter text-primary font-black">${cartTotal.toLocaleString('es-AR')}</span>
@@ -143,13 +143,13 @@ export default function DashboardPage() {
             type="text"
             id="pos-search"
             placeholder="BUSCAR PRODUCTO..."
-            className="w-full p-5 rounded-3xl bg-white border-2 border-slate-100 outline-none focus:border-primary transition-all uppercase font-black h-auto"
+            className="w-full p-5 rounded-3xl bg-card border-2 outline-none focus:border-primary transition-all uppercase font-black h-auto"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
           />
           <div id="pos-grid" className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredProducts.map(p => (
-              <div key={p.id} onClick={() => handleAddToCart(p)} className="product-card bg-white p-6 rounded-[2.5rem] border border-slate-100 flex flex-col items-center text-center cursor-pointer shadow-sm">
+              <div key={p.id} onClick={() => handleAddToCart(p)} className="product-card bg-card text-card-foreground p-6 rounded-[2.5rem] border flex flex-col items-center text-center cursor-pointer shadow-sm">
                 <span className="text-4xl mb-3">{p.emoji}</span>
                 <h3 className="text-[9px] h-8 leading-tight mb-2 font-black">{p.name}</h3>
                 <p className="text-primary font-bold">${p.price.toLocaleString('es-AR')}</p>
@@ -158,7 +158,7 @@ export default function DashboardPage() {
           </div>
         </div>
         {isMobile ? (
-          <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-sm border-t lg:hidden z-30">
+          <div className="fixed bottom-0 left-0 right-0 p-4 bg-card/80 backdrop-blur-sm border-t lg:hidden z-30">
             <div className="flex justify-between items-center">
                 <div className="flex flex-col">
                     <span className="text-xs opacity-60">{cartCount} items</span>
@@ -175,7 +175,7 @@ export default function DashboardPage() {
       </section>
 
       <Dialog open={isCheckoutOpen} onOpenChange={setCheckoutOpen}>
-        <DialogContent className="bg-white w-full max-w-md rounded-[3.5rem] p-10 animate-pop">
+        <DialogContent className="bg-card w-full max-w-md rounded-[3.5rem] p-10 animate-pop">
           <DialogHeader>
             <DialogTitle className="text-3xl tracking-tighter mb-8 text-center font-black">TERMINAR VENTA</DialogTitle>
           </DialogHeader>
@@ -186,14 +186,14 @@ export default function DashboardPage() {
             </div>
             {isDelivery && (
                 <div className="space-y-3 animate-pop mb-4">
-                    <Input id="check-phone" type="tel" placeholder="NÚMERO DE TELÉFONO" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} className="w-full p-5 rounded-2xl bg-slate-50 outline-none uppercase font-black h-auto" />
-                    <Input id="check-delivery-fee" type="number" placeholder="COSTO ENVÍO" value={deliveryFee} onChange={(e) => setDeliveryFee(e.target.value)} className="w-full p-5 rounded-2xl bg-slate-50 outline-none uppercase font-black h-auto" />
+                    <Input id="check-phone" type="tel" placeholder="NÚMERO DE TELÉFONO" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} className="w-full p-5 rounded-2xl bg-slate-100 dark:bg-zinc-800 outline-none uppercase font-black h-auto" />
+                    <Input id="check-delivery-fee" type="number" placeholder="COSTO ENVÍO" value={deliveryFee} onChange={(e) => setDeliveryFee(e.target.value)} className="w-full p-5 rounded-2xl bg-slate-100 dark:bg-zinc-800 outline-none uppercase font-black h-auto" />
                 </div>
             )}
-            <Input id="check-name" type="text" placeholder="NOMBRE CLIENTE" value={customerName} onChange={(e) => setCustomerName(e.target.value)} className="w-full p-5 rounded-2xl bg-slate-50 outline-none uppercase font-black h-auto" />
+            <Input id="check-name" type="text" placeholder="NOMBRE CLIENTE" value={customerName} onChange={(e) => setCustomerName(e.target.value)} className="w-full p-5 rounded-2xl bg-slate-100 dark:bg-zinc-800 outline-none uppercase font-black h-auto" />
             <div className="flex gap-2">
-              <Button onClick={() => setPayMethod('Efectivo')} className={`flex-1 py-4 rounded-2xl border-2 font-black ${payMethod === 'Efectivo' ? 'bg-lime-100 border-primary' : 'bg-slate-50 border-transparent'}`}>💵 EFECTIVO</Button>
-              <Button onClick={() => setPayMethod('Transferencia')} className={`flex-1 py-4 rounded-2xl border-2 font-black ${payMethod === 'Transferencia' ? 'bg-blue-100 border-blue-500' : 'bg-slate-50 border-transparent'}`}>📱 TRANSFE</Button>
+              <Button onClick={() => setPayMethod('Efectivo')} className={`flex-1 py-4 rounded-2xl border-2 font-black ${payMethod === 'Efectivo' ? 'bg-lime-100 border-primary' : 'bg-slate-100 dark:bg-zinc-800 border-transparent'}`}>💵 EFECTIVO</Button>
+              <Button onClick={() => setPayMethod('Transferencia')} className={`flex-1 py-4 rounded-2xl border-2 font-black ${payMethod === 'Transferencia' ? 'bg-blue-100 border-blue-500' : 'bg-slate-100 dark:bg-zinc-800 border-transparent'}`}>📱 TRANSFE</Button>
             </div>
             <div className="pt-6 flex gap-4">
               <Button onClick={() => setCheckoutOpen(false)} variant="ghost" className="flex-1 py-5 opacity-40 font-black uppercase">ATRÁS</Button>

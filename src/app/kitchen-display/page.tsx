@@ -13,8 +13,8 @@ export default function KitchenDisplayPage() {
       </h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
         {orders.map(order => (
-          <div key={order.id} className="bg-white text-zinc-900 rounded-3xl p-8 flex flex-col animate-pop shadow-2xl">
-            <div className="flex justify-between items-center border-b-2 border-slate-100 pb-4 mb-4">
+          <div key={order.id} className="bg-card text-card-foreground rounded-3xl p-8 flex flex-col animate-pop shadow-2xl">
+            <div className="flex justify-between items-center border-b-2 pb-4 mb-4">
               <span className="text-5xl font-black">#{order.orderNumber}</span>
               <div className="text-right">
                 <span className="text-lg font-bold block">{order.customerName}</span>
