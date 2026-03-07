@@ -180,6 +180,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (!firebaseUser) return;
     const newOrder = {
       ...orderData,
+      isDelivery: orderData.isDelivery || false,
       localId: firebaseUser.uid,
       createdAt: serverTimestamp(),
       status: 'pending',
@@ -307,3 +308,5 @@ export const useApp = () => {
   }
   return context;
 };
+
+    

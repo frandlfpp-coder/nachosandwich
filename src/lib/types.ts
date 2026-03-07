@@ -21,6 +21,9 @@ export type Order = {
   orderNumber: number;
   status: 'pending' | 'completed';
   updatedAt?: any;
+  isDelivery: boolean;
+  customerPhone?: string;
+  deliveryFee?: number;
 };
 
 export type StockItem = {
@@ -52,3 +55,5 @@ export type Closure = {
   netTotal: number;
   transactionCount: number;
 };
+
+    

@@ -3,6 +3,7 @@
 import AppShell from '@/components/layout/AppShell';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
+import { Motorcycle } from 'lucide-react';
 
 export default function KitchenPage() {
   const { orders, completeOrder } = useApp();
@@ -22,11 +23,22 @@ export default function KitchenPage() {
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <h3 className="text-xl font-black">{o.customerName}</h3>
+                   {o.isDelivery && (
+                    <div className="flex items-center gap-2 mt-1 text-sm font-bold text-blue-600 normal-case">
+                        <Motorcycle className="w-4 h-4" />
+                        <span>Delivery</span>
+                    </div>
+                  )}
                 </div>
                 <span className="bg-primary text-primary-foreground text-3xl px-6 py-2 rounded-2xl font-black">
                   #{o.orderNumber}
                 </span>
               </div>
+              {o.isDelivery && o.customerPhone && (
+                <div className="text-xs mb-4 font-semibold text-gray-600 normal-case">
+                    Teléfono: {o.customerPhone}
+                </div>
+              )}
               <ul className="text-xs space-y-2 mb-8 border-l-4 border-primary pl-4 font-black">
                 {o.items.map(i => <li key={i.id}>{i.qty}x {i.name}</li>)}
               </ul>
@@ -40,3 +52,5 @@ export default function KitchenPage() {
     </AppShell>
   );
 }
+
+    

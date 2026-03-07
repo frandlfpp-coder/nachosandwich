@@ -159,6 +159,18 @@
           "items": {
             "type": "string"
           }
+        },
+        "isDelivery": {
+          "type": "boolean",
+          "description": "Flag to indicate if the order is for delivery."
+        },
+        "customerPhone": {
+          "type": "string",
+          "description": "Customer's phone number for delivery orders."
+        },
+        "deliveryFee": {
+          "type": "number",
+          "description": "The fee paid to the delivery driver for the trip."
         }
       },
       "required": [
@@ -168,7 +180,8 @@
         "items",
         "createdAt",
         "orderNumber",
-        "status"
+        "status",
+        "isDelivery"
       ]
     },
     "Transaction": {
@@ -392,3 +405,4 @@
     "reasoning": "The Firestore structure is designed around a clear, hierarchical, and user-centric ownership model, where each 'Local' represents the primary organizational unit and the owner of all its associated operational data. This design strictly adheres to the core principles, especially Authorization Independence and QAPs.\n\n**Authorization Independence:** The central strategy for achieving authorization independence is denormalization. Each `Local` entity is stored at `/locals/{localId}`, where `{localId}` directly corresponds to the `request.auth.uid` of the authenticated manager for that local. All subsequent operational data entities (Products, Stock Items, Orders, Transactions, Closures) are stored as subcollections under their respective parent `local` (e.g., `/locals/{localId}/products/{productId}`). Critically, every document within these subcollections (`Product`, `StockItem`, `Order`, `Transaction`, `Closure`) **MUST** include a `localId` field in its data payload, which explicitly duplicates the `{localId}` from its path. This allows security rules to evaluate access by comparing `request.auth.uid` directly with `resource.data.localId` without needing to perform `get()` operations on parent documents. This prevents rule complexity, avoids breaking atomic operations (like transactions or batched writes that create parent and child documents simultaneously), and enhances debuggability.\n\n**QAPs (Queries as Authorization Primitives):** This structure naturally supports QAPs through structural segregation. All data related to a specific local (products, stock items, orders, etc.) resides within that local's dedicated path, e.g., `/locals/{localId}/products`. Because all documents within a given `/locals/{localId}/...` subtree share the exact same security posture (i.e., they are owned and managed solely by `localId`), any `list` operation performed by the authenticated `localId` on any of these subcollections will inherently only retrieve data to which that user is authorized. The security rules will simply check `request.auth.uid == localId` (or `request.auth.uid == resource.data.localId`) for any read access, ensuring that rules are not used as filters and only authorized data is ever returned. This makes rule writing straightforward and highly performant for all query types.\n\nIn summary, the design provides distinct, self-contained data silos for each business local, enforced by path-based ownership and reinforced by denormalized `localId` fields within documents. This ensures robust security, simplifies rule development, and maximizes scalability and debuggability."
   }
 }
+    

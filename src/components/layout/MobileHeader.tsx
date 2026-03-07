@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingCart, ChefHat, Boxes, CircleDollarSign, Settings, LogOut, GitBranch, Zap } from 'lucide-react';
+import { ShoppingCart, ChefHat, Boxes, CircleDollarSign, Settings, LogOut, GitBranch, Zap, Motorcycle } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import {
   Sheet,
@@ -30,6 +30,7 @@ import { usePathname } from 'next/navigation';
 const navItems = [
   { href: '/dashboard', label: 'Ventas', icon: ShoppingCart },
   { href: '/kitchen', label: 'Cocina', icon: ChefHat },
+  { href: '/delivery', label: 'Delivery', icon: Motorcycle },
   { href: '/stock',label: 'Stock', icon: Boxes },
   { href: '/finance',label: 'Caja', icon: CircleDollarSign },
   { href: '/admin', label: 'Admin', icon: Settings },
@@ -95,16 +96,16 @@ export default function MobileHeader() {
       </header>
        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t p-1 flex justify-around z-40">
         {navItems.map(item => (
-           <Link key={item.href} href={item.href} className={`flex flex-col items-center justify-center text-center p-2 rounded-lg w-1/6 ${pathname === item.href ? 'text-primary' : 'text-gray-500'}`}>
+           <Link key={item.href} href={item.href} className={`flex flex-1 flex-col items-center justify-center text-center p-2 rounded-lg ${pathname === item.href ? 'text-primary' : 'text-gray-500'}`}>
               <item.icon className="h-5 w-5 mb-1" />
               <span className="text-[9px] non-italic font-semibold normal-case tracking-normal">{item.label}</span>
            </Link>
         ))}
-         <button onClick={() => setSwitchLocalOpen(true)} className="flex flex-col items-center justify-center text-center p-2 rounded-lg w-1/6 text-gray-500">
+         <button onClick={() => setSwitchLocalOpen(true)} className="flex flex-1 flex-col items-center justify-center text-center p-2 rounded-lg text-gray-500">
           <GitBranch className="h-5 w-5 mb-1" />
           <span className="text-[9px] non-italic font-semibold normal-case tracking-normal">Cambiar</span>
         </button>
-         <button onClick={() => { if (confirm('¿Cerrar sesión?')) logout(); }} className="flex flex-col items-center justify-center text-center p-2 rounded-lg w-1/6 text-gray-500">
+         <button onClick={() => { if (confirm('¿Cerrar sesión?')) logout(); }} className="flex flex-1 flex-col items-center justify-center text-center p-2 rounded-lg text-gray-500">
           <LogOut className="h-5 w-5 mb-1" />
           <span className="text-[9px] non-italic font-semibold normal-case tracking-normal">Salir</span>
         </button>
@@ -127,3 +128,5 @@ export default function MobileHeader() {
     </>
   );
 }
+
+    

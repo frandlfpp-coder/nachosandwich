@@ -18,6 +18,7 @@ import {
 const navItems = [
   { href: '/dashboard', label: 'Ventas' },
   { href: '/kitchen', label: 'Cocina' },
+  { href: '/delivery', label: 'Delivery' },
   { href: '/stock', label: 'Stock' },
   { href: '/finance', label: 'Caja' },
   { href: '/admin', label: 'Admin' },
@@ -99,3 +100,5 @@ export default function Sidebar() {
     </aside>
   );
 }
+
+    

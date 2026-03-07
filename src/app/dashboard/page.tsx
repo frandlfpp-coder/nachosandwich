@@ -10,6 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Plus, Minus, X } from 'lucide-react';
 import { Product } from '@/lib/types';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 export default function DashboardPage() {
   const { products, cart, addToCart, updateCartQty, clearCart, cartTotal, cartCount, addTransaction, addOrder } = useApp();
@@ -19,6 +21,11 @@ export default function DashboardPage() {
   const [payMethod, setPayMethod] = useState<'Efectivo' | 'Transferencia'>('Efectivo');
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  
+  const [isDelivery, setIsDelivery] = useState(false);
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [deliveryFee, setDeliveryFee] = useState('');
+
 
   const filteredProducts = products.filter(p =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -34,17 +41,32 @@ export default function DashboardPage() {
       toast({ variant: 'destructive', title: "Carrito vacío" });
       return;
     }
+    
+    const parsedDeliveryFee = parseFloat(deliveryFee) || 0;
+    if (isDelivery && !customerPhone) {
+      toast({ variant: 'destructive', title: "Falta el teléfono para el delivery" });
+      return;
+    }
+    if (isDelivery && parsedDeliveryFee <= 0) {
+      toast({ variant: 'destructive', title: "Falta el costo del delivery" });
+      return;
+    }
+
     const name = customerName.trim().toUpperCase() || "SIN NOMBRE";
+    const orderNumber = Math.floor(Math.random() * 90) + 10;
     
     // Create a new order
     addOrder({
       customerName: name,
       items: cart,
-      orderNumber: Math.floor(Math.random() * 90) + 10, // Random 2-digit number
-      status: 'pending'
+      orderNumber: orderNumber,
+      status: 'pending',
+      isDelivery: isDelivery,
+      customerPhone: isDelivery ? customerPhone : undefined,
+      deliveryFee: isDelivery ? parsedDeliveryFee : undefined,
     });
     
-    // Add a financial transaction
+    // Add a financial transaction for the sale
     addTransaction({
       concept: `VENTA: ${name}`,
       amount: cartTotal,
@@ -52,9 +74,22 @@ export default function DashboardPage() {
       type: 'ingreso',
     });
 
+    // If it's a delivery, add an expense transaction for the delivery fee
+    if (isDelivery) {
+        addTransaction({
+            concept: `PAGO DELIVERY: ORDEN #${orderNumber}`,
+            amount: parsedDeliveryFee,
+            paymentMethod: 'Efectivo',
+            type: 'egreso',
+        });
+    }
+
     clearCart();
     setCheckoutOpen(false);
     setCustomerName('');
+    setIsDelivery(false);
+    setCustomerPhone('');
+    setDeliveryFee('');
     toast({ title: '¡Venta Exitosa!' });
   };
 
@@ -140,6 +175,16 @@ export default function DashboardPage() {
             <DialogTitle className="text-3xl tracking-tighter mb-8 text-center font-black">TERMINAR VENTA</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            <div className="flex items-center space-x-2 my-4 justify-center">
+                <Switch id="delivery-mode" checked={isDelivery} onCheckedChange={setIsDelivery} />
+                <Label htmlFor="delivery-mode" className="font-black text-sm uppercase">ES DELIVERY</Label>
+            </div>
+            {isDelivery && (
+                <div className="space-y-3 animate-pop mb-4">
+                    <Input id="check-phone" type="tel" placeholder="NÚMERO DE TELÉFONO" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} className="w-full p-5 rounded-2xl bg-slate-50 outline-none uppercase font-black h-auto" />
+                    <Input id="check-delivery-fee" type="number" placeholder="COSTO ENVÍO" value={deliveryFee} onChange={(e) => setDeliveryFee(e.target.value)} className="w-full p-5 rounded-2xl bg-slate-50 outline-none uppercase font-black h-auto" />
+                </div>
+            )}
             <Input id="check-name" type="text" placeholder="NOMBRE CLIENTE" value={customerName} onChange={(e) => setCustomerName(e.target.value)} className="w-full p-5 rounded-2xl bg-slate-50 outline-none uppercase font-black h-auto" />
             <div className="flex gap-2">
               <Button onClick={() => setPayMethod('Efectivo')} className={`flex-1 py-4 rounded-2xl border-2 font-black ${payMethod === 'Efectivo' ? 'bg-lime-100 border-primary' : 'bg-slate-50 border-transparent'}`}>💵 EFECTIVO</Button>
@@ -155,3 +200,5 @@ export default function DashboardPage() {
     </AppShell>
   );
 }
+
+    

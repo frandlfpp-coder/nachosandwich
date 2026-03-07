@@ -1,6 +1,7 @@
 'use client';
 
 import { useApp } from '@/contexts/AppContext';
+import { Motorcycle } from 'lucide-react';
 
 export default function KitchenDisplayPage() {
   const { orders } = useApp(); // These are pending orders
@@ -15,7 +16,15 @@ export default function KitchenDisplayPage() {
           <div key={order.id} className="bg-white text-zinc-900 rounded-3xl p-8 flex flex-col animate-pop shadow-2xl">
             <div className="flex justify-between items-center border-b-2 border-slate-100 pb-4 mb-4">
               <span className="text-5xl font-black">#{order.orderNumber}</span>
-              <span className="text-lg font-bold">{order.customerName}</span>
+              <div className="text-right">
+                <span className="text-lg font-bold block">{order.customerName}</span>
+                 {order.isDelivery && (
+                    <div className="flex items-center justify-end gap-2 mt-1 text-sm font-bold text-blue-600 normal-case">
+                        <Motorcycle className="w-4 h-4" />
+                        <span>Delivery</span>
+                    </div>
+                )}
+              </div>
             </div>
             <ul className="space-y-2 flex-1">
               {order.items.map(item => (
@@ -36,3 +45,5 @@ export default function KitchenDisplayPage() {
     </div>
   );
 }
+
+    
