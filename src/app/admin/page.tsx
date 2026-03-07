@@ -7,6 +7,8 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import Link from 'next/link';
+import { Tv } from 'lucide-react';
 
 export default function AdminPage() {
   const { products, addProduct, deleteProduct, stockItems, addStockItem, deleteStockItem } = useApp();
@@ -49,6 +51,24 @@ export default function AdminPage() {
   return (
     <AppShell>
       <section className="space-y-8">
+        <div className="bg-white rounded-[3rem] p-8 border border-slate-100">
+            <h2 className="text-2xl font-black mb-6">MODO TV</h2>
+            <div className="flex gap-4">
+                <Button asChild variant="outline" className="flex-1 h-auto py-4 text-xs font-black">
+                    <Link href="/kitchen-display" target="_blank">
+                        <Tv className="mr-2 h-4 w-4" />
+                        TV COCINA
+                    </Link>
+                </Button>
+                <Button asChild className="flex-1 h-auto py-4 text-xs font-black">
+                    <Link href="/customer-display" target="_blank">
+                        <Tv className="mr-2 h-4 w-4" />
+                        TV CLIENTES
+                    </Link>
+                </Button>
+            </div>
+        </div>
+
         <div className="bg-white rounded-[3rem] p-8 border border-slate-100">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-black">PRODUCTOS</h2>

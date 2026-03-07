@@ -20,6 +20,7 @@ export type Order = {
   createdAt: any;
   orderNumber: number;
   status: 'pending' | 'completed';
+  updatedAt?: any;
 };
 
 export type StockItem = {

@@ -144,6 +144,11 @@
           "description": "Timestamp when the order was created.",
           "format": "date-time"
         },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the order was last updated.",
+          "format": "date-time"
+        },
         "orderNumber": {
           "type": "number",
           "description": "A unique, randomly generated number used for identifying the order in the kitchen display."

@@ -23,6 +23,7 @@ type AppContextType = {
   cartTotal: number;
   cartCount: number;
   orders: Order[];
+  completedOrders: Order[];
   addOrder: (orderData: Omit<Order, 'id' | 'createdAt' | 'localId'>) => void,
   completeOrder: (orderId: string) => void;
   stockItems: StockItem[];
@@ -65,7 +66,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       await signInWithEmailAndPassword(auth, email, password);
       toast({ title: `Cambiado a ${local.toUpperCase()}` });
     } catch (signInError: any) {
-      if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/invalid-credential') {
+      if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/invalid-credential' || signInError.code === 'auth/wrong-password') {
         try {
           const { user: newUser } = await createUserWithEmailAndPassword(auth, email, password);
           await setDoc(doc(firestore, 'locals', newUser.uid), {
@@ -112,7 +113,19 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       .map(o => ({
         ...o,
         createdAt: o.createdAt?.toDate(),
-      })).sort((a,b) => a.createdAt - b.createdAt);
+      })).sort((a,b) => (a.createdAt || 0) - (b.createdAt || 0));
+  }, [rawOrders]);
+
+  const completedOrders = useMemo(() => {
+    if (!rawOrders) return [];
+    return rawOrders
+      .filter(o => o.status === 'completed')
+      .map(o => ({
+        ...o,
+        updatedAt: o.updatedAt?.toDate(),
+        createdAt: o.createdAt?.toDate(),
+      }))
+      .sort((a,b) => (b.updatedAt || 0) - (a.updatedAt || 0));
   }, [rawOrders]);
 
   const transactionsQuery = useMemoFirebase(() => firebaseUser ? collection(firestore, 'locals', firebaseUser.uid, 'transactions') : null, [firestore, firebaseUser]);
@@ -176,7 +189,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const completeOrder = (orderId: string) => {
     if (!firebaseUser) return;
-    updateDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'orders', orderId), { status: 'completed' });
+    updateDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'orders', orderId), { status: 'completed', updatedAt: serverTimestamp() });
   };
 
   const updateStock = (itemId: string, delta: number) => {
@@ -269,6 +282,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     cartTotal,
     cartCount,
     orders: orders || [],
+    completedOrders: completedOrders || [],
     addOrder,
     completeOrder,
     stockItems: stockItems || [],
