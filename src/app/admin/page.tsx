@@ -17,7 +17,7 @@ export default function AdminPage() {
     stockItems, addStockItem, deleteStockItem, 
     completedOrders, pickupOrder, 
     resetData, updateProduct,
-    toppings, addTopping, deleteTopping
+    toppings, addTopping, deleteTopping, updateTopping
   } = useApp();
 
   const [isProductModalOpen, setProductModalOpen] = useState(false);
@@ -33,9 +33,13 @@ export default function AdminPage() {
   const [newToppingName, setNewToppingName] = useState('');
   const [newToppingPrice, setNewToppingPrice] = useState('');
   
-  const [isEditModalOpen, setEditModalOpen] = useState(false);
+  const [isEditProductModalOpen, setEditProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [editedPrice, setEditedPrice] = useState('');
+  const [editedProductPrice, setEditedProductPrice] = useState('');
+
+  const [isEditToppingModalOpen, setEditToppingModalOpen] = useState(false);
+  const [editingTopping, setEditingTopping] = useState<Topping | null>(null);
+  const [editedToppingPrice, setEditedToppingPrice] = useState('');
 
   const { toast } = useToast();
 
@@ -64,6 +68,24 @@ export default function AdminPage() {
       toast({variant: "destructive", title: "Datos inválidos"});
     }
   };
+  
+  const handleDeleteProduct = (id: string) => {
+    if (confirm('¿Seguro que quieres eliminar este producto?')) {
+      deleteProduct(id);
+    }
+  };
+
+  const handleDeleteStockItem = (id: string) => {
+    if (confirm('¿Seguro que quieres eliminar este insumo?')) {
+      deleteStockItem(id);
+    }
+  };
+
+  const handleDeleteTopping = (id: string) => {
+    if (confirm('¿Seguro que quieres eliminar este topping? También se quitará de los carritos de compra.')) {
+      deleteTopping(id);
+    }
+  };
 
   const handleSaveTopping = () => {
     const price = parseFloat(newToppingPrice);
@@ -78,20 +100,39 @@ export default function AdminPage() {
     }
   };
 
-  const openEditModal = (product: Product) => {
+  const openEditProductModal = (product: Product) => {
     setEditingProduct(product);
-    setEditedPrice(product.price.toString());
-    setEditModalOpen(true);
+    setEditedProductPrice(product.price.toString());
+    setEditProductModalOpen(true);
   };
 
   const handleUpdateProduct = () => {
     if (!editingProduct) return;
-    const price = parseFloat(editedPrice);
+    const price = parseFloat(editedProductPrice);
     if (!isNaN(price) && price > 0) {
         updateProduct(editingProduct.id, price);
-        setEditModalOpen(false);
+        setEditProductModalOpen(false);
         setEditingProduct(null);
-        toast({ title: 'Precio actualizado' });
+        toast({ title: 'Precio de producto actualizado' });
+    } else {
+        toast({ variant: 'destructive', title: 'Precio inválido' });
+    }
+  };
+  
+  const openEditToppingModal = (topping: Topping) => {
+    setEditingTopping(topping);
+    setEditedToppingPrice(topping.price.toString());
+    setEditToppingModalOpen(true);
+  };
+
+  const handleUpdateTopping = () => {
+    if (!editingTopping) return;
+    const price = parseFloat(editedToppingPrice);
+    if (!isNaN(price)) { // Allow 0 for price
+        updateTopping(editingTopping.id, price);
+        setEditToppingModalOpen(false);
+        setEditingTopping(null);
+        toast({ title: 'Precio de topping actualizado' });
     } else {
         toast({ variant: 'destructive', title: 'Precio inválido' });
     }
@@ -149,10 +190,10 @@ export default function AdminPage() {
               <div key={p.id} className="flex justify-between items-center p-4 bg-slate-100 dark:bg-zinc-800 rounded-2xl text-[10px] font-black">
                 <span>{p.emoji} {p.name} - ${p.price}</span>
                 <div className="flex items-center gap-2">
-                    <Button onClick={() => openEditModal(p)} size="icon" variant="ghost" className="h-auto w-auto p-1 text-muted-foreground hover:text-primary">
+                    <Button onClick={() => openEditProductModal(p)} size="icon" variant="ghost" className="h-auto w-auto p-1 text-muted-foreground hover:text-primary">
                         <Edit className="h-3 w-3" />
                     </Button>
-                    <button onClick={() => deleteProduct(p.id)} className="text-destructive font-black">✕</button>
+                    <button onClick={() => handleDeleteProduct(p.id)} className="text-destructive font-black">✕</button>
                 </div>
               </div>
             ))}
@@ -168,7 +209,12 @@ export default function AdminPage() {
             {toppings.map(t => (
               <div key={t.id} className="flex justify-between items-center p-4 bg-slate-100 dark:bg-zinc-800 rounded-2xl text-[10px] font-black">
                 <span>{t.name} - ${t.price}</span>
-                <button onClick={() => deleteTopping(t.id)} className="text-destructive font-black">✕</button>
+                 <div className="flex items-center gap-2">
+                    <Button onClick={() => openEditToppingModal(t)} size="icon" variant="ghost" className="h-auto w-auto p-1 text-muted-foreground hover:text-primary">
+                        <Edit className="h-3 w-3" />
+                    </Button>
+                    <button onClick={() => handleDeleteTopping(t.id)} className="text-destructive font-black">✕</button>
+                </div>
               </div>
             ))}
           </div>
@@ -183,7 +229,7 @@ export default function AdminPage() {
             {stockItems.map(i => (
               <div key={i.id} className="flex justify-between p-4 bg-slate-100 dark:bg-zinc-800 rounded-2xl text-[10px] font-black">
                 <span>{i.name} ({i.unit})</span>
-                <button onClick={() => deleteStockItem(i.id)} className="text-destructive font-black">✕</button>
+                <button onClick={() => handleDeleteStockItem(i.id)} className="text-destructive font-black">✕</button>
               </div>
             ))}
           </div>
@@ -240,9 +286,8 @@ export default function AdminPage() {
         </DialogContent>
       </Dialog>
 
-
       {/* Edit Product Modal */}
-      <Dialog open={isEditModalOpen} onOpenChange={setEditModalOpen}>
+      <Dialog open={isEditProductModalOpen} onOpenChange={setEditProductModalOpen}>
         <DialogContent className="bg-card w-full max-w-sm rounded-3xl p-10 animate-pop">
           <DialogHeader>
             <DialogTitle className="text-2xl tracking-tighter mb-6 text-center font-black">Editar Precio</DialogTitle>
@@ -255,14 +300,39 @@ export default function AdminPage() {
           )}
           <Input 
             type="number" 
-            value={editedPrice} 
-            onChange={e => setEditedPrice(e.target.value)} 
+            value={editedProductPrice} 
+            onChange={e => setEditedProductPrice(e.target.value)} 
             placeholder="Nuevo Precio $" 
             className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black mb-6 h-auto" 
           />
           <DialogFooter className="sm:justify-center flex-col sm:flex-row gap-2">
-            <Button variant="ghost" onClick={() => setEditModalOpen(false)} className="w-full sm:w-auto py-4 opacity-40 font-black h-auto">Cancelar</Button>
+            <Button variant="ghost" onClick={() => setEditProductModalOpen(false)} className="w-full sm:w-auto py-4 opacity-40 font-black h-auto">Cancelar</Button>
             <Button onClick={handleUpdateProduct} className="w-full sm:w-auto bg-primary text-primary-foreground py-4 rounded-2xl font-black h-auto">Guardar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Topping Modal */}
+      <Dialog open={isEditToppingModalOpen} onOpenChange={setEditToppingModalOpen}>
+        <DialogContent className="bg-card w-full max-w-sm rounded-3xl p-10 animate-pop">
+          <DialogHeader>
+            <DialogTitle className="text-2xl tracking-tighter mb-6 text-center font-black">Editar Precio de Topping</DialogTitle>
+          </DialogHeader>
+          {editingTopping && (
+            <div className="text-center mb-4">
+                <p className="font-black">{editingTopping.name}</p>
+            </div>
+          )}
+          <Input 
+            type="number" 
+            value={editedToppingPrice} 
+            onChange={e => setEditedToppingPrice(e.target.value)} 
+            placeholder="Nuevo Precio $" 
+            className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black mb-6 h-auto" 
+          />
+          <DialogFooter className="sm:justify-center flex-col sm:flex-row gap-2">
+            <Button variant="ghost" onClick={() => setEditToppingModalOpen(false)} className="w-full sm:w-auto py-4 opacity-40 font-black h-auto">Cancelar</Button>
+            <Button onClick={handleUpdateTopping} className="w-full sm:w-auto bg-primary text-primary-foreground py-4 rounded-2xl font-black h-auto">Guardar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

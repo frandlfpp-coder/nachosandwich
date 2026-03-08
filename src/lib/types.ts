@@ -4,6 +4,7 @@ export type Topping = {
   name: string;
   price: number;
   createdAt: any;
+  updatedAt: any;
 };
 
 export type Product = {
@@ -17,7 +18,7 @@ export type Product = {
 };
 
 export type CartItem = {
-  id: string; // Unique ID for this specific item in the cart
+  id: string; // Unique ID for this specific item configuration in the cart
   product: Product;
   qty: number;
   toppings: Topping[];

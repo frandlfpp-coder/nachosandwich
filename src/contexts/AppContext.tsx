@@ -40,8 +40,9 @@ type AppContextType = {
   updateProduct: (id: string, price: number) => void;
   addStockItem: (item: Omit<StockItem, 'id' | 'stock'| 'localId' | 'createdAt' | 'updatedAt'>) => void;
   deleteStockItem: (id: string) => void;
-  addTopping: (topping: Omit<Topping, 'id' | 'localId' | 'createdAt'>) => void;
+  addTopping: (topping: Omit<Topping, 'id' | 'localId' | 'createdAt' | 'updatedAt'>) => void;
   deleteTopping: (id: string) => void;
+  updateTopping: (id: string, price: number) => void;
   resetData: () => Promise<void>;
 };
 
@@ -172,16 +173,25 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   // Cart logic
   const addToCart = (product: Product, options: {toppings: Topping[], notes?: string}) => {
-    const finalPrice = product.price + options.toppings.reduce((total, t) => total + t.price, 0);
-    const newCartItem: CartItem = {
-      id: `${Date.now()}-${Math.random()}`, // Simple unique ID
-      product,
-      qty: 1,
-      toppings: options.toppings,
-      notes: options.notes,
-      finalPrice,
-    };
-    setCart(prevCart => [...prevCart, newCartItem]);
+    const sortedToppingIds = options.toppings.map(t => t.id).sort().join(',');
+    const uniqueItemId = `${product.id}|${sortedToppingIds}|${(options.notes || '').trim()}`;
+
+    const existingItem = cart.find(item => item.id === uniqueItemId);
+
+    if (existingItem) {
+        updateCartQty(uniqueItemId, 1);
+    } else {
+        const finalPrice = product.price + options.toppings.reduce((total, t) => total + t.price, 0);
+        const newCartItem: CartItem = {
+            id: uniqueItemId,
+            product,
+            qty: 1,
+            toppings: options.toppings,
+            notes: options.notes,
+            finalPrice,
+        };
+        setCart(prevCart => [...prevCart, newCartItem]);
+    }
     toast({ title: `Añadido: ${product.name}` });
   };
 
@@ -226,6 +236,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const completeOrder = (orderId: string) => {
     if (!firebaseUser) return;
     updateDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'orders', orderId), { status: 'completed', updatedAt: serverTimestamp() });
+    toast({ title: "Pedido completado y listo para retirar" });
   };
   
   const pickupOrder = (orderId: string) => {
@@ -332,6 +343,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const deleteProduct = (id: string) => {
     if (!firebaseUser) return;
     deleteDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'products', id));
+    // Also remove any items from the cart that use this product
+    setCart(prev => {
+        const productInCart = prev.some(item => item.product.id === id);
+        if (productInCart) {
+            toast({ title: "Producto eliminado del carrito" });
+        }
+        return prev.filter(item => item.product.id !== id);
+    });
   };
   
   const updateProduct = (id: string, price: number) => {
@@ -356,12 +375,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     deleteDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'stockItems', id));
   };
   
-  const addTopping = (topping: Omit<Topping, 'id' | 'localId' | 'createdAt'>) => {
+  const addTopping = (topping: Omit<Topping, 'id' | 'localId' | 'createdAt' | 'updatedAt'>) => {
     if (!firebaseUser) return;
     const newTopping = {
       ...topping,
       localId: firebaseUser.uid,
       createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     };
     addDocumentNonBlocking(collection(firestore, 'locals', firebaseUser.uid, 'toppings'), newTopping);
   };
@@ -369,6 +389,36 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const deleteTopping = (id: string) => {
     if (!firebaseUser) return;
     deleteDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'toppings', id));
+     // Also remove any items from the cart that use this topping
+    setCart(prev => {
+        const cartHasTopping = prev.some(item => item.toppings.some(t => t.id === id));
+        if (cartHasTopping) {
+            toast({ title: "Topping eliminado", description: "Algunos productos fueron removidos de tu carrito." });
+        }
+        return prev.filter(item => !item.toppings.some(t => t.id === id));
+    });
+  };
+
+  const updateTopping = (id: string, price: number) => {
+    if (!firebaseUser) return;
+    updateDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'toppings', id), { price, updatedAt: serverTimestamp() });
+    // Also update cart items that use this topping
+    setCart(prev => {
+        let cartUpdated = false;
+        const newCart = prev.map(item => {
+            if (item.toppings.some(t => t.id === id)) {
+                cartUpdated = true;
+                const updatedToppings = item.toppings.map(t => t.id === id ? {...t, price} : t);
+                const finalPrice = item.product.price + updatedToppings.reduce((total, t) => total + t.price, 0);
+                return {...item, toppings: updatedToppings, finalPrice};
+            }
+            return item;
+        });
+        if (cartUpdated) {
+            toast({ title: "Topping actualizado", description: "Se actualizó el precio en tu carrito." });
+        }
+        return newCart;
+    });
   };
 
   const resetData = async () => {
@@ -442,6 +492,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     deleteStockItem,
     addTopping,
     deleteTopping,
+    updateTopping,
     resetData,
   };
 
