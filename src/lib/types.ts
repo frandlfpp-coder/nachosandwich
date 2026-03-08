@@ -1,3 +1,11 @@
+export type Topping = {
+  id: string;
+  localId: string;
+  name: string;
+  price: number;
+  createdAt: any;
+};
+
 export type Product = {
   id: string;
   localId: string;
@@ -8,8 +16,13 @@ export type Product = {
   updatedAt: any;
 };
 
-export type CartItem = Product & {
+export type CartItem = {
+  id: string; // Unique ID for this specific item in the cart
+  product: Product;
   qty: number;
+  toppings: Topping[];
+  notes?: string;
+  finalPrice: number; // The final price for one unit (product price + toppings price)
 };
 
 export type Order = {

@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Product, CartItem, Order, StockItem, Transaction, Closure } from '@/lib/types';
+import { Product, CartItem, Order, StockItem, Transaction, Closure, Topping } from '@/lib/types';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc, serverTimestamp, increment, setDoc, getDocs, writeBatch } from 'firebase/firestore';
 import { signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, User } from 'firebase/auth';
@@ -16,9 +16,10 @@ type AppContextType = {
   switchLocal: (local: 'nacho1' | 'nacho2' | 'prueba') => Promise<void>;
   isSwitchingLocal: boolean;
   products: Product[];
+  toppings: Topping[];
   cart: CartItem[];
-  addToCart: (product: Product) => void;
-  updateCartQty: (productId: string, delta: number) => void;
+  addToCart: (product: Product, options: { toppings: Topping[], notes?: string }) => void;
+  updateCartQty: (cartItemId: string, delta: number) => void;
   clearCart: () => void;
   cartTotal: number;
   cartCount: number;
@@ -39,6 +40,8 @@ type AppContextType = {
   updateProduct: (id: string, price: number) => void;
   addStockItem: (item: Omit<StockItem, 'id' | 'stock'| 'localId' | 'createdAt' | 'updatedAt'>) => void;
   deleteStockItem: (id: string) => void;
+  addTopping: (topping: Omit<Topping, 'id' | 'localId' | 'createdAt'>) => void;
+  deleteTopping: (id: string) => void;
   resetData: () => Promise<void>;
 };
 
@@ -104,6 +107,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   // Data fetching
   const productsQuery = useMemoFirebase(() => firebaseUser ? collection(firestore, 'locals', firebaseUser.uid, 'products') : null, [firestore, firebaseUser]);
   const { data: products } = useCollection<Product>(productsQuery);
+  
+  const toppingsQuery = useMemoFirebase(() => firebaseUser ? collection(firestore, 'locals', firebaseUser.uid, 'toppings') : null, [firestore, firebaseUser]);
+  const { data: toppings } = useCollection<Topping>(toppingsQuery);
 
   const stockItemsQuery = useMemoFirebase(() => firebaseUser ? collection(firestore, 'locals', firebaseUser.uid, 'stockItems') : null, [firestore, firebaseUser]);
   const { data: stockItems } = useCollection<StockItem>(stockItemsQuery);
@@ -165,33 +171,35 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
 
   // Cart logic
-  const addToCart = (product: Product) => {
-    setCart(prevCart => {
-      const existingItem = prevCart.find(item => item.id === product.id);
-      if (existingItem) {
-        return prevCart.map(item =>
-          item.id === product.id ? { ...item, qty: item.qty + 1 } : item
-        );
-      }
-      return [...prevCart, { ...product, qty: 1 }];
-    });
+  const addToCart = (product: Product, options: {toppings: Topping[], notes?: string}) => {
+    const finalPrice = product.price + options.toppings.reduce((total, t) => total + t.price, 0);
+    const newCartItem: CartItem = {
+      id: `${Date.now()}-${Math.random()}`, // Simple unique ID
+      product,
+      qty: 1,
+      toppings: options.toppings,
+      notes: options.notes,
+      finalPrice,
+    };
+    setCart(prevCart => [...prevCart, newCartItem]);
+    toast({ title: `Añadido: ${product.name}` });
   };
 
-  const updateCartQty = (productId: string, delta: number) => {
+  const updateCartQty = (cartItemId: string, delta: number) => {
     setCart(prevCart => {
-      const itemToUpdate = prevCart.find(item => item.id === productId);
+      const itemToUpdate = prevCart.find(item => item.id === cartItemId);
       if (itemToUpdate && itemToUpdate.qty + delta > 0) {
         return prevCart.map(item =>
-          item.id === productId ? { ...item, qty: item.qty + delta } : item
+          item.id === cartItemId ? { ...item, qty: item.qty + delta } : item
         );
       }
-      return prevCart.filter(item => item.id !== productId);
+      return prevCart.filter(item => item.id !== cartItemId);
     });
   };
 
   const clearCart = () => setCart([]);
   
-  const cartTotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+  const cartTotal = cart.reduce((sum, item) => sum + item.finalPrice * item.qty, 0);
   const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
 
   // Data mutations
@@ -347,6 +355,21 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (!firebaseUser) return;
     deleteDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'stockItems', id));
   };
+  
+  const addTopping = (topping: Omit<Topping, 'id' | 'localId' | 'createdAt'>) => {
+    if (!firebaseUser) return;
+    const newTopping = {
+      ...topping,
+      localId: firebaseUser.uid,
+      createdAt: serverTimestamp(),
+    };
+    addDocumentNonBlocking(collection(firestore, 'locals', firebaseUser.uid, 'toppings'), newTopping);
+  };
+
+  const deleteTopping = (id: string) => {
+    if (!firebaseUser) return;
+    deleteDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'toppings', id));
+  };
 
   const resetData = async () => {
     if (!firebaseUser || !firestore) {
@@ -362,7 +385,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     toast({ title: "Borrando datos, por favor espera..." });
 
     const localId = firebaseUser.uid;
-    const collectionsToDelete = ['products', 'stockItems', 'orders', 'transactions', 'closures'];
+    const collectionsToDelete = ['products', 'stockItems', 'orders', 'transactions', 'closures', 'toppings'];
 
     try {
         for (const collectionName of collectionsToDelete) {
@@ -393,6 +416,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     switchLocal,
     isSwitchingLocal,
     products: products || [],
+    toppings: toppings || [],
     cart,
     addToCart,
     updateCartQty,
@@ -416,6 +440,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     updateProduct,
     addStockItem,
     deleteStockItem,
+    addTopping,
+    deleteTopping,
     resetData,
   };
 

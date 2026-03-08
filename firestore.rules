@@ -103,6 +103,19 @@ service cloud.firestore {
         allow update: if isExistingOwner(localId) && isSubcollectionRelationshipImmutable();
         allow delete: if isExistingOwner(localId);
       }
+      
+      /**
+       * @description Rules for Toppings, which belong to a specific Local.
+       * @path /locals/{localId}/toppings/{toppingId}
+       * @principle Restricts all data access to the owner of the parent 'Local' document.
+       */
+      match /toppings/{toppingId} {
+        allow get: if isOwner(localId);
+        allow list: if isOwner(localId);
+        allow create: if isOwner(localId) && isSubcollectionDataConsistentOnCreate(localId);
+        allow update: if isExistingOwner(localId) && isSubcollectionRelationshipImmutable();
+        allow delete: if isExistingOwner(localId);
+      }
 
       /**
        * @description Rules for StockItems (inventory), which belong to a specific Local.

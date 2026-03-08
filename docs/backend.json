@@ -73,6 +73,42 @@
         "createdAt"
       ]
     },
+    "Topping": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Topping",
+      "type": "object",
+      "description": "Represents an optional topping or extra that can be added to a product, with an associated cost.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Topping entity."
+        },
+        "localId": {
+          "type": "string",
+          "description": "Reference to the Local this topping belongs to. (Relationship: Local 1:N Topping)"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the topping (e.g., 'Bacon', 'Cheddar')."
+        },
+        "price": {
+          "type": "number",
+          "description": "Additional price for adding this topping."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the topping was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "localId",
+        "name",
+        "price",
+        "createdAt"
+      ]
+    },
     "StockItem": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "StockItem",
@@ -322,6 +358,26 @@
             {
               "name": "productId",
               "description": "The unique identifier of the Product."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/locals/{localId}/toppings/{toppingId}",
+        "definition": {
+          "entityName": "Topping",
+          "schema": {
+            "$ref": "#/backend/entities/Topping"
+          },
+          "description": "Subcollection for toppings that can be added to products. Includes denormalized 'localId' for authorization.",
+          "params": [
+            {
+              "name": "localId",
+              "description": "The unique identifier of the owning Local, matching request.auth.uid."
+            },
+            {
+              "name": "toppingId",
+              "description": "The unique identifier of the Topping."
             }
           ]
         }

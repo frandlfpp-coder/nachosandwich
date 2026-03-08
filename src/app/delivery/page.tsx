@@ -15,7 +15,7 @@ export default function DeliveryPage() {
   }, [orders]);
 
   const calculateOrderTotal = (order: Order) => {
-    return order.items.reduce((total, item) => total + item.price * item.qty, 0);
+    return order.items.reduce((total, item) => total + item.finalPrice * item.qty, 0);
   }
 
   const totalToPayDriver = useMemo(() => {
@@ -26,37 +26,37 @@ export default function DeliveryPage() {
     <AppShell>
       <section>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            <div className="bg-card text-card-foreground p-8 rounded-[2.5rem] border">
-                <p className="text-[10px] opacity-40 mb-2 font-black uppercase">Deliveries Pendientes</p>
+            <div className="bg-card text-card-foreground p-8 rounded-3xl border">
+                <p className="text-[10px] opacity-40 mb-2 font-black">Deliveries Pendientes</p>
                 <h3 className="text-4xl tracking-tighter text-primary font-black">{deliveryOrders.length}</h3>
             </div>
-            <div className="bg-card text-card-foreground p-8 rounded-[2.5rem] border">
-                <p className="text-[10px] opacity-40 mb-2 font-black uppercase">Entregados Hoy</p>
+            <div className="bg-card text-card-foreground p-8 rounded-3xl border">
+                <p className="text-[10px] opacity-40 mb-2 font-black">Entregados Hoy</p>
                 <h3 className="text-4xl tracking-tighter text-blue-600 font-black">{completedDeliveriesThisShift.length}</h3>
             </div>
-            <div className="bg-zinc-900 text-white p-8 rounded-[2.5rem] shadow-xl">
-                <p className="text-[10px] text-primary mb-2 font-black uppercase">A Pagar al Repartidor</p>
+            <div className="bg-zinc-900 text-white p-8 rounded-3xl shadow-xl">
+                <p className="text-[10px] text-primary mb-2 font-black">A Pagar al Repartidor</p>
                 <h3 className="text-4xl tracking-tighter text-primary font-black">${totalToPayDriver.toLocaleString('es-AR')}</h3>
             </div>
         </div>
         
         <div className="mb-12">
             <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl tracking-tighter font-black flex items-center gap-3 uppercase"><Bike /> Pendientes de Entrega</h2>
+                <h2 className="text-2xl tracking-tighter font-black flex items-center gap-3"><Bike /> Pendientes de Entrega</h2>
             </div>
             
             {deliveryOrders.length === 0 ? (
                <div className="text-center py-12 opacity-40">
                  <Bike className="w-12 h-12 mx-auto mb-4" />
-                 <h3 className="text-md font-black uppercase">Sin Deliveries Pendientes</h3>
+                 <h3 className="text-md font-black">Sin Deliveries Pendientes</h3>
                </div>
             ) : (
               <div id="delivery-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {deliveryOrders.map(o => (
-                  <div key={o.id} className="bg-card text-card-foreground rounded-[3rem] p-8 border shadow-xl animate-pop">
+                  <div key={o.id} className="bg-card text-card-foreground rounded-3xl p-8 border shadow-xl animate-pop">
                     <div className="flex justify-between items-start mb-6">
                       <div>
-                        <h3 className="text-xl font-black uppercase">{o.customerName}</h3>
+                        <h3 className="text-xl font-black">{o.customerName}</h3>
                         {o.customerPhone && (
                           <div className="flex items-center gap-2 text-xs text-muted-foreground font-semibold">
                             <Phone className="w-3 h-3" />
@@ -70,24 +70,36 @@ export default function DeliveryPage() {
                     </div>
 
                     <div className="mb-6">
-                        <p className="text-[10px] opacity-40 mb-1 font-black uppercase">Items</p>
-                        <ul className="text-xs space-y-1 font-black border-l-4 border-slate-100 dark:border-zinc-800 pl-3 uppercase">
-                            {o.items.map(i => <li key={i.id}>{i.qty}x {i.name}</li>)}
+                        <p className="text-[10px] opacity-40 mb-1 font-black">Items</p>
+                        <ul className="text-sm space-y-2 font-black border-l-4 border-slate-100 dark:border-zinc-800 pl-3">
+                            {o.items.map(i => (
+                              <li key={i.id}>
+                                <span>{i.qty}x {i.product.name}</span>
+                                {i.toppings.length > 0 && (
+                                    <ul className="pl-4 text-[10px] opacity-70 font-semibold normal-case">
+                                        {i.toppings.map(t => <li key={t.id}>+ {t.name}</li>)}
+                                    </ul>
+                                )}
+                                {i.notes && (
+                                    <p className="pl-4 text-[10px] text-blue-500 font-semibold normal-case italic">Nota: {i.notes}</p>
+                                )}
+                              </li>
+                            ))}
                         </ul>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4 mb-8 text-center">
                         <div className="bg-slate-100 dark:bg-zinc-800 p-4 rounded-2xl">
-                            <p className="text-[10px] opacity-40 font-black uppercase">Cobrar al Cliente</p>
+                            <p className="text-[10px] opacity-40 font-black">Cobrar al Cliente</p>
                             <p className="text-lg font-black text-primary">${(calculateOrderTotal(o) + (o.deliveryFee || 0)).toLocaleString('es-AR')}</p>
                         </div>
                          <div className="bg-slate-100 dark:bg-zinc-800 p-4 rounded-2xl">
-                            <p className="text-[10px] opacity-40 font-black uppercase">Pago al Delivery</p>
+                            <p className="text-[10px] opacity-40 font-black">Pago al Delivery</p>
                             <p className="text-lg font-black text-destructive">${o.deliveryFee?.toLocaleString('es-AR') || 0}</p>
                         </div>
                     </div>
 
-                    <Button onClick={() => completeOrder(o.id)} className="w-full bg-zinc-950 text-white dark:text-zinc-950 dark:bg-white py-4 rounded-2xl text-[10px] font-black h-auto hover:bg-zinc-800 dark:hover:bg-zinc-200 uppercase">
+                    <Button onClick={() => completeOrder(o.id)} className="w-full bg-zinc-950 text-white dark:text-zinc-950 dark:bg-white py-4 rounded-2xl text-[10px] font-black h-auto hover:bg-zinc-800 dark:hover:bg-zinc-200">
                       Marcar como Entregado
                     </Button>
                   </div>
@@ -98,12 +110,12 @@ export default function DeliveryPage() {
 
         <div>
            <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl tracking-tighter font-black flex items-center gap-3 uppercase"><CheckCircle2 /> Entregados en este Turno</h2>
+            <h2 className="text-2xl tracking-tighter font-black flex items-center gap-3"><CheckCircle2 /> Entregados en este Turno</h2>
           </div>
             {completedDeliveriesThisShift.length === 0 ? (
                  <div className="text-center py-12 opacity-40">
                     <Package className="w-12 h-12 mx-auto mb-4" />
-                    <h3 className="text-md font-black uppercase">Ningún Delivery Entregado Aún</h3>
+                    <h3 className="text-md font-black">Ningún Delivery Entregado Aún</h3>
                     <p className="text-xs font-semibold">Este registro se reinicia al cerrar la caja.</p>
                 </div>
             ) : (
@@ -113,11 +125,11 @@ export default function DeliveryPage() {
                     <div className='flex items-center gap-4'>
                         <span className="bg-slate-100 dark:bg-zinc-800 text-primary font-black text-lg px-4 py-2 rounded-xl">#{o.orderNumber}</span>
                         <div>
-                            <span className="uppercase">{o.customerName}</span>
+                            <span>{o.customerName}</span>
                             <span className='text-[8px] opacity-50 font-normal block'>{o.updatedAt?.toLocaleTimeString('es-AR')}</span>
                         </div>
                     </div>
-                    <span className={'text-primary uppercase'}>
+                    <span className={'text-primary'}>
                         Pago Delivery: ${o.deliveryFee?.toLocaleString('es-AR')}
                     </span>
                   </div>
