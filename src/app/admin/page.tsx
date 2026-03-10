@@ -9,7 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
-import { Tv, Check, Edit, Trash2, HistoryX, Trophy, Users } from 'lucide-react';
+import { Tv, Check, Edit, Trash2, History, Trophy, Users } from 'lucide-react';
 import { Product, Topping, ProductCategory, StockItem } from '@/lib/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -312,7 +312,7 @@ export default function AdminPage() {
                     Esta acción borrará pedidos, transacciones y cierres de caja. Los productos y el stock no se verán afectados.
                 </p>
                 <Button onClick={() => setClearHistoryAlertOpen(true)} variant="outline" className="w-full h-auto py-4 text-xs font-black border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive">
-                    <HistoryX className="mr-2" />
+                    <History className="mr-2" />
                     Borrar Historial Financiero
                 </Button>
             </div>
