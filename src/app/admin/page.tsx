@@ -9,7 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
-import { Tv, Check, Edit, Trash2, History, Trophy, Users } from 'lucide-react';
+import { Tv, Check, Edit, Trash2, History, Trophy, Users, RefreshCw } from 'lucide-react';
 import { Product, Topping, ProductCategory, StockItem } from '@/lib/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -53,6 +53,7 @@ export default function AdminPage() {
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; type: 'product' | 'topping' | 'stockItem' } | null>(null);
   const [isClearHistoryAlertOpen, setClearHistoryAlertOpen] = useState(false);
   const [isResetAllAlertOpen, setResetAllAlertOpen] = useState(false);
+  const [isResetTopsAlertOpen, setResetTopsAlertOpen] = useState(false);
 
   const { toast } = useToast();
 
@@ -198,6 +199,10 @@ export default function AdminPage() {
             <div className="bg-card text-card-foreground rounded-3xl p-8 border">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-black flex items-center gap-2"><Trophy className="text-amber-400" /> Top Productos</h2>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" title="Reiniciar Rankings" onClick={() => setResetTopsAlertOpen(true)}>
+                        <RefreshCw className="w-4 h-4 text-muted-foreground"/>
+                        <span className="sr-only">Reiniciar rankings</span>
+                    </Button>
                 </div>
                 <div className="space-y-2">
                     {topProducts.length > 0 ? topProducts.map(p => (
@@ -467,7 +472,10 @@ export default function AdminPage() {
             </AlertDialogHeader>
             <AlertDialogFooter>
                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={clearFinancialHistory} className={buttonVariants({ variant: "destructive" })}>
+                <AlertDialogAction onClick={() => {
+                    setClearHistoryAlertOpen(false);
+                    clearFinancialHistory();
+                }} className={buttonVariants({ variant: "destructive" })}>
                     Sí, borrar historial
                 </AlertDialogAction>
             </AlertDialogFooter>
@@ -484,8 +492,31 @@ export default function AdminPage() {
             </AlertDialogHeader>
             <AlertDialogFooter>
                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={deleteAllLocalData} className={buttonVariants({ variant: "destructive" })}>
+                <AlertDialogAction onClick={() => {
+                    setResetAllAlertOpen(false);
+                    deleteAllLocalData();
+                }} className={buttonVariants({ variant: "destructive" })}>
                     Sí, borrar todo
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isResetTopsAlertOpen} onOpenChange={setResetTopsAlertOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>¿Reiniciar Rankings?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    Esta acción borrará todo el historial de pedidos, transacciones y cierres de caja. Esto reiniciará los rankings de productos y clientes. Esta acción no puede deshacerse.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={() => {
+                    setResetTopsAlertOpen(false);
+                    clearFinancialHistory();
+                }} className={buttonVariants({ variant: "destructive" })}>
+                    Sí, borrar y reiniciar
                 </AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>
