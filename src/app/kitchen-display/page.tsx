@@ -28,17 +28,19 @@ export default function KitchenDisplayPage() {
             </div>
             <ul className="space-y-3 flex-1 text-lg">
               {order.items.map(item => (
-                <li key={item.id} className="font-bold">
-                  <span>{item.qty}x {item.product.name}</span>
-                  {item.toppings.length > 0 && (
-                      <ul className="pl-5 text-sm opacity-80 font-semibold">
-                          {item.toppings.map(t => <li key={t.id}>+ {t.name}</li>)}
-                      </ul>
-                  )}
-                  {item.notes && (
-                      <p className="pl-5 text-sm text-blue-400 font-semibold italic">Nota: {item.notes}</p>
-                  )}
-                </li>
+                item.product ? (
+                  <li key={item.id} className="font-bold">
+                    <span>{item.qty}x {item.product.name}</span>
+                    {item.toppings.length > 0 && (
+                        <ul className="pl-5 text-sm opacity-80 font-semibold">
+                            {item.toppings.map(t => <li key={t.id}>+ {t.name}</li>)}
+                        </ul>
+                    )}
+                    {item.notes && (
+                        <p className="pl-5 text-sm text-blue-400 font-semibold italic">Nota: {item.notes}</p>
+                    )}
+                  </li>
+                ) : null
               ))}
             </ul>
           </div>

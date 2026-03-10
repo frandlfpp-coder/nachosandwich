@@ -75,17 +75,19 @@ export default function DeliveryPage() {
                         <p className="text-[10px] opacity-40 mb-1 font-black">Items</p>
                         <ul className="text-sm space-y-2 font-black border-l-4 border-slate-100 dark:border-zinc-800 pl-3">
                             {o.items.map(i => (
-                              <li key={i.id}>
-                                <span>{i.qty}x {i.product.name}</span>
-                                {i.toppings.length > 0 && (
-                                    <ul className="pl-4 text-[10px] opacity-70 font-semibold normal-case">
-                                        {i.toppings.map(t => <li key={t.id}>+ {t.name}</li>)}
-                                    </ul>
-                                )}
-                                {i.notes && (
-                                    <p className="pl-4 text-[10px] text-blue-500 font-semibold normal-case italic">Nota: {i.notes}</p>
-                                )}
-                              </li>
+                              i.product ? (
+                                <li key={i.id}>
+                                  <span>{i.qty}x {i.product.name}</span>
+                                  {i.toppings.length > 0 && (
+                                      <ul className="pl-4 text-[10px] opacity-70 font-semibold normal-case">
+                                          {i.toppings.map(t => <li key={t.id}>+ {t.name}</li>)}
+                                      </ul>
+                                  )}
+                                  {i.notes && (
+                                      <p className="pl-4 text-[10px] text-blue-500 font-semibold normal-case italic">Nota: {i.notes}</p>
+                                  )}
+                                </li>
+                              ) : null
                             ))}
                         </ul>
                     </div>

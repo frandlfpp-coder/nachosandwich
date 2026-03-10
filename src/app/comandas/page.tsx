@@ -47,17 +47,19 @@ export default function ComandasPage() {
                   )}
                   <ul className="text-sm space-y-3 mb-8 border-l-4 border-primary pl-4 font-black">
                     {o.items.map(i => (
-                      <li key={i.id}>
-                        <span>{i.qty}x {i.product.name}</span>
-                        {i.toppings.length > 0 && (
-                            <ul className="pl-4 text-[10px] opacity-70 font-semibold normal-case">
-                                {i.toppings.map(t => <li key={t.id}>+ {t.name}</li>)}
-                            </ul>
-                        )}
-                        {i.notes && (
-                            <p className="pl-4 text-[10px] text-blue-500 font-semibold normal-case italic">Nota: {i.notes}</p>
-                        )}
-                      </li>
+                      i.product ? (
+                        <li key={i.id}>
+                          <span>{i.qty}x {i.product.name}</span>
+                          {i.toppings.length > 0 && (
+                              <ul className="pl-4 text-[10px] opacity-70 font-semibold normal-case">
+                                  {i.toppings.map(t => <li key={t.id}>+ {t.name}</li>)}
+                              </ul>
+                          )}
+                          {i.notes && (
+                              <p className="pl-4 text-[10px] text-blue-500 font-semibold normal-case italic">Nota: {i.notes}</p>
+                          )}
+                        </li>
+                      ) : null
                     ))}
                   </ul>
                   <Button onClick={() => completeOrder(o.id)} className="w-full bg-zinc-950 text-white dark:text-zinc-950 dark:bg-white py-4 rounded-2xl text-[10px] font-black h-auto hover:bg-zinc-800 dark:hover:bg-zinc-200">
