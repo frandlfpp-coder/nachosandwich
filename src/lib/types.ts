@@ -43,7 +43,6 @@ export type Order = {
   customerPhone?: string;
   deliveryFee?: number;
   closureId?: string;
-  archivedForRanking?: boolean;
 };
 
 export type StockItem = {
@@ -78,10 +77,4 @@ export type Closure = {
   balanceTransferencia: number;
   totalTransacciones: number;
   totalDeliveryFees: number;
-};
-
-export type TopSale = {
-  name: string;
-  count: number;
-  emoji?: string;
 };
