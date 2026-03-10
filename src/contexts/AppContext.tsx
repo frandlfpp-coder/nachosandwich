@@ -131,7 +131,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       .map(o => ({
         ...o,
         createdAt: o.createdAt?.toDate(),
-      })).sort((a,b) => (a.createdAt || 0) - (b.createdAt || 0));
+      })).sort((a,b) => (a.createdAt?.getTime() || 0) - (b.createdAt?.getTime() || 0));
   }, [rawOrders]);
 
   const completedOrders = useMemo(() => {
@@ -143,7 +143,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         updatedAt: o.updatedAt?.toDate(),
         createdAt: o.createdAt?.toDate(),
       }))
-      .sort((a,b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+      .sort((a,b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0));
   }, [rawOrders]);
   
   const completedDeliveriesThisShift = useMemo(() => {
@@ -154,7 +154,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         ...o,
         updatedAt: o.updatedAt?.toDate(),
       }))
-      .sort((a,b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+      .sort((a,b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0));
   }, [rawOrders]);
 
   const transactionsQuery = useMemoFirebase(() => firebaseUser ? collection(firestore, 'locals', firebaseUser.uid, 'transactions') : null, [firestore, firebaseUser]);
@@ -165,7 +165,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return rawTransactions
       .filter(t => !t.closureId) // Filter for transactions not yet part of a closure
       .map(t => ({...t, createdAt: t.createdAt?.toDate()}))
-      .sort((a,b) => b.createdAt - a.createdAt);
+      .sort((a,b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
   }, [rawTransactions]);
 
   const closuresQuery = useMemoFirebase(() => firebaseUser ? collection(firestore, 'locals', firebaseUser.uid, 'closures') : null, [firestore, firebaseUser]);
@@ -173,7 +173,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const closures = useMemo(() => {
     if (!rawClosures) return [];
-    return rawClosures.map(c => ({...c, closureDate: c.closureDate?.toDate()})).sort((a,b) => b.closureDate - a.closureDate);
+    return rawClosures.map(c => ({...c, closureDate: c.closureDate?.toDate()})).sort((a,b) => (b.closureDate?.getTime() || 0) - (a.closureDate?.getTime() || 0));
   }, [rawClosures]);
   
   const { topProducts, topCustomers } = useMemo(() => {
