@@ -2,22 +2,23 @@
 
 import AppShell from '@/components/layout/AppShell';
 import { useApp } from '@/contexts/AppContext';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { Tv, Check, Edit } from 'lucide-react';
-import { Product, Topping, ProductCategory } from '@/lib/types';
+import { Product, Topping, ProductCategory, StockItem } from '@/lib/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function AdminPage() {
   const { 
-    products, addProduct, deleteProduct, 
+    products, addProduct, deleteProduct, updateProduct,
     stockItems, addStockItem, deleteStockItem, 
     completedOrders, pickupOrder, 
-    resetData, updateProduct,
+    resetData,
     toppings, addTopping, deleteTopping, updateTopping
   } = useApp();
 
@@ -37,11 +38,17 @@ export default function AdminPage() {
   
   const [isEditProductModalOpen, setEditProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editedProductName, setEditedProductName] = useState('');
   const [editedProductPrice, setEditedProductPrice] = useState('');
+  const [editedProductEmoji, setEditedProductEmoji] = useState('');
+  const [editedProductCategory, setEditedProductCategory] = useState<ProductCategory | ''>('');
+
 
   const [isEditToppingModalOpen, setEditToppingModalOpen] = useState(false);
   const [editingTopping, setEditingTopping] = useState<Topping | null>(null);
   const [editedToppingPrice, setEditedToppingPrice] = useState('');
+
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; type: 'product' | 'topping' | 'stockItem' } | null>(null);
 
   const { toast } = useToast();
 
@@ -71,23 +78,36 @@ export default function AdminPage() {
       toast({variant: "destructive", title: "Datos inválidos"});
     }
   };
+
+  const confirmDelete = () => {
+    if (!deleteTarget) return;
+    switch (deleteTarget.type) {
+        case 'product':
+            deleteProduct(deleteTarget.id);
+            toast({ title: 'Producto eliminado' });
+            break;
+        case 'topping':
+            deleteTopping(deleteTarget.id);
+            toast({ title: 'Topping eliminado' });
+            break;
+        case 'stockItem':
+            deleteStockItem(deleteTarget.id);
+            toast({ title: 'Insumo eliminado' });
+            break;
+    }
+    setDeleteTarget(null);
+  };
   
-  const handleDeleteProduct = (id: string) => {
-    if (confirm('¿Seguro que quieres eliminar este producto?')) {
-      deleteProduct(id);
-    }
+  const handleDeleteProduct = (product: Product) => {
+    setDeleteTarget({ id: product.id, name: product.name, type: 'product' });
   };
 
-  const handleDeleteStockItem = (id: string) => {
-    if (confirm('¿Seguro que quieres eliminar este insumo?')) {
-      deleteStockItem(id);
-    }
+  const handleDeleteStockItem = (item: StockItem) => {
+    setDeleteTarget({ id: item.id, name: item.name, type: 'stockItem' });
   };
 
-  const handleDeleteTopping = (id: string) => {
-    if (confirm('¿Seguro que quieres eliminar este topping? También se quitará de los carritos de compra.')) {
-      deleteTopping(id);
-    }
+  const handleDeleteTopping = (topping: Topping) => {
+    setDeleteTarget({ id: topping.id, name: topping.name, type: 'topping' });
   };
 
   const handleSaveTopping = () => {
@@ -105,20 +125,28 @@ export default function AdminPage() {
 
   const openEditProductModal = (product: Product) => {
     setEditingProduct(product);
+    setEditedProductName(product.name);
     setEditedProductPrice(product.price.toString());
+    setEditedProductEmoji(product.emoji);
+    setEditedProductCategory(product.category);
     setEditProductModalOpen(true);
   };
 
   const handleUpdateProduct = () => {
     if (!editingProduct) return;
     const price = parseFloat(editedProductPrice);
-    if (!isNaN(price) && price > 0) {
-        updateProduct(editingProduct.id, price);
+    if (editedProductName && !isNaN(price) && price > 0 && editedProductEmoji && editedProductCategory) {
+        updateProduct(editingProduct.id, { 
+            name: editedProductName.toUpperCase(), 
+            price, 
+            emoji: editedProductEmoji,
+            category: editedProductCategory 
+        });
         setEditProductModalOpen(false);
         setEditingProduct(null);
-        toast({ title: 'Precio de producto actualizado' });
+        toast({ title: 'Producto actualizado' });
     } else {
-        toast({ variant: 'destructive', title: 'Precio inválido' });
+        toast({ variant: 'destructive', title: 'Datos inválidos' });
     }
   };
   
@@ -196,7 +224,7 @@ export default function AdminPage() {
                     <Button onClick={() => openEditProductModal(p)} size="icon" variant="ghost" className="h-auto w-auto p-1 text-muted-foreground hover:text-primary">
                         <Edit className="h-3 w-3" />
                     </Button>
-                    <button onClick={() => handleDeleteProduct(p.id)} className="text-destructive font-black">✕</button>
+                    <button onClick={() => handleDeleteProduct(p)} className="text-destructive font-black">✕</button>
                 </div>
               </div>
             ))}
@@ -216,7 +244,7 @@ export default function AdminPage() {
                     <Button onClick={() => openEditToppingModal(t)} size="icon" variant="ghost" className="h-auto w-auto p-1 text-muted-foreground hover:text-primary">
                         <Edit className="h-3 w-3" />
                     </Button>
-                    <button onClick={() => handleDeleteTopping(t.id)} className="text-destructive font-black">✕</button>
+                    <button onClick={() => handleDeleteTopping(t)} className="text-destructive font-black">✕</button>
                 </div>
               </div>
             ))}
@@ -232,7 +260,7 @@ export default function AdminPage() {
             {stockItems.map(i => (
               <div key={i.id} className="flex justify-between p-4 bg-slate-100 dark:bg-zinc-800 rounded-2xl text-[10px] font-black">
                 <span>{i.name} ({i.unit})</span>
-                <button onClick={() => handleDeleteStockItem(i.id)} className="text-destructive font-black">✕</button>
+                <button onClick={() => handleDeleteStockItem(i)} className="text-destructive font-black">✕</button>
               </div>
             ))}
           </div>
@@ -306,24 +334,27 @@ export default function AdminPage() {
       <Dialog open={isEditProductModalOpen} onOpenChange={setEditProductModalOpen}>
         <DialogContent className="bg-card w-full max-w-sm rounded-3xl p-10 animate-pop">
           <DialogHeader>
-            <DialogTitle className="text-2xl tracking-tighter mb-6 text-center font-black">Editar Precio</DialogTitle>
+            <DialogTitle className="text-2xl tracking-tighter mb-6 text-center font-black">Editar Producto</DialogTitle>
           </DialogHeader>
-          {editingProduct && (
-            <div className="text-center mb-4">
-                <p className="text-2xl">{editingProduct.emoji}</p>
-                <p className="font-black">{editingProduct.name}</p>
-            </div>
-          )}
-          <Input 
-            type="number" 
-            value={editedProductPrice} 
-            onChange={e => setEditedProductPrice(e.target.value)} 
-            placeholder="Nuevo Precio $" 
-            className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black mb-6 h-auto" 
-          />
-          <DialogFooter className="sm:justify-center flex-col sm:flex-row gap-2">
+          <div className="space-y-3">
+            <Input value={editedProductEmoji} onChange={e => setEditedProductEmoji(e.target.value)} placeholder="Emoji" className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black h-auto" />
+            <Input value={editedProductName} onChange={e => setEditedProductName(e.target.value)} placeholder="Nombre" className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black h-auto" />
+            <Select value={editedProductCategory} onValueChange={(value) => setEditedProductCategory(value as ProductCategory)}>
+              <SelectTrigger className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black h-auto text-sm">
+                <SelectValue placeholder="Categoría" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Sandwich de Miga">Sandwich de Miga</SelectItem>
+                <SelectItem value="Lomitos">Lomitos</SelectItem>
+                <SelectItem value="Pebetes">Pebetes</SelectItem>
+                <SelectItem value="Barroluco">Barroluco</SelectItem>
+              </SelectContent>
+            </Select>
+            <Input type="number" value={editedProductPrice} onChange={e => setEditedProductPrice(e.target.value)} placeholder="Precio $" className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black h-auto" />
+          </div>
+          <DialogFooter className="mt-6 sm:justify-center flex-col sm:flex-row gap-2">
             <Button variant="ghost" onClick={() => setEditProductModalOpen(false)} className="w-full sm:w-auto py-4 opacity-40 font-black h-auto">Cancelar</Button>
-            <Button onClick={handleUpdateProduct} className="w-full sm:w-auto bg-primary text-primary-foreground py-4 rounded-2xl font-black h-auto">Guardar</Button>
+            <Button onClick={handleUpdateProduct} className="w-full sm:w-auto bg-primary text-primary-foreground py-4 rounded-2xl font-black h-auto">Guardar Cambios</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -352,6 +383,26 @@ export default function AdminPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+       <AlertDialog open={!!deleteTarget} onOpenChange={(isOpen) => !isOpen && setDeleteTarget(null)}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    Esta acción no se puede deshacer. Se eliminará permanentemente{' '}
+                    <span className="font-bold">{deleteTarget?.name}</span>.
+                    {deleteTarget?.type === 'product' && " También se quitará de los carritos de compra."}
+                    {deleteTarget?.type === 'topping' && " También se quitará de los carritos de compra."}
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setDeleteTarget(null)}>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={confirmDelete} className={buttonVariants({ variant: "destructive" })}>
+                    Eliminar
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppShell>
   );
 }

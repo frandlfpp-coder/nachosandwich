@@ -37,7 +37,7 @@ type AppContextType = {
   closeDay: () => Promise<void>;
   addProduct: (product: Omit<Product, 'id' | 'localId' | 'createdAt' | 'updatedAt'>) => void;
   deleteProduct: (id: string) => void;
-  updateProduct: (id: string, price: number) => void;
+  updateProduct: (id: string, updates: Partial<Omit<Product, 'id' | 'localId' | 'createdAt'>>) => void;
   addStockItem: (item: Omit<StockItem, 'id' | 'stock'| 'localId' | 'createdAt' | 'updatedAt'>) => void;
   deleteStockItem: (id: string) => void;
   addTopping: (topping: Omit<Topping, 'id' | 'localId' | 'createdAt' | 'updatedAt'>) => void;
@@ -353,9 +353,27 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     });
   };
   
-  const updateProduct = (id: string, price: number) => {
+  const updateProduct = (id: string, updates: Partial<Omit<Product, 'id' | 'localId' | 'createdAt'>>) => {
     if (!firebaseUser) return;
-    updateDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'products', id), { price, updatedAt: serverTimestamp() });
+    updateDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'products', id), { ...updates, updatedAt: serverTimestamp() });
+    
+    setCart(prev => {
+        let cartUpdated = false;
+        const newCart = prev.map(item => {
+            if (item.product.id === id) {
+                cartUpdated = true;
+                const updatedProduct = { ...item.product, ...updates };
+                const finalPrice = (updates.price ?? item.product.price) + item.toppings.reduce((total, t) => total + t.price, 0);
+                return { ...item, product: updatedProduct, finalPrice };
+            }
+            return item;
+        });
+
+        if (cartUpdated) {
+            toast({ title: "Producto actualizado", description: "Se actualizó el producto en tu carrito." });
+        }
+        return newCart;
+    });
   }
 
   const addStockItem = (item: Omit<StockItem, 'id' | 'stock'|'localId'|'createdAt'|'updatedAt'>) => {
