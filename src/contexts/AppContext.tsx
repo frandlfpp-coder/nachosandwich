@@ -102,7 +102,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const logout = () => {
-    signOut(auth);
+    if (auth) {
+      signOut(auth);
+    }
   };
 
   useEffect(() => {
@@ -137,7 +139,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const completedOrders = useMemo(() => {
     if (!rawOrders) return [];
     return rawOrders
-      .filter(o => o.status === 'completed')
+      .filter(o => o.status === 'completed' && !o.closureId)
       .map(o => ({
         ...o,
         updatedAt: o.updatedAt?.toDate(),
