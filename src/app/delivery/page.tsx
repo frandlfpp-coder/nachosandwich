@@ -2,15 +2,17 @@
 
 import AppShell from '@/components/layout/AppShell';
 import { useApp } from '@/contexts/AppContext';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Order } from '@/lib/types';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Bike, Phone, CheckCircle2, Package } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 export default function DeliveryPage() {
-  const { orders, completeOrder, completedDeliveriesThisShift } = useApp();
+  const { orders, completeOrder, completedDeliveriesThisShift, cancelOrder } = useApp();
   const { isClient } = useTheme();
+  const [cancelTarget, setCancelTarget] = useState<Order | null>(null);
 
   const deliveryOrders = useMemo(() => {
     return orders.filter(o => o.isDelivery && o.status === 'pending');
@@ -55,7 +57,7 @@ export default function DeliveryPage() {
             ) : (
               <div id="delivery-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {deliveryOrders.map(o => (
-                  <div key={o.id} className="bg-card text-card-foreground rounded-3xl p-8 border shadow-xl animate-pop">
+                  <div key={o.id} className="bg-card text-card-foreground rounded-3xl p-8 border shadow-xl animate-pop flex flex-col">
                     <div className="flex justify-between items-start mb-6">
                       <div>
                         <h3 className="text-xl font-black">{o.customerName}</h3>
@@ -99,13 +101,18 @@ export default function DeliveryPage() {
                         </div>
                          <div className="bg-slate-100 dark:bg-zinc-800 p-4 rounded-2xl">
                             <p className="text-[10px] opacity-40 font-black">Pago al Delivery</p>
-                            <p className="text-lg font-black text-destructive">${o.deliveryFee?.toLocaleString('es-AR') || 0}</p>
+                            <p className="text-lg font-black text-blue-600">${o.deliveryFee?.toLocaleString('es-AR') || 0}</p>
                         </div>
                     </div>
 
-                    <Button onClick={() => completeOrder(o.id)} className="w-full bg-zinc-950 text-white dark:text-zinc-950 dark:bg-white py-4 rounded-2xl text-[10px] font-black h-auto hover:bg-zinc-800 dark:hover:bg-zinc-200">
-                      Marcar como Entregado
-                    </Button>
+                    <div className="grid grid-cols-2 gap-2 mt-auto">
+                      <Button variant="outline" onClick={() => setCancelTarget(o)} className="w-full py-4 rounded-2xl text-[10px] font-black h-auto text-destructive border-destructive/50 hover:bg-destructive/10 hover:text-destructive">
+                          Cancelar
+                      </Button>
+                      <Button onClick={() => completeOrder(o.id)} className="w-full bg-zinc-950 text-white dark:text-zinc-950 dark:bg-white py-4 rounded-2xl text-[10px] font-black h-auto hover:bg-zinc-800 dark:hover:bg-zinc-200">
+                        Marcar como Entregado
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -133,7 +140,7 @@ export default function DeliveryPage() {
                             <span className='text-[8px] opacity-50 font-normal block'>{isClient ? o.updatedAt?.toLocaleTimeString('es-AR') : '...'}</span>
                         </div>
                     </div>
-                    <span className={'text-primary'}>
+                    <span className={'text-blue-600'}>
                         Pago Delivery: ${o.deliveryFee?.toLocaleString('es-AR')}
                     </span>
                   </div>
@@ -142,6 +149,28 @@ export default function DeliveryPage() {
             )}
         </div>
       </section>
+      <AlertDialog open={!!cancelTarget} onOpenChange={(isOpen) => !isOpen && setCancelTarget(null)}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>¿Cancelar Pedido?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    Esta acción no se puede deshacer. El pedido de delivery #{cancelTarget?.orderNumber} para{' '}
+                    <span className="font-bold">{cancelTarget?.customerName}</span> se eliminará permanentemente.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setCancelTarget(null)}>Volver</AlertDialogCancel>
+                <AlertDialogAction onClick={() => {
+                    if (cancelTarget) {
+                        cancelOrder(cancelTarget.id);
+                    }
+                    setCancelTarget(null);
+                }} className={buttonVariants({ variant: "destructive" })}>
+                    Confirmar Cancelación
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppShell>
   );
 }

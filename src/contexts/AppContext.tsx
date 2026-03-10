@@ -29,6 +29,7 @@ type AppContextType = {
   addOrder: (orderData: Omit<Order, 'id' | 'createdAt' | 'localId'>) => void,
   completeOrder: (orderId: string) => void;
   pickupOrder: (orderId: string) => void;
+  cancelOrder: (orderId: string) => void;
   stockItems: StockItem[];
   updateStock: (itemId: string, delta: number) => void;
   transactions: Transaction[]; // Represents OPEN transactions for the current shift
@@ -225,12 +226,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       isDelivery: orderData.isDelivery,
       paymentMethod: orderData.paymentMethod,
     };
-
+    
     if (orderData.isDelivery) {
         newOrder.customerPhone = orderData.customerPhone;
         newOrder.deliveryFee = orderData.deliveryFee;
     }
-
+    
     addDocumentNonBlocking(collection(firestore, 'locals', firebaseUser.uid, 'orders'), newOrder);
   };
 
@@ -246,13 +247,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
     const orderTotal = orderToComplete.items.reduce((sum, item) => sum + item.finalPrice * item.qty, 0);
     
-    addTransaction({
+    // Create the income transaction
+    const transactionData: Omit<Transaction, 'id' | 'createdAt' | 'localId'> = {
       concept: `VENTA: ${orderToComplete.customerName}`,
       amount: orderTotal,
       paymentMethod: orderToComplete.paymentMethod,
       type: 'ingreso',
-    });
+    };
+    addTransaction(transactionData);
 
+    // Update order status
     updateDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'orders', orderId), { status: 'completed', updatedAt: serverTimestamp() });
     toast({ title: "Pedido completado y listo para retirar" });
   };
@@ -261,6 +265,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (!firebaseUser) return;
     updateDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'orders', orderId), { status: 'picked-up', updatedAt: serverTimestamp() });
     toast({title: "Pedido marcado como retirado"});
+  };
+
+  const cancelOrder = (orderId: string) => {
+    if (!firebaseUser) return;
+    deleteDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'orders', orderId));
+    toast({ title: 'Pedido Cancelado' });
   };
 
   const updateStock = (itemId: string, delta: number) => {
@@ -515,6 +525,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     addOrder,
     completeOrder,
     pickupOrder,
+    cancelOrder,
     stockItems: stockItems || [],
     updateStock,
     transactions: openTransactions || [],
