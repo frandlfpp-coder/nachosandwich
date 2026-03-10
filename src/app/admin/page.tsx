@@ -9,7 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
-import { Tv, Check, Edit, Trash2, HistoryX } from 'lucide-react';
+import { Tv, Check, Edit, Trash2, HistoryX, Trophy, Users } from 'lucide-react';
 import { Product, Topping, ProductCategory, StockItem } from '@/lib/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -20,7 +20,9 @@ export default function AdminPage() {
     completedOrders, pickupOrder, 
     deleteAllLocalData,
     clearFinancialHistory,
-    toppings, addTopping, deleteTopping, updateTopping
+    toppings, addTopping, deleteTopping, updateTopping,
+    topProducts,
+    topCustomers
   } = useApp();
 
   const [isProductModalOpen, setProductModalOpen] = useState(false);
@@ -189,6 +191,39 @@ export default function AdminPage() {
                         TV Clientes
                     </Link>
                 </Button>
+            </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8">
+            <div className="bg-card text-card-foreground rounded-3xl p-8 border">
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-2xl font-black flex items-center gap-2"><Trophy className="text-amber-400" /> Top Productos</h2>
+                </div>
+                <div className="space-y-2">
+                    {topProducts.length > 0 ? topProducts.map(p => (
+                    <div key={p.name} className="flex justify-between items-center p-4 bg-slate-100 dark:bg-zinc-800 rounded-2xl text-xs font-black">
+                        <span>{p.emoji && `${p.emoji} `}{p.name}</span>
+                        <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-[10px]">{p.count} vendidos</span>
+                    </div>
+                    )) : (
+                        <p className="text-center text-xs opacity-50 font-black py-4">No hay datos suficientes.</p>
+                    )}
+                </div>
+            </div>
+            <div className="bg-card text-card-foreground rounded-3xl p-8 border">
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-2xl font-black flex items-center gap-2"><Users className="text-blue-500" /> Top Clientes</h2>
+                </div>
+                <div className="space-y-2">
+                    {topCustomers.length > 0 ? topCustomers.map(c => (
+                    <div key={c.name} className="flex justify-between items-center p-4 bg-slate-100 dark:bg-zinc-800 rounded-2xl text-xs font-black">
+                        <span>{c.name}</span>
+                        <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-[10px]">{c.count} pedidos</span>
+                    </div>
+                    )) : (
+                        <p className="text-center text-xs opacity-50 font-black py-4">No hay datos suficientes.</p>
+                    )}
+                </div>
             </div>
         </div>
 
@@ -459,5 +494,3 @@ export default function AdminPage() {
     </AppShell>
   );
 }
-
-    

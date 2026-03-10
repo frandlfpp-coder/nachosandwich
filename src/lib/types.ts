@@ -79,4 +79,8 @@ export type Closure = {
   totalDeliveryFees: number;
 };
 
-    
+export type TopSale = {
+  name: string;
+  count: number;
+  emoji?: string;
+};

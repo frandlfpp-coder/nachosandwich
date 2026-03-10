@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Product, CartItem, Order, StockItem, Transaction, Closure, Topping } from '@/lib/types';
+import { Product, CartItem, Order, StockItem, Transaction, Closure, Topping, TopSale } from '@/lib/types';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc, serverTimestamp, increment, setDoc, getDocs, writeBatch } from 'firebase/firestore';
 import { signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, User } from 'firebase/auth';
@@ -47,6 +47,8 @@ type AppContextType = {
   updateTopping: (id: string, price: number) => void;
   deleteAllLocalData: () => Promise<void>;
   clearFinancialHistory: () => Promise<void>;
+  topProducts: TopSale[];
+  topCustomers: TopSale[];
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -172,6 +174,45 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (!rawClosures) return [];
     return rawClosures.map(c => ({...c, closureDate: c.closureDate?.toDate()})).sort((a,b) => b.closureDate - a.closureDate);
   }, [rawClosures]);
+  
+  const { topProducts, topCustomers } = useMemo(() => {
+    if (!rawOrders) return { topProducts: [], topCustomers: [] };
+
+    const productCounts: { [key: string]: { name: string, count: number, emoji?: string } } = {};
+    const customerCounts: { [key: string]: { name: string, count: number } } = {};
+
+    rawOrders.forEach(order => {
+      // Count products
+      order.items.forEach(item => {
+        if (item.product) {
+          const name = item.product.name;
+          if (!productCounts[name]) {
+            productCounts[name] = { name, count: 0, emoji: item.product.emoji };
+          }
+          productCounts[name].count += item.qty;
+        }
+      });
+
+      // Count customers
+      const customerName = order.customerName.trim();
+      if (customerName && customerName !== 'SIN NOMBRE') {
+        if (!customerCounts[customerName]) {
+          customerCounts[customerName] = { name: customerName, count: 0 };
+        }
+        customerCounts[customerName].count += 1;
+      }
+    });
+
+    const sortedProducts: TopSale[] = Object.values(productCounts)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5); // Top 5
+
+    const sortedCustomers: TopSale[] = Object.values(customerCounts)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5); // Top 5
+
+    return { topProducts: sortedProducts, topCustomers: sortedCustomers };
+  }, [rawOrders]);
 
 
   // Cart logic
@@ -593,6 +634,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     updateTopping,
     deleteAllLocalData,
     clearFinancialHistory,
+    topProducts,
+    topCustomers,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
