@@ -34,6 +34,7 @@ export type Order = {
   localId: string;
   customerName: string;
   items: CartItem[];
+  paymentMethod: 'Efectivo' | 'Transferencia';
   createdAt: any;
   orderNumber: number;
   status: 'pending' | 'completed' | 'picked-up';

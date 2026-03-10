@@ -223,6 +223,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       items: orderData.items,
       orderNumber: orderData.orderNumber,
       isDelivery: orderData.isDelivery,
+      paymentMethod: orderData.paymentMethod,
     };
 
     if (orderData.isDelivery) {
@@ -234,7 +235,24 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const completeOrder = (orderId: string) => {
-    if (!firebaseUser) return;
+    if (!firebaseUser || !rawOrders) return;
+    
+    const orderToComplete = rawOrders.find(o => o.id === orderId);
+
+    if (!orderToComplete) {
+      toast({ variant: 'destructive', title: 'Error', description: 'No se pudo encontrar el pedido.' });
+      return;
+    }
+
+    const orderTotal = orderToComplete.items.reduce((sum, item) => sum + item.finalPrice * item.qty, 0);
+    
+    addTransaction({
+      concept: `VENTA: ${orderToComplete.customerName}`,
+      amount: orderTotal,
+      paymentMethod: orderToComplete.paymentMethod,
+      type: 'ingreso',
+    });
+
     updateDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'orders', orderId), { status: 'completed', updatedAt: serverTimestamp() });
     toast({ title: "Pedido completado y listo para retirar" });
   };

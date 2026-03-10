@@ -20,7 +20,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 const productCategories: ProductCategory[] = ['Sandwich de Miga', 'Lomitos', 'Pebetes', 'Barroluco', 'Tostados', 'Baguette'];
 
 export default function DashboardPage() {
-  const { products, toppings, cart, addToCart, updateCartQty, clearCart, cartTotal, cartCount, addTransaction, addOrder } = useApp();
+  const { products, toppings, cart, addToCart, updateCartQty, clearCart, cartTotal, cartCount, addOrder } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [isCheckoutOpen, setCheckoutOpen] = useState(false);
   const [customerName, setCustomerName] = useState('');
@@ -72,6 +72,7 @@ export default function DashboardPage() {
       orderNumber: orderNumber,
       status: 'pending',
       isDelivery: isDelivery,
+      paymentMethod: payMethod,
     };
     
     if (isDelivery) {
@@ -81,13 +82,6 @@ export default function DashboardPage() {
     
     addOrder(orderData as Omit<Order, 'id' | 'createdAt' | 'localId'>);
     
-    addTransaction({
-      concept: `VENTA: ${name}`,
-      amount: cartTotal,
-      paymentMethod: payMethod,
-      type: 'ingreso',
-    });
-
     clearCart();
     setCheckoutOpen(false);
     setCustomerName('');
