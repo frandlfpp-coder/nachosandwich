@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { startOfWeek, endOfWeek, isWithinInterval } from 'date-fns';
 import { Bike } from 'lucide-react';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function FinancePage() {
   const { transactions, closures, addTransaction, closeDay } = useApp();
@@ -25,6 +26,7 @@ export default function FinancePage() {
   const [modalType, setModalType] = useState<'ingreso' | 'egreso'>('ingreso');
   const [concept, setConcept] = useState('');
   const [amount, setAmount] = useState('');
+  const { isClient } = useTheme();
 
   // Calculations for the current open shift (based on open transactions)
   const cash = transactions.filter(t => t.paymentMethod === 'Efectivo').reduce((s,t)=>s+(t.type==='ingreso'?t.amount:-t.amount), 0);
@@ -109,7 +111,7 @@ export default function FinancePage() {
                 <div key={t.id} className="flex justify-between items-center p-4 bg-card rounded-2xl border text-[10px] animate-pop font-black">
                   <div className='flex flex-col'>
                     <span className="uppercase">{t.concept}</span>
-                    <span className='text-[8px] opacity-50 font-normal'>{t.createdAt?.toLocaleString('es-AR')}</span>
+                    <span className='text-[8px] opacity-50 font-normal'>{isClient ? t.createdAt?.toLocaleString('es-AR') : '...'}</span>
                   </div>
                   <span className={cn('text-lg', t.type === 'ingreso' ? 'text-primary' : 'text-destructive')}>
                     {t.type === 'ingreso' ? '+' : '-'}${t.amount.toLocaleString('es-AR')}
@@ -149,7 +151,7 @@ export default function FinancePage() {
               <div key={c.id} className="bg-card p-6 rounded-3xl border animate-pop">
                 <div className="flex justify-between items-start mb-4">
                   <span className="text-[10px] opacity-40 capitalize font-black">
-                    {c.closureDate?.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'short' })}
+                    {isClient ? c.closureDate?.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'short' }) : '...'}
                   </span>
                   <div className='text-right'>
                     <p className="text-[9px] opacity-60 font-black uppercase">Neto del Turno</p>

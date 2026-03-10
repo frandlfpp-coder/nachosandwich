@@ -6,9 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Order } from '@/lib/types';
 import { useMemo } from 'react';
 import { Bike, Phone, CheckCircle2, Package } from 'lucide-react';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function DeliveryPage() {
   const { orders, completeOrder, completedDeliveriesThisShift } = useApp();
+  const { isClient } = useTheme();
 
   const deliveryOrders = useMemo(() => {
     return orders.filter(o => o.isDelivery && o.status === 'pending');
@@ -126,7 +128,7 @@ export default function DeliveryPage() {
                         <span className="bg-slate-100 dark:bg-zinc-800 text-primary font-black text-lg px-4 py-2 rounded-xl">#{o.orderNumber}</span>
                         <div>
                             <span>{o.customerName}</span>
-                            <span className='text-[8px] opacity-50 font-normal block'>{o.updatedAt?.toLocaleTimeString('es-AR')}</span>
+                            <span className='text-[8px] opacity-50 font-normal block'>{isClient ? o.updatedAt?.toLocaleTimeString('es-AR') : '...'}</span>
                         </div>
                     </div>
                     <span className={'text-primary'}>
