@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingCart, ChefHat, Boxes, CircleDollarSign, Settings, LogOut, GitBranch, Zap, Bike, Sun, Moon } from 'lucide-react';
+import { ShoppingCart, ChefHat, Boxes, CircleDollarSign, Settings, LogOut, GitBranch, Zap, Bike, Sun, Moon, ClipboardList } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import {
@@ -31,6 +31,7 @@ import { usePathname } from 'next/navigation';
 const navItems = [
   { href: '/dashboard', label: 'Ventas', icon: ShoppingCart },
   { href: '/kitchen', label: 'Cocina', icon: ChefHat },
+  { href: '/comandas', label: 'Comandas', icon: ClipboardList },
   { href: '/delivery', label: 'Delivery', icon: Bike },
   { href: '/stock',label: 'Stock', icon: Boxes },
   { href: '/finance',label: 'Caja', icon: CircleDollarSign },

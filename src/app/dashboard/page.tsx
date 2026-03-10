@@ -11,10 +11,13 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Plus, Minus, X } from 'lucide-react';
-import { Product, Order, Topping } from '@/lib/types';
+import { X } from 'lucide-react';
+import { Product, Order, Topping, ProductCategory } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+const productCategories: ProductCategory[] = ['Sandwich de Miga', 'Lomitos', 'Pebetes', 'Barroluco'];
 
 export default function DashboardPage() {
   const { products, toppings, cart, addToCart, updateCartQty, clearCart, cartTotal, cartCount, addTransaction, addOrder } = useApp();
@@ -31,9 +34,11 @@ export default function DashboardPage() {
   
   const [productToCustomize, setProductToCustomize] = useState<Product | null>(null);
   const [isCustomizeModalOpen, setCustomizeModalOpen] = useState(false);
-
+  
+  const [activeCategory, setActiveCategory] = useState<ProductCategory | 'all'>('all');
 
   const filteredProducts = products.filter(p =>
+    (activeCategory === 'all' || p.category === activeCategory) &&
     p.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -222,6 +227,15 @@ export default function DashboardPage() {
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
           />
+           <Tabs defaultValue="all" onValueChange={(value) => setActiveCategory(value as ProductCategory | 'all')} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 h-auto">
+                <TabsTrigger value="all" className="py-3 text-xs font-black">Todos</TabsTrigger>
+                {productCategories.map(category => (
+                    <TabsTrigger key={category} value={category} className="py-3 text-xs font-black">{category}</TabsTrigger>
+                ))}
+            </TabsList>
+          </Tabs>
+
           <div id="pos-grid" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {filteredProducts.map(p => (
               <div key={p.id} onClick={() => handleOpenCustomize(p)} className="product-card bg-card text-card-foreground p-6 rounded-3xl border flex flex-col items-center text-center cursor-pointer shadow-sm">

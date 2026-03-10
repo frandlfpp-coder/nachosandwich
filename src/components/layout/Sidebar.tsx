@@ -19,6 +19,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 const navItems = [
   { href: '/dashboard', label: 'Ventas' },
   { href: '/kitchen', label: 'Cocina' },
+  { href: '/comandas', label: 'Comandas' },
   { href: '/delivery', label: 'Delivery' },
   { href: '/stock', label: 'Stock' },
   { href: '/finance', label: 'Caja' },

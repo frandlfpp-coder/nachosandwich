@@ -53,6 +53,16 @@
           "type": "string",
           "description": "Emoji representing the product."
         },
+        "category": {
+          "type": "string",
+          "description": "Category of the product.",
+          "enum": [
+            "Sandwich de Miga",
+            "Lomitos",
+            "Pebetes",
+            "Barroluco"
+          ]
+        },
         "createdAt": {
           "type": "string",
           "description": "Timestamp when the product was created.",
@@ -70,6 +80,7 @@
         "name",
         "price",
         "emoji",
+        "category",
         "createdAt"
       ]
     },

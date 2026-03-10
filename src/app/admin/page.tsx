@@ -8,8 +8,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
-import { Tv, Check, Edit, PlusCircle } from 'lucide-react';
-import { Product, Topping } from '@/lib/types';
+import { Tv, Check, Edit } from 'lucide-react';
+import { Product, Topping, ProductCategory } from '@/lib/types';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function AdminPage() {
   const { 
@@ -24,6 +25,7 @@ export default function AdminPage() {
   const [newProductName, setNewProductName] = useState('');
   const [newProductPrice, setNewProductPrice] = useState('');
   const [newProductEmoji, setNewProductEmoji] = useState('');
+  const [newProductCategory, setNewProductCategory] = useState<ProductCategory | ''>('');
 
   const [isStockModalOpen, setStockModalOpen] = useState(false);
   const [newStockName, setNewStockName] = useState('');
@@ -45,11 +47,12 @@ export default function AdminPage() {
 
   const handleSaveProduct = () => {
     const price = parseFloat(newProductPrice);
-    if (newProductName && !isNaN(price) && newProductEmoji) {
-      addProduct({ name: newProductName.toUpperCase(), price, emoji: newProductEmoji });
+    if (newProductName && !isNaN(price) && newProductEmoji && newProductCategory) {
+      addProduct({ name: newProductName.toUpperCase(), price, emoji: newProductEmoji, category: newProductCategory });
       setNewProductName('');
       setNewProductPrice('');
       setNewProductEmoji('');
+      setNewProductCategory('');
       setProductModalOpen(false);
       toast({title: "Producto guardado"});
     } else {
@@ -188,7 +191,7 @@ export default function AdminPage() {
           <div className="space-y-2">
             {products.map(p => (
               <div key={p.id} className="flex justify-between items-center p-4 bg-slate-100 dark:bg-zinc-800 rounded-2xl text-[10px] font-black">
-                <span>{p.emoji} {p.name} - ${p.price}</span>
+                <span>{p.emoji} {p.name} - ${p.price} <span className="text-[9px] opacity-60">({p.category})</span></span>
                 <div className="flex items-center gap-2">
                     <Button onClick={() => openEditProductModal(p)} size="icon" variant="ghost" className="h-auto w-auto p-1 text-muted-foreground hover:text-primary">
                         <Edit className="h-3 w-3" />
@@ -250,10 +253,23 @@ export default function AdminPage() {
       <Dialog open={isProductModalOpen} onOpenChange={setProductModalOpen}>
         <DialogContent className="bg-card w-full max-w-sm rounded-3xl p-10 animate-pop">
           <DialogHeader><DialogTitle className="text-2xl tracking-tighter mb-6 text-center font-black">Nuevo Producto</DialogTitle></DialogHeader>
-          <Input value={newProductEmoji} onChange={e => setNewProductEmoji(e.target.value)} placeholder="Emoji" className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black mb-3 h-auto" />
-          <Input value={newProductName} onChange={e => setNewProductName(e.target.value)} placeholder="Nombre" className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black mb-3 h-auto" />
-          <Input type="number" value={newProductPrice} onChange={e => setNewProductPrice(e.target.value)} placeholder="Precio $" className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black mb-6 h-auto" />
-          <DialogFooter className="sm:justify-center flex-col sm:flex-row gap-2">
+          <div className="space-y-3">
+            <Input value={newProductEmoji} onChange={e => setNewProductEmoji(e.target.value)} placeholder="Emoji" className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black h-auto" />
+            <Input value={newProductName} onChange={e => setNewProductName(e.target.value)} placeholder="Nombre" className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black h-auto" />
+            <Select value={newProductCategory} onValueChange={(value) => setNewProductCategory(value as ProductCategory)}>
+              <SelectTrigger className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black h-auto text-sm">
+                <SelectValue placeholder="Categoría" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Sandwich de Miga">Sandwich de Miga</SelectItem>
+                <SelectItem value="Lomitos">Lomitos</SelectItem>
+                <SelectItem value="Pebetes">Pebetes</SelectItem>
+                <SelectItem value="Barroluco">Barroluco</SelectItem>
+              </SelectContent>
+            </Select>
+            <Input type="number" value={newProductPrice} onChange={e => setNewProductPrice(e.target.value)} placeholder="Precio $" className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black h-auto" />
+          </div>
+          <DialogFooter className="mt-6 sm:justify-center flex-col sm:flex-row gap-2">
             <Button variant="ghost" onClick={() => setProductModalOpen(false)} className="w-full sm:w-auto py-4 opacity-40 font-black h-auto">Atrás</Button>
             <Button onClick={handleSaveProduct} className="w-full sm:w-auto bg-primary text-primary-foreground py-4 rounded-2xl font-black h-auto">Guardar</Button>
           </DialogFooter>
