@@ -35,6 +35,7 @@ type AppContextType = {
   transactions: Transaction[]; // Represents OPEN transactions for the current shift
   closures: Closure[];
   addTransaction: (transaction: Omit<Transaction, 'id' | 'createdAt' | 'localId'>) => void;
+  deleteTransaction: (id: string) => void;
   closeDay: () => Promise<void>;
   addProduct: (product: Omit<Product, 'id' | 'localId' | 'createdAt' | 'updatedAt'>) => void;
   deleteProduct: (id: string) => void;
@@ -292,6 +293,21 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         createdAt: serverTimestamp(),
     };
     addDocumentNonBlocking(collection(firestore, 'locals', firebaseUser.uid, 'transactions'), newTransaction);
+  };
+
+  const deleteTransaction = (id: string) => {
+    if (!firebaseUser) return;
+    const transaction = (rawTransactions || []).find(t => t.id === id);
+    if (transaction && transaction.concept.startsWith('VENTA:')) {
+        toast({
+            variant: "destructive",
+            title: "Acción no permitida",
+            description: "Las transacciones de venta no se pueden eliminar manualmente.",
+        });
+        return;
+    }
+    deleteDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'transactions', id));
+    toast({ title: 'Movimiento eliminado' });
   };
 
   const closeDay = async () => {
@@ -565,6 +581,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     transactions: openTransactions || [],
     closures: closures || [],
     addTransaction,
+    deleteTransaction,
     closeDay,
     addProduct,
     deleteProduct,
@@ -588,5 +605,3 @@ export const useApp = () => {
   }
   return context;
 };
-
-    

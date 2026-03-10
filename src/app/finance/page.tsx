@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import AppShell from '@/components/layout/AppShell';
 import { useApp } from '@/contexts/AppContext';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import {
   Dialog,
@@ -16,16 +16,22 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { startOfWeek, endOfWeek, isWithinInterval } from 'date-fns';
-import { Bike } from 'lucide-react';
+import { Bike, X } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
+import { Transaction } from '@/lib/types';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+
 
 export default function FinancePage() {
-  const { transactions, closures, addTransaction, closeDay } = useApp();
+  const { transactions, closures, addTransaction, closeDay, deleteTransaction } = useApp();
   const [mode, setMode] = useState('hoy');
   const [isModalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState<'ingreso' | 'egreso'>('ingreso');
   const [concept, setConcept] = useState('');
   const [amount, setAmount] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'Efectivo' | 'Transferencia'>('Efectivo');
+  const [deleteTarget, setDeleteTarget] = useState<Transaction | null>(null);
+
   const { isClient } = useTheme();
 
   // Calculations for the current open shift (based on open transactions)
@@ -37,6 +43,7 @@ export default function FinancePage() {
     setModalType(type);
     setConcept('');
     setAmount('');
+    setPaymentMethod('Efectivo');
     setModalOpen(true);
   };
   
@@ -46,7 +53,7 @@ export default function FinancePage() {
       addTransaction({
         concept: concept.toUpperCase(),
         amount: parsedAmount,
-        paymentMethod: 'Efectivo', // Manual transactions are cash for now
+        paymentMethod: paymentMethod,
         type: modalType
       });
       setModalOpen(false);
@@ -55,6 +62,13 @@ export default function FinancePage() {
 
   const handleCloseDay = () => {
     closeDay();
+  };
+
+  const confirmDeleteTransaction = () => {
+    if (deleteTarget) {
+      deleteTransaction(deleteTarget.id);
+      setDeleteTarget(null);
+    }
   };
   
   const { weeklyIngresos, weeklyEgresos, weeklyDeliveryFees } = useMemo(() => {
@@ -113,9 +127,16 @@ export default function FinancePage() {
                     <span className="uppercase">{t.concept}</span>
                     <span className='text-[8px] opacity-50 font-normal'>{isClient ? t.createdAt?.toLocaleString('es-AR') : '...'}</span>
                   </div>
-                  <span className={cn('text-lg', t.type === 'ingreso' ? 'text-primary' : 'text-destructive')}>
-                    {t.type === 'ingreso' ? '+' : '-'}${t.amount.toLocaleString('es-AR')}
-                  </span>
+                  <div className="flex items-center gap-4">
+                    <span className={cn('text-lg', t.type === 'ingreso' ? 'text-primary' : 'text-destructive')}>
+                      {t.type === 'ingreso' ? '+' : '-'}${t.amount.toLocaleString('es-AR')}
+                    </span>
+                    {!t.concept.startsWith('VENTA:') && (
+                        <button onClick={() => setDeleteTarget(t)} className="text-destructive font-black text-lg p-1 rounded-full hover:bg-destructive/10">
+                            <X className="w-4 h-4" />
+                        </button>
+                    )}
+                  </div>
                 </div>
               ))}
                {transactions.length === 0 && (
@@ -208,8 +229,15 @@ export default function FinancePage() {
               <Label htmlFor="amount" className="text-xs opacity-70">Monto</Label>
               <Input id="amount" type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="$" className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black h-auto" />
             </div>
+             <div>
+              <Label className="text-xs opacity-70">Método de Pago</Label>
+              <div className="flex gap-2 mt-1">
+                  <Button onClick={() => setPaymentMethod('Efectivo')} className={cn('flex-1 py-4 rounded-2xl border-2 font-black h-auto text-sm', paymentMethod === 'Efectivo' ? 'bg-lime-200 border-primary text-foreground dark:bg-lime-900 dark:text-white' : 'bg-slate-100 dark:bg-zinc-800 border-transparent text-foreground/60 hover:bg-slate-200 dark:hover:bg-zinc-700')}>💵 Efectivo</Button>
+                  <Button onClick={() => setPaymentMethod('Transferencia')} className={cn('flex-1 py-4 rounded-2xl border-2 font-black h-auto text-sm', paymentMethod === 'Transferencia' ? 'bg-blue-100 border-blue-500 text-foreground dark:bg-blue-900 dark:text-white' : 'bg-slate-100 dark:bg-zinc-800 border-transparent text-foreground/60 hover:bg-slate-200 dark:hover:bg-zinc-700')}>📱 Transfe</Button>
+              </div>
+            </div>
           </div>
-          <DialogFooter className="sm:justify-center">
+          <DialogFooter className="mt-6 sm:justify-center flex-col sm:flex-row gap-2">
             <DialogClose asChild>
                 <Button variant="ghost" className="w-full sm:w-auto py-4 opacity-40 font-black h-auto uppercase">Atrás</Button>
             </DialogClose>
@@ -217,8 +245,23 @@ export default function FinancePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <AlertDialog open={!!deleteTarget} onOpenChange={(isOpen) => !isOpen && setDeleteTarget(null)}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>¿Eliminar Movimiento?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    Esta acción no se puede deshacer. Se eliminará permanentemente el movimiento: <br />
+                    <span className="font-bold">{deleteTarget?.concept}</span> por <span className="font-bold">${deleteTarget?.amount.toLocaleString('es-AR')}</span>.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setDeleteTarget(null)}>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={confirmDeleteTransaction} className={buttonVariants({ variant: "destructive" })}>
+                    Eliminar
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppShell>
   );
 }
-
-    
