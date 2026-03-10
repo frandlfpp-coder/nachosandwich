@@ -270,7 +270,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       items: orderData.items,
       orderNumber: orderData.orderNumber,
       isDelivery: orderData.isDelivery,
-      paymentMethod: orderData.paymentMethod,
+      paymentMethod: orderData.paymentMethod || 'Efectivo',
     };
     
     if (orderData.isDelivery) {
@@ -297,7 +297,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const transactionData: Omit<Transaction, 'id' | 'createdAt' | 'localId'> = {
       concept: `VENTA: ${orderToComplete.customerName}`,
       amount: orderTotal,
-      paymentMethod: orderToComplete.paymentMethod,
+      paymentMethod: orderToComplete.paymentMethod || 'Efectivo',
       type: 'ingreso',
     };
     addTransaction(transactionData);
