@@ -9,7 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
-import { Tv, Check, Edit } from 'lucide-react';
+import { Tv, Check, Edit, Trash2, HistoryX } from 'lucide-react';
 import { Product, Topping, ProductCategory, StockItem } from '@/lib/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -18,7 +18,8 @@ export default function AdminPage() {
     products, addProduct, deleteProduct, updateProduct,
     stockItems, addStockItem, deleteStockItem, 
     completedOrders, pickupOrder, 
-    resetData,
+    deleteAllLocalData,
+    clearFinancialHistory,
     toppings, addTopping, deleteTopping, updateTopping
   } = useApp();
 
@@ -43,12 +44,13 @@ export default function AdminPage() {
   const [editedProductEmoji, setEditedProductEmoji] = useState('');
   const [editedProductCategory, setEditedProductCategory] = useState<ProductCategory | ''>('');
 
-
   const [isEditToppingModalOpen, setEditToppingModalOpen] = useState(false);
   const [editingTopping, setEditingTopping] = useState<Topping | null>(null);
   const [editedToppingPrice, setEditedToppingPrice] = useState('');
 
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; type: 'product' | 'topping' | 'stockItem' } | null>(null);
+  const [isClearHistoryAlertOpen, setClearHistoryAlertOpen] = useState(false);
+  const [isResetAllAlertOpen, setResetAllAlertOpen] = useState(false);
 
   const { toast } = useToast();
 
@@ -269,12 +271,26 @@ export default function AdminPage() {
 
       <div className="bg-card rounded-3xl p-8 border-2 border-destructive/50 mt-8">
         <h2 className="text-2xl font-black mb-4 text-destructive">Zona Peligrosa</h2>
-        <p className="text-xs opacity-70 font-black mb-6">
-            Esta acción es irreversible. Al presionar el botón se borrarán todos los productos, pedidos, stock y datos financieros únicamente del local que tengas seleccionado.
-        </p>
-        <Button onClick={resetData} variant="destructive" className="w-full h-auto py-4 text-xs font-black">
-            Borrar todos los datos de este local
-        </Button>
+        <div className="space-y-4">
+            <div>
+                <p className="text-xs opacity-70 font-black mb-2">
+                    Esta acción borrará pedidos, transacciones y cierres de caja. Los productos y el stock no se verán afectados.
+                </p>
+                <Button onClick={() => setClearHistoryAlertOpen(true)} variant="outline" className="w-full h-auto py-4 text-xs font-black border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive">
+                    <HistoryX className="mr-2" />
+                    Borrar Historial Financiero
+                </Button>
+            </div>
+            <div>
+                <p className="text-xs opacity-70 font-black mb-2">
+                    Esta acción es irreversible. Se borrarán TODOS los datos del local actual, incluyendo productos, stock, pedidos y finanzas.
+                </p>
+                <Button onClick={() => setResetAllAlertOpen(true)} variant="destructive" className="w-full h-auto py-4 text-xs font-black">
+                    <Trash2 className="mr-2" />
+                    Borrar Todos los Datos de este Local
+                </Button>
+            </div>
+        </div>
       </div>
 
       {/* Product Modal */}
@@ -395,8 +411,6 @@ export default function AdminPage() {
                 <AlertDialogDescription>
                     Esta acción no se puede deshacer. Se eliminará permanentemente{' '}
                     <span className="font-bold">{deleteTarget?.name}</span>.
-                    {deleteTarget?.type === 'product' && " También se quitará de los carritos de compra."}
-                    {deleteTarget?.type === 'topping' && " También se quitará de los carritos de compra."}
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -407,6 +421,43 @@ export default function AdminPage() {
             </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={isClearHistoryAlertOpen} onOpenChange={setClearHistoryAlertOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>¿Borrar Historial Financiero?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    Esta acción no se puede deshacer. Se eliminarán permanentemente todos los pedidos, transacciones y cierres de caja. Sus productos e inventario permanecerán.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={clearFinancialHistory} className={buttonVariants({ variant: "destructive" })}>
+                    Sí, borrar historial
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isResetAllAlertOpen} onOpenChange={setResetAllAlertOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>¿Borrar Todos los Datos del Local?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    ¡Esta acción es irreversible! Se eliminarán permanentemente todos los productos, toppings, stock, pedidos, transacciones y cierres de caja del local actual.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={deleteAllLocalData} className={buttonVariants({ variant: "destructive" })}>
+                    Sí, borrar todo
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     </AppShell>
   );
 }
+
+    

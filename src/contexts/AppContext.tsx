@@ -44,7 +44,8 @@ type AppContextType = {
   addTopping: (topping: Omit<Topping, 'id' | 'localId' | 'createdAt' | 'updatedAt'>) => void;
   deleteTopping: (id: string) => void;
   updateTopping: (id: string, price: number) => void;
-  resetData: () => Promise<void>;
+  deleteAllLocalData: () => Promise<void>;
+  clearFinancialHistory: () => Promise<void>;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -302,9 +303,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       toast({ title: 'No hay movimientos para cerrar.' });
       return;
     }
-    if (!confirm('¿CERRAR JORNADA? Esto creará un reporte y reiniciará los movimientos actuales.')) {
-      return;
-    }
 
     const ordersToClose = (rawOrders || []).filter(
       o => (o.status === 'completed' || o.status === 'picked-up') && !o.closureId
@@ -467,18 +465,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const resetData = async () => {
+  const deleteAllLocalData = async () => {
     if (!firebaseUser || !firestore) {
         toast({ variant: "destructive", title: "No estás autenticado." });
         return;
     }
 
-    if (!confirm("¿ESTÁS SEGURO? Esta acción borrará TODOS los productos, insumos, pedidos, transacciones y cierres del local actual. Esta acción no se puede deshacer.")) {
-        return;
-    }
-
-    setIsSwitchingLocal(true); // Reuse loading state to show a spinner
-    toast({ title: "Borrando datos, por favor espera..." });
+    setIsSwitchingLocal(true);
+    toast({ title: "Borrando todos los datos, por favor espera..." });
 
     const localId = firebaseUser.uid;
     const collectionsToDelete = ['products', 'stockItems', 'orders', 'transactions', 'closures', 'toppings'];
@@ -490,16 +484,56 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             
             if (snapshot.empty) continue;
 
-            const batch = writeBatch(firestore);
-            snapshot.docs.forEach(docSnapshot => {
-                batch.delete(docSnapshot.ref);
-            });
-            await batch.commit();
+            for (let i = 0; i < snapshot.docs.length; i += 500) {
+                const batch = writeBatch(firestore);
+                const chunk = snapshot.docs.slice(i, i + 500);
+                chunk.forEach(docSnapshot => {
+                    batch.delete(docSnapshot.ref);
+                });
+                await batch.commit();
+            }
         }
-        toast({ title: "¡Datos de prueba borrados con éxito!" });
+        toast({ title: "¡Todos los datos del local han sido borrados!" });
     } catch (error: any) {
         console.error("Error al borrar datos:", error);
         toast({ variant: "destructive", title: "Error al borrar los datos", description: error.message });
+    } finally {
+        setIsSwitchingLocal(false);
+    }
+  };
+
+  const clearFinancialHistory = async () => {
+    if (!firebaseUser || !firestore) {
+        toast({ variant: 'destructive', title: 'No estás autenticado.' });
+        return;
+    }
+
+    setIsSwitchingLocal(true);
+    toast({ title: 'Borrando historial financiero, por favor espera...' });
+
+    const localId = firebaseUser.uid;
+    const collectionsToDelete = ['orders', 'transactions', 'closures'];
+
+    try {
+        for (const collectionName of collectionsToDelete) {
+            const collectionRef = collection(firestore, 'locals', localId, collectionName);
+            const snapshot = await getDocs(collectionRef);
+            
+            if (snapshot.empty) continue;
+            
+            for (let i = 0; i < snapshot.docs.length; i += 500) {
+                const batch = writeBatch(firestore);
+                const chunk = snapshot.docs.slice(i, i + 500);
+                chunk.forEach(docSnapshot => {
+                    batch.delete(docSnapshot.ref);
+                });
+                await batch.commit();
+            }
+        }
+        toast({ title: '¡Historial financiero borrado con éxito!' });
+    } catch (error: any) {
+        console.error('Error al borrar el historial financiero:', error);
+        toast({ variant: 'destructive', title: 'Error al borrar el historial', description: error.message });
     } finally {
         setIsSwitchingLocal(false);
     }
@@ -540,7 +574,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     addTopping,
     deleteTopping,
     updateTopping,
-    resetData,
+    deleteAllLocalData,
+    clearFinancialHistory,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
@@ -553,3 +588,5 @@ export const useApp = () => {
   }
   return context;
 };
+
+    
