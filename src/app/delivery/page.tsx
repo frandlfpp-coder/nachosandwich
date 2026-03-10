@@ -101,7 +101,7 @@ export default function DeliveryPage() {
                         </div>
                          <div className="bg-slate-100 dark:bg-zinc-800 p-4 rounded-2xl">
                             <p className="text-[10px] opacity-40 font-black">Pago al Delivery</p>
-                            <p className="text-lg font-black text-blue-600">${o.deliveryFee?.toLocaleString('es-AR') || 0}</p>
+                            <p className="text-lg font-black text-blue-600">${(o.deliveryFee || 0).toLocaleString('es-AR')}</p>
                         </div>
                     </div>
 
@@ -141,7 +141,7 @@ export default function DeliveryPage() {
                         </div>
                     </div>
                     <span className={'text-blue-600'}>
-                        Pago Delivery: ${o.deliveryFee?.toLocaleString('es-AR')}
+                        Pago Delivery: ${(o.deliveryFee || 0).toLocaleString('es-AR')}
                     </span>
                   </div>
                 ))}
@@ -174,3 +174,5 @@ export default function DeliveryPage() {
     </AppShell>
   );
 }
+
+    

@@ -221,7 +221,7 @@ export default function AdminPage() {
           <div className="space-y-2">
             {products.map(p => (
               <div key={p.id} className="flex justify-between items-center p-4 bg-slate-100 dark:bg-zinc-800 rounded-2xl text-[10px] font-black">
-                <span>{p.emoji} {p.name} - ${p.price} <span className="text-[9px] opacity-60">({p.category})</span></span>
+                <span>{p.emoji} {p.name} - ${p.price.toLocaleString('es-AR')} <span className="text-[9px] opacity-60">({p.category})</span></span>
                 <div className="flex items-center gap-2">
                     <Button onClick={() => openEditProductModal(p)} size="icon" variant="ghost" className="h-auto w-auto p-1 text-muted-foreground hover:text-primary">
                         <Edit className="h-3 w-3" />
@@ -241,7 +241,7 @@ export default function AdminPage() {
           <div className="space-y-2">
             {toppings.map(t => (
               <div key={t.id} className="flex justify-between items-center p-4 bg-slate-100 dark:bg-zinc-800 rounded-2xl text-[10px] font-black">
-                <span>{t.name} - ${t.price}</span>
+                <span>{t.name} - ${t.price.toLocaleString('es-AR')}</span>
                  <div className="flex items-center gap-2">
                     <Button onClick={() => openEditToppingModal(t)} size="icon" variant="ghost" className="h-auto w-auto p-1 text-muted-foreground hover:text-primary">
                         <Edit className="h-3 w-3" />

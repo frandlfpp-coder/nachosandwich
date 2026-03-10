@@ -138,7 +138,7 @@ export default function DashboardPage() {
                                             />
                                             <Label htmlFor={`topping-${topping.id}`} className="font-semibold">{topping.name}</Label>
                                         </div>
-                                        <span className="text-sm font-bold text-primary">+${topping.price}</span>
+                                        <span className="text-sm font-bold text-primary">+${topping.price.toLocaleString('es-AR')}</span>
                                     </div>
                                 ))}
                                 </div>
@@ -290,3 +290,5 @@ export default function DashboardPage() {
     </AppShell>
   );
 }
+
+    
