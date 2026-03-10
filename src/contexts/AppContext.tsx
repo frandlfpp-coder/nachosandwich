@@ -149,7 +149,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const completedDeliveriesThisShift = useMemo(() => {
     if (!rawOrders) return [];
     return rawOrders
-      .filter(o => o.isDelivery && o.status === 'completed' && !o.closureId)
+      .filter(o => o.isDelivery && (o.status === 'completed' || o.status === 'picked-up') && !o.closureId)
       .map(o => ({
         ...o,
         updatedAt: o.updatedAt?.toDate(),
