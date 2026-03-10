@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Product, CartItem, Order, StockItem, Transaction, Closure, Topping, TopSale } from '@/lib/types';
-import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirebase, useCollection } from '@/firebase';
 import { collection, doc, serverTimestamp, increment, setDoc, getDocs, writeBatch } from 'firebase/firestore';
 import { signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, User } from 'firebase/auth';
 import { addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
@@ -112,16 +112,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, [firebaseUser])
 
   // Data fetching
-  const productsQuery = useMemoFirebase(() => firebaseUser ? collection(firestore, 'locals', firebaseUser.uid, 'products') : null, [firestore, firebaseUser]);
+  const productsQuery = useMemo(() => firebaseUser ? collection(firestore, 'locals', firebaseUser.uid, 'products') : null, [firestore, firebaseUser]);
   const { data: products } = useCollection<Product>(productsQuery);
   
-  const toppingsQuery = useMemoFirebase(() => firebaseUser ? collection(firestore, 'locals', firebaseUser.uid, 'toppings') : null, [firestore, firebaseUser]);
+  const toppingsQuery = useMemo(() => firebaseUser ? collection(firestore, 'locals', firebaseUser.uid, 'toppings') : null, [firestore, firebaseUser]);
   const { data: toppings } = useCollection<Topping>(toppingsQuery);
 
-  const stockItemsQuery = useMemoFirebase(() => firebaseUser ? collection(firestore, 'locals', firebaseUser.uid, 'stockItems') : null, [firestore, firebaseUser]);
+  const stockItemsQuery = useMemo(() => firebaseUser ? collection(firestore, 'locals', firebaseUser.uid, 'stockItems') : null, [firestore, firebaseUser]);
   const { data: stockItems } = useCollection<StockItem>(stockItemsQuery);
   
-  const ordersQuery = useMemoFirebase(() => firebaseUser ? collection(firestore, 'locals', firebaseUser.uid, 'orders') : null, [firestore, firebaseUser]);
+  const ordersQuery = useMemo(() => firebaseUser ? collection(firestore, 'locals', firebaseUser.uid, 'orders') : null, [firestore, firebaseUser]);
   const { data: rawOrders } = useCollection<Order>(ordersQuery);
 
   const orders = useMemo(() => {
@@ -157,7 +157,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       .sort((a,b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0));
   }, [rawOrders]);
 
-  const transactionsQuery = useMemoFirebase(() => firebaseUser ? collection(firestore, 'locals', firebaseUser.uid, 'transactions') : null, [firestore, firebaseUser]);
+  const transactionsQuery = useMemo(() => firebaseUser ? collection(firestore, 'locals', firebaseUser.uid, 'transactions') : null, [firestore, firebaseUser]);
   const { data: rawTransactions } = useCollection<Transaction>(transactionsQuery);
   
   const openTransactions = useMemo(() => {
@@ -168,7 +168,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       .sort((a,b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
   }, [rawTransactions]);
 
-  const closuresQuery = useMemoFirebase(() => firebaseUser ? collection(firestore, 'locals', firebaseUser.uid, 'closures') : null, [firestore, firebaseUser]);
+  const closuresQuery = useMemo(() => firebaseUser ? collection(firestore, 'locals', firebaseUser.uid, 'closures') : null, [firestore, firebaseUser]);
   const { data: rawClosures } = useCollection<Closure>(closuresQuery);
 
   const closures = useMemo(() => {
