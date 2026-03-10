@@ -56,7 +56,7 @@ export default function AdminPage() {
 
   const handleSaveProduct = () => {
     const price = parseFloat(newProductPrice);
-    if (newProductName && !isNaN(price) && newProductEmoji && newProductCategory) {
+    if (newProductName && !isNaN(price) && newProductCategory) {
       addProduct({ name: newProductName.toUpperCase(), price, emoji: newProductEmoji, category: newProductCategory });
       setNewProductName('');
       setNewProductPrice('');
@@ -129,7 +129,7 @@ export default function AdminPage() {
     setEditingProduct(product);
     setEditedProductName(product.name);
     setEditedProductPrice(product.price.toString());
-    setEditedProductEmoji(product.emoji);
+    setEditedProductEmoji(product.emoji || '');
     setEditedProductCategory(product.category);
     setEditProductModalOpen(true);
   };
@@ -137,7 +137,7 @@ export default function AdminPage() {
   const handleUpdateProduct = () => {
     if (!editingProduct) return;
     const price = parseFloat(editedProductPrice);
-    if (editedProductName && !isNaN(price) && price > 0 && editedProductEmoji && editedProductCategory) {
+    if (editedProductName && !isNaN(price) && price > 0 && editedProductCategory) {
         updateProduct(editingProduct.id, { 
             name: editedProductName.toUpperCase(), 
             price, 
@@ -221,7 +221,7 @@ export default function AdminPage() {
           <div className="space-y-2">
             {products.map(p => (
               <div key={p.id} className="flex justify-between items-center p-4 bg-slate-100 dark:bg-zinc-800 rounded-2xl text-[10px] font-black">
-                <span>{p.emoji} {p.name} - ${p.price.toLocaleString('es-AR')} <span className="text-[9px] opacity-60">({p.category})</span></span>
+                <span>{p.emoji && `${p.emoji} `}{p.name} - ${p.price.toLocaleString('es-AR')} <span className="text-[9px] opacity-60">({p.category})</span></span>
                 <div className="flex items-center gap-2">
                     <Button onClick={() => openEditProductModal(p)} size="icon" variant="ghost" className="h-auto w-auto p-1 text-muted-foreground hover:text-primary">
                         <Edit className="h-3 w-3" />
@@ -298,7 +298,7 @@ export default function AdminPage() {
         <DialogContent className="bg-card w-full max-w-sm rounded-3xl p-10 animate-pop">
           <DialogHeader><DialogTitle className="text-2xl tracking-tighter mb-6 text-center font-black">Nuevo Producto</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <Input value={newProductEmoji} onChange={e => setNewProductEmoji(e.target.value)} placeholder="Emoji" className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black h-auto" />
+            <Input value={newProductEmoji} onChange={e => setNewProductEmoji(e.target.value)} placeholder="Emoji (Opcional)" className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black h-auto" />
             <Input value={newProductName} onChange={e => setNewProductName(e.target.value)} placeholder="Nombre" className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black h-auto" />
             <Select value={newProductCategory} onValueChange={(value) => setNewProductCategory(value as ProductCategory)}>
               <SelectTrigger className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black h-auto text-sm">
@@ -355,7 +355,7 @@ export default function AdminPage() {
             <DialogTitle className="text-2xl tracking-tighter mb-6 text-center font-black">Editar Producto</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <Input value={editedProductEmoji} onChange={e => setEditedProductEmoji(e.target.value)} placeholder="Emoji" className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black h-auto" />
+            <Input value={editedProductEmoji} onChange={e => setEditedProductEmoji(e.target.value)} placeholder="Emoji (Opcional)" className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black h-auto" />
             <Input value={editedProductName} onChange={e => setEditedProductName(e.target.value)} placeholder="Nombre" className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black h-auto" />
             <Select value={editedProductCategory} onValueChange={(value) => setEditedProductCategory(value as ProductCategory)}>
               <SelectTrigger className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black h-auto text-sm">

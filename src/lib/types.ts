@@ -14,7 +14,7 @@ export type Product = {
   localId: string;
   name: string;
   price: number;
-  emoji: string;
+  emoji?: string;
   category: ProductCategory;
   createdAt: any;
   updatedAt: any;
@@ -78,3 +78,5 @@ export type Closure = {
   totalTransacciones: number;
   totalDeliveryFees: number;
 };
+
+    
