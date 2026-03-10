@@ -43,6 +43,7 @@ export type Order = {
   customerPhone?: string;
   deliveryFee?: number;
   closureId?: string;
+  archivedForRanking?: boolean;
 };
 
 export type StockItem = {

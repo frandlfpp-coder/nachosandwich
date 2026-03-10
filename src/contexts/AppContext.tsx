@@ -47,6 +47,7 @@ type AppContextType = {
   updateTopping: (id: string, price: number) => void;
   deleteAllLocalData: () => Promise<void>;
   clearFinancialHistory: () => Promise<void>;
+  resetRankings: () => Promise<void>;
   topProducts: TopSale[];
   topCustomers: TopSale[];
 };
@@ -178,10 +179,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const { topProducts, topCustomers } = useMemo(() => {
     if (!rawOrders) return { topProducts: [], topCustomers: [] };
 
+    const ordersForRanking = rawOrders.filter(o => !o.archivedForRanking);
+
     const productCounts: { [key: string]: { name: string, count: number, emoji?: string } } = {};
     const customerCounts: { [key: string]: { name: string, count: number } } = {};
 
-    rawOrders.forEach(order => {
+    ordersForRanking.forEach(order => {
       // Count products
       order.items.forEach(item => {
         if (item.product) {
@@ -596,6 +599,40 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const resetRankings = async () => {
+    if (!firebaseUser || !firestore) {
+        toast({ variant: 'destructive', title: 'No estás autenticado.' });
+        return;
+    }
+
+    const ordersToArchive = (rawOrders || []).filter(o => !o.archivedForRanking);
+
+    if (ordersToArchive.length === 0) {
+        toast({ title: 'No hay pedidos en los rankings para reiniciar.' });
+        return;
+    }
+    
+    setIsSwitchingLocal(true); // show loading spinner
+    toast({ title: 'Reiniciando rankings, por favor espera...' });
+
+    const localId = firebaseUser.uid;
+    
+    try {
+        const batch = writeBatch(firestore);
+        ordersToArchive.forEach(order => {
+            const orderRef = doc(firestore, 'locals', localId, 'orders', order.id);
+            batch.update(orderRef, { archivedForRanking: true });
+        });
+        await batch.commit();
+        toast({ title: '¡Rankings reiniciados con éxito!' });
+    } catch (error: any) {
+        console.error('Error al reiniciar los rankings:', error);
+        toast({ variant: 'destructive', title: 'Error al reiniciar', description: error.message });
+    } finally {
+        setIsSwitchingLocal(false);
+    }
+  };
+
   const value = {
     user: firebaseUser,
     isUserLoading,
@@ -634,6 +671,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     updateTopping,
     deleteAllLocalData,
     clearFinancialHistory,
+    resetRankings,
     topProducts,
     topCustomers,
   };

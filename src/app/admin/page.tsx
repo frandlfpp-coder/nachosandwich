@@ -20,6 +20,7 @@ export default function AdminPage() {
     completedOrders, pickupOrder, 
     deleteAllLocalData,
     clearFinancialHistory,
+    resetRankings,
     toppings, addTopping, deleteTopping, updateTopping,
     topProducts,
     topCustomers
@@ -507,16 +508,16 @@ export default function AdminPage() {
             <AlertDialogHeader>
                 <AlertDialogTitle>¿Reiniciar Rankings?</AlertDialogTitle>
                 <AlertDialogDescription>
-                    Esta acción borrará todo el historial de pedidos, transacciones y cierres de caja. Esto reiniciará los rankings de productos y clientes. Esta acción no puede deshacerse.
+                    Esto reiniciará los contadores de los rankings. Todos los pedidos realizados hasta ahora dejarán de contar para el top, y los nuevos pedidos empezarán a contar desde cero. No se borrará ningún dato financiero.
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
                 <AlertDialogAction onClick={() => {
                     setResetTopsAlertOpen(false);
-                    clearFinancialHistory();
+                    resetRankings();
                 }} className={buttonVariants({ variant: "destructive" })}>
-                    Sí, borrar y reiniciar
+                    Sí, reiniciar
                 </AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>
