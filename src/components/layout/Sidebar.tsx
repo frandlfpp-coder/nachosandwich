@@ -28,7 +28,7 @@ const navItems = [
 export default function Sidebar() {
   const pathname = usePathname();
   const { user, logout, switchLocal } = useApp();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, isClient } = useTheme();
 
   const currentLocal = useMemo(() => {
     if (user?.email) {
@@ -94,7 +94,7 @@ export default function Sidebar() {
               variant="ghost"
               className="w-full justify-center p-4 text-zinc-500 text-xs hover:text-white font-black h-auto flex-1"
             >
-              {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+              {isClient ? (theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />) : <div className="h-5 w-5" />}
               <span className="sr-only">Cambiar tema</span>
             </Button>
             <Button

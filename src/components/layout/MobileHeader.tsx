@@ -39,7 +39,7 @@ const navItems = [
 
 export default function MobileHeader() {
   const { cartCount, logout, user, switchLocal } = useApp();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, isClient } = useTheme();
   const [isSheetOpen, setSheetOpen] = useState(false);
   const [isSwitchLocalOpen, setSwitchLocalOpen] = useState(false);
   const pathname = usePathname();
@@ -76,7 +76,7 @@ export default function MobileHeader() {
         </Link>
         <div className="flex items-center">
             <Button onClick={toggleTheme} variant="ghost" className="p-3 rounded-2xl h-auto">
-              {theme === 'light' ? <Moon className="h-6 w-6" /> : <Sun className="h-6 w-6" />}
+              {isClient ? (theme === 'light' ? <Moon className="h-6 w-6" /> : <Sun className="h-6 w-6" />) : <div className="h-6 w-6" />}
               <span className="sr-only">Cambiar Tema</span>
             </Button>
             <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
