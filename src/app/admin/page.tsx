@@ -293,6 +293,8 @@ export default function AdminPage() {
                 <SelectItem value="Lomitos">Lomitos</SelectItem>
                 <SelectItem value="Pebetes">Pebetes</SelectItem>
                 <SelectItem value="Barroluco">Barroluco</SelectItem>
+                <SelectItem value="Tostados">Tostados</SelectItem>
+                <SelectItem value="Baguette">Baguette</SelectItem>
               </SelectContent>
             </Select>
             <Input type="number" value={newProductPrice} onChange={e => setNewProductPrice(e.target.value)} placeholder="Precio $" className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black h-auto" />
@@ -348,6 +350,8 @@ export default function AdminPage() {
                 <SelectItem value="Lomitos">Lomitos</SelectItem>
                 <SelectItem value="Pebetes">Pebetes</SelectItem>
                 <SelectItem value="Barroluco">Barroluco</SelectItem>
+                <SelectItem value="Tostados">Tostados</SelectItem>
+                <SelectItem value="Baguette">Baguette</SelectItem>
               </SelectContent>
             </Select>
             <Input type="number" value={editedProductPrice} onChange={e => setEditedProductPrice(e.target.value)} placeholder="Precio $" className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black h-auto" />

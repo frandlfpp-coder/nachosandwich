@@ -17,7 +17,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-const productCategories: ProductCategory[] = ['Sandwich de Miga', 'Lomitos', 'Pebetes', 'Barroluco'];
+const productCategories: ProductCategory[] = ['Sandwich de Miga', 'Lomitos', 'Pebetes', 'Barroluco', 'Tostados', 'Baguette'];
 
 export default function DashboardPage() {
   const { products, toppings, cart, addToCart, updateCartQty, clearCart, cartTotal, cartCount, addTransaction, addOrder } = useApp();
@@ -228,7 +228,7 @@ export default function DashboardPage() {
             onChange={e => setSearchTerm(e.target.value)}
           />
            <Tabs defaultValue="all" onValueChange={(value) => setActiveCategory(value as ProductCategory | 'all')} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 h-auto">
+            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 md:grid-cols-7 h-auto">
                 <TabsTrigger value="all" className="py-3 text-xs font-black">Todos</TabsTrigger>
                 {productCategories.map(category => (
                     <TabsTrigger key={category} value={category} className="py-3 text-xs font-black">{category}</TabsTrigger>

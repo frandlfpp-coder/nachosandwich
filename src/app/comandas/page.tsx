@@ -84,7 +84,7 @@ export default function ComandasPage() {
                         #{o.orderNumber}
                         </span>
                     </div>
-                     <p className="text-xs opacity-60">Listo a las: {o.updatedAt?.toLocaleTimeString()}</p>
+                     <p className="text-xs opacity-60">Listo a las: {o.updatedAt ? o.updatedAt.toLocaleTimeString() : ''}</p>
                  </div>
               )) : <p className="text-center text-xs opacity-50 font-black py-20 uppercase col-span-full">No hay comandas listas</p>}
             </div>

@@ -7,7 +7,7 @@ export type Topping = {
   updatedAt: any;
 };
 
-export type ProductCategory = 'Sandwich de Miga' | 'Lomitos' | 'Pebetes' | 'Barroluco';
+export type ProductCategory = 'Sandwich de Miga' | 'Lomitos' | 'Pebetes' | 'Barroluco' | 'Tostados' | 'Baguette';
 
 export type Product = {
   id: string;
