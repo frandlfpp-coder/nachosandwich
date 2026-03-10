@@ -89,7 +89,7 @@ export default function DashboardPage() {
     setIsDelivery(false);
     setCustomerPhone('');
     setDeliveryFee('');
-    toast({ title: '¡Venta Exitosa!' });
+    toast({ title: '¡Comanda Enviada!' });
   };
   
   const CustomizeProductModal = () => {
@@ -204,7 +204,7 @@ export default function DashboardPage() {
           <span className="text-5xl tracking-tighter text-primary font-black">${cartTotal.toLocaleString('es-AR')}</span>
         </div>
         <Button onClick={() => cart.length > 0 ? setCheckoutOpen(true) : toast({ title: 'CARRITO VACÍO' })} className="w-full bg-primary text-primary-foreground py-6 rounded-3xl text-xl shadow-xl active:scale-95 transition-all font-black h-auto">
-          Cobrar
+          Comandar
         </Button>
       </div>
     </div>
@@ -240,7 +240,7 @@ export default function DashboardPage() {
                     <span className="text-2xl font-black text-primary">${cartTotal.toLocaleString('es-AR')}</span>
                 </div>
                 <Button onClick={() => cart.length > 0 ? setCheckoutOpen(true) : toast({ title: 'CARRITO VACÍO' })} className="bg-primary text-primary-foreground py-4 px-8 rounded-2xl text-lg shadow-xl active:scale-95 transition-all font-black h-auto">
-                  Cobrar
+                  Comandar
                 </Button>
             </div>
           </div>
@@ -254,7 +254,7 @@ export default function DashboardPage() {
       <Dialog open={isCheckoutOpen} onOpenChange={setCheckoutOpen}>
         <DialogContent className="bg-card w-full max-w-md rounded-3xl p-10 animate-pop">
           <DialogHeader>
-            <DialogTitle className="text-3xl tracking-tighter mb-8 text-center font-black">Terminar Venta</DialogTitle>
+            <DialogTitle className="text-3xl tracking-tighter mb-8 text-center font-black">Confirmar Comanda</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="flex items-center space-x-2 my-4 justify-center">
@@ -274,7 +274,7 @@ export default function DashboardPage() {
             </div>
             <div className="pt-6 flex flex-col sm:flex-row gap-4">
               <Button onClick={() => setCheckoutOpen(false)} variant="ghost" className="w-full sm:w-auto order-last sm:order-first sm:flex-1 py-5 opacity-40 font-black">Atrás</Button>
-              <Button onClick={handleConfirmSale} className="w-full sm:w-auto sm:flex-[2] bg-primary text-primary-foreground py-5 rounded-3xl text-xl shadow-xl font-black h-auto">Confirmar</Button>
+              <Button onClick={handleConfirmSale} className="w-full sm:w-auto sm:flex-[2] bg-primary text-primary-foreground py-5 rounded-3xl text-xl shadow-xl font-black h-auto">Enviar a Cocina</Button>
             </div>
           </div>
         </DialogContent>

@@ -55,7 +55,7 @@ export default function KitchenPage() {
                 ))}
               </ul>
               <Button onClick={() => completeOrder(o.id)} className="w-full bg-zinc-950 text-white dark:text-zinc-950 dark:bg-white py-4 rounded-2xl text-[10px] font-black h-auto hover:bg-zinc-800 dark:hover:bg-zinc-200">
-                Entregar
+                Marcar como Listo
               </Button>
             </div>
           ))}
