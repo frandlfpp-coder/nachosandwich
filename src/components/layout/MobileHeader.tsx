@@ -30,7 +30,6 @@ import { usePathname } from 'next/navigation';
 
 const navItems = [
   { href: '/dashboard', label: 'Ventas', icon: ShoppingCart },
-  { href: '/kitchen', label: 'Cocina', icon: ChefHat },
   { href: '/comandas', label: 'Comandas', icon: ClipboardList },
   { href: '/delivery', label: 'Delivery', icon: Bike },
   { href: '/stock',label: 'Stock', icon: Boxes },
