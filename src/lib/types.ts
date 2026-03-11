@@ -22,7 +22,7 @@ export type Product = {
 
 export type CartItem = {
   id: string; // Unique ID for this specific item configuration in the cart
-  product: Product;
+  product?: Product;
   qty: number;
   toppings: Topping[];
   notes?: string;
