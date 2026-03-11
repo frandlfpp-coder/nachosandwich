@@ -1,23 +1,23 @@
 {
   "entities": {
-    "Local": {
+    "UserProfile": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Local",
+      "title": "UserProfile",
       "type": "object",
-      "description": "Represents a business location, which serves as the primary organizational unit and owner of all related operational data.",
+      "description": "Represents an authenticated business location or user managing the app. This entity links all operational data to a specific local instance.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the Local entity."
+          "description": "Unique identifier for the UserProfile entity (Firebase UID)."
         },
         "email": {
           "type": "string",
-          "description": "Email address associated with the local for login and display purposes.",
+          "description": "The email address associated with this user profile.",
           "format": "email"
         },
         "createdAt": {
           "type": "string",
-          "description": "Timestamp when the local account was created.",
+          "description": "Timestamp indicating when the user profile was created.",
           "format": "date-time"
         }
       },
@@ -31,308 +31,204 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Product",
       "type": "object",
-      "description": "Represents an item available for sale at a specific business local.",
+      "description": "Represents an item available for sale in the Point of Sale (POS) system.",
       "properties": {
         "id": {
           "type": "string",
           "description": "Unique identifier for the Product entity."
         },
-        "localId": {
-          "type": "string",
-          "description": "Reference to the Local this product belongs to. (Relationship: Local 1:N Product)"
-        },
         "name": {
           "type": "string",
-          "description": "Name of the product."
+          "description": "The name of the product."
         },
         "price": {
           "type": "number",
-          "description": "Selling price of the product."
+          "description": "The selling price of the product."
         },
-        "emoji": {
+        "userId": {
           "type": "string",
-          "description": "Emoji representing the product."
-        },
-        "category": {
-          "type": "string",
-          "description": "Category of the product.",
-          "enum": [
-            "Sandwich de Miga",
-            "Lomitos",
-            "Pebetes",
-            "Barroluco",
-            "Tostados",
-            "Baguette"
-          ]
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp when the product was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp when the product was last updated.",
-          "format": "date-time"
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Product)"
         }
       },
       "required": [
         "id",
-        "localId",
         "name",
         "price",
-        "category",
-        "createdAt"
-      ]
-    },
-    "Topping": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Topping",
-      "type": "object",
-      "description": "Represents an optional topping or extra that can be added to a product, with an associated cost.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Topping entity."
-        },
-        "localId": {
-          "type": "string",
-          "description": "Reference to the Local this topping belongs to. (Relationship: Local 1:N Topping)"
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of the topping (e.g., 'Bacon', 'Cheddar')."
-        },
-        "price": {
-          "type": "number",
-          "description": "Additional price for adding this topping."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp when the topping was created.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "localId",
-        "name",
-        "price",
-        "createdAt"
+        "userId"
       ]
     },
     "StockItem": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "StockItem",
       "type": "object",
-      "description": "Represents an inventory item or ingredient used by a specific business local.",
+      "description": "Represents an inventory item or raw ingredient used in the business operations.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the StockItem (Insumo) entity."
-        },
-        "localId": {
-          "type": "string",
-          "description": "Reference to the Local this stock item belongs to. (Relationship: Local 1:N StockItem)"
+          "description": "Unique identifier for the StockItem entity."
         },
         "name": {
           "type": "string",
-          "description": "Name of the stock item or ingredient."
+          "description": "The name of the stock item (e.g., 'TOMATE', 'PAN')."
         },
         "unit": {
           "type": "string",
-          "description": "Unit of measure for the stock item (e.g., KG, UNID, LITER)."
+          "description": "The unit of measurement for the stock item (e.g., 'KG', 'UNID', 'LITRO')."
         },
         "stock": {
           "type": "number",
-          "description": "Current quantity of the stock item in inventory."
+          "description": "The current quantity of the item in stock."
         },
-        "createdAt": {
+        "userId": {
           "type": "string",
-          "description": "Timestamp when the stock item was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp when the stock item was last updated.",
-          "format": "date-time"
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N StockItem)"
         }
       },
       "required": [
         "id",
-        "localId",
         "name",
         "unit",
         "stock",
-        "createdAt"
+        "userId"
       ]
     },
     "Order": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Order",
       "type": "object",
-      "description": "Represents a customer's sales order containing multiple products, managed by the kitchen.",
+      "description": "Represents a customer order placed through the POS system, to be prepared by the kitchen.",
       "properties": {
         "id": {
           "type": "string",
           "description": "Unique identifier for the Order entity."
         },
-        "localId": {
+        "clientName": {
           "type": "string",
-          "description": "Reference to the Local this order belongs to. (Relationship: Local 1:N Order)"
-        },
-        "customerName": {
-          "type": "string",
-          "description": "Name of the customer for this order, or 'SIN NOMBRE' if not provided."
+          "description": "The name of the customer for this order."
         },
         "items": {
           "type": "array",
-          "description": "List of products and their quantities included in this order.",
+          "description": "A list of products included in this order with their quantities and prices at the time of sale.",
           "items": {
             "type": "string"
           }
+        },
+        "callerNumber": {
+          "type": "number",
+          "description": "A random number assigned to the order for display in the kitchen monitor."
         },
         "createdAt": {
           "type": "string",
-          "description": "Timestamp when the order was created.",
+          "description": "Timestamp indicating when the order was created.",
           "format": "date-time"
         },
-        "updatedAt": {
+        "userId": {
           "type": "string",
-          "description": "Timestamp when the order was last updated.",
-          "format": "date-time"
-        },
-        "orderNumber": {
-          "type": "number",
-          "description": "A unique, randomly generated number used for identifying the order in the kitchen display."
-        },
-        "status": {
-          "type": "string",
-          "description": "Current status of the order, 'pending' upon creation and 'completed' once delivered.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "isDelivery": {
-          "type": "boolean",
-          "description": "Flag to indicate if the order is for delivery."
-        },
-        "customerPhone": {
-          "type": "string",
-          "description": "Customer's phone number for delivery orders."
-        },
-        "deliveryFee": {
-          "type": "number",
-          "description": "The fee paid to the delivery driver for the trip."
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Order)"
         }
       },
       "required": [
         "id",
-        "localId",
-        "customerName",
+        "clientName",
         "items",
+        "callerNumber",
         "createdAt",
-        "orderNumber",
-        "status",
-        "isDelivery"
+        "userId"
       ]
     },
     "Transaction": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Transaction",
       "type": "object",
-      "description": "Represents a single financial movement (income or expense) recorded for a business local.",
+      "description": "Records individual financial movements (income or expense) within a specific shift or day.",
       "properties": {
         "id": {
           "type": "string",
           "description": "Unique identifier for the Transaction entity."
         },
-        "localId": {
-          "type": "string",
-          "description": "Reference to the Local this transaction belongs to. (Relationship: Local 1:N Transaction)"
-        },
         "concept": {
           "type": "string",
-          "description": "Description or concept of the financial transaction (e.g., 'VENTA: CLIENTE A', 'PAGO A PROVEEDOR')."
+          "description": "A description of the transaction (e.g., 'VENTA: JUAN PEREZ', 'COMPRA PAN')."
         },
         "amount": {
           "type": "number",
-          "description": "Monetary amount of the transaction."
+          "description": "The monetary value of the transaction."
         },
         "paymentMethod": {
           "type": "string",
-          "description": "Method of payment for the transaction.",
-          "items": {
-            "type": "string"
-          }
+          "description": "The method used for payment (e.g., 'Efectivo', 'Transferencia')."
         },
         "type": {
           "type": "string",
-          "description": "Type of transaction: 'ingreso' (income) or 'egreso' (expense).",
+          "description": "Indicates if the transaction is an 'ingreso' (income) or 'egreso' (expense).",
           "items": {
             "type": "string"
           }
         },
         "createdAt": {
           "type": "string",
-          "description": "Timestamp when the transaction was recorded.",
+          "description": "Timestamp indicating when the transaction occurred.",
           "format": "date-time"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Transaction)"
         }
       },
       "required": [
         "id",
-        "localId",
         "concept",
         "amount",
         "paymentMethod",
         "type",
-        "createdAt"
+        "createdAt",
+        "userId"
       ]
     },
     "Closure": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Closure",
       "type": "object",
-      "description": "Represents a financial summary at the end of a shift or operating period for a business local.",
+      "description": "Represents a summary of financial activity for a closed shift or business day.",
       "properties": {
         "id": {
           "type": "string",
           "description": "Unique identifier for the Closure entity."
         },
-        "localId": {
+        "date": {
           "type": "string",
-          "description": "Reference to the Local this closure belongs to. (Relationship: Local 1:N Closure)"
-        },
-        "closureDate": {
-          "type": "string",
-          "description": "Timestamp marking the end of the financial shift/period.",
+          "description": "The date and time when the shift or business day was officially closed.",
           "format": "date-time"
         },
-        "cashTotal": {
+        "cashAmount": {
           "type": "number",
-          "description": "Total cash balance for the closed period."
+          "description": "The total amount of cash handled (income minus expenses) during the closed period."
         },
-        "transferTotal": {
+        "transferAmount": {
           "type": "number",
-          "description": "Total transfer balance for the closed period."
+          "description": "The total amount of funds processed via electronic transfer during the closed period."
         },
-        "netTotal": {
+        "totalAmount": {
           "type": "number",
-          "description": "Net total balance (cash + transfer) for the period."
+          "description": "The grand total of all financial movements (cash + transfer) for the closed period."
         },
         "transactionCount": {
           "type": "number",
-          "description": "Number of transactions included in this closure report."
+          "description": "The total number of individual transactions included in this closure summary."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Closure)"
         }
       },
       "required": [
         "id",
-        "localId",
-        "closureDate",
-        "cashTotal",
-        "transferTotal",
-        "netTotal",
-        "transactionCount"
+        "date",
+        "cashAmount",
+        "transferAmount",
+        "totalAmount",
+        "transactionCount",
+        "userId"
       ]
     }
   },
@@ -345,136 +241,146 @@
   "firestore": {
     "structure": [
       {
-        "path": "/locals/{localId}",
+        "path": "/artifacts/{appId}/users/{userId}",
         "definition": {
-          "entityName": "Local",
+          "entityName": "UserProfile",
           "schema": {
-            "$ref": "#/backend/entities/Local"
+            "$ref": "#/backend/entities/UserProfile"
           },
-          "description": "Top-level collection for business locals. Each document's ID (`localId`) corresponds to the Firebase Authentication UID of the local's manager/owner. This document serves as the primary authorization context for all nested data."
+          "description": "Stores the profile data for an authenticated business location/user. This document's ID corresponds to the Firebase Authentication UID. It serves as the root for all other user-specific data.",
+          "params": [
+            {
+              "name": "appId",
+              "description": "The static unique identifier for this application instance or tenant."
+            },
+            {
+              "name": "userId",
+              "description": "The Firebase Authentication UID of the user, which is also the ID of the UserProfile document."
+            }
+          ]
         }
       },
       {
-        "path": "/locals/{localId}/products/{productId}",
+        "path": "/artifacts/{appId}/users/{userId}/products/{productId}",
         "definition": {
           "entityName": "Product",
           "schema": {
             "$ref": "#/backend/entities/Product"
           },
-          "description": "Subcollection for products belonging to a specific local. Includes denormalized 'localId' for authorization independence.",
+          "description": "Contains product listings for a specific business location. Includes denormalized 'userId' for authorization independence.",
           "params": [
             {
-              "name": "localId",
-              "description": "The unique identifier of the owning Local, matching request.auth.uid."
+              "name": "appId",
+              "description": "The static unique identifier for this application instance or tenant."
+            },
+            {
+              "name": "userId",
+              "description": "The Firebase Authentication UID of the owner of this product."
             },
             {
               "name": "productId",
-              "description": "The unique identifier of the Product."
+              "description": "The unique identifier for the product document."
             }
           ]
         }
       },
       {
-        "path": "/locals/{localId}/toppings/{toppingId}",
-        "definition": {
-          "entityName": "Topping",
-          "schema": {
-            "$ref": "#/backend/entities/Topping"
-          },
-          "description": "Subcollection for toppings that can be added to products. Includes denormalized 'localId' for authorization.",
-          "params": [
-            {
-              "name": "localId",
-              "description": "The unique identifier of the owning Local, matching request.auth.uid."
-            },
-            {
-              "name": "toppingId",
-              "description": "The unique identifier of the Topping."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/locals/{localId}/stockItems/{stockItemId}",
+        "path": "/artifacts/{appId}/users/{userId}/stockItems/{stockItemId}",
         "definition": {
           "entityName": "StockItem",
           "schema": {
             "$ref": "#/backend/entities/StockItem"
           },
-          "description": "Subcollection for inventory stock items belonging to a specific local. Includes denormalized 'localId' for authorization independence.",
+          "description": "Manages inventory items and raw ingredients for a specific business location. Includes denormalized 'userId' for authorization independence.",
           "params": [
             {
-              "name": "localId",
-              "description": "The unique identifier of the owning Local, matching request.auth.uid."
+              "name": "appId",
+              "description": "The static unique identifier for this application instance or tenant."
+            },
+            {
+              "name": "userId",
+              "description": "The Firebase Authentication UID of the owner of this stock item."
             },
             {
               "name": "stockItemId",
-              "description": "The unique identifier of the StockItem."
+              "description": "The unique identifier for the stock item document."
             }
           ]
         }
       },
       {
-        "path": "/locals/{localId}/orders/{orderId}",
+        "path": "/artifacts/{appId}/users/{userId}/orders/{orderId}",
         "definition": {
           "entityName": "Order",
           "schema": {
             "$ref": "#/backend/entities/Order"
           },
-          "description": "Subcollection for customer orders placed at a specific local. Includes denormalized 'localId' for authorization independence.",
+          "description": "Stores customer orders placed at a specific business location. Includes denormalized 'userId' for authorization independence.",
           "params": [
             {
-              "name": "localId",
-              "description": "The unique identifier of the owning Local, matching request.auth.uid."
+              "name": "appId",
+              "description": "The static unique identifier for this application instance or tenant."
+            },
+            {
+              "name": "userId",
+              "description": "The Firebase Authentication UID of the business location that owns this order."
             },
             {
               "name": "orderId",
-              "description": "The unique identifier of the Order."
+              "description": "The unique identifier for the order document."
             }
           ]
         }
       },
       {
-        "path": "/locals/{localId}/transactions/{transactionId}",
+        "path": "/artifacts/{appId}/users/{userId}/transactions/{transactionId}",
         "definition": {
           "entityName": "Transaction",
           "schema": {
             "$ref": "#/backend/entities/Transaction"
           },
-          "description": "Subcollection for financial transactions (income/expense) recorded for a specific local. Includes denormalized 'localId' for authorization independence.",
+          "description": "Records individual financial movements (income/expense) for a specific business location. Includes denormalized 'userId' for authorization independence.",
           "params": [
             {
-              "name": "localId",
-              "description": "The unique identifier of the owning Local, matching request.auth.uid."
+              "name": "appId",
+              "description": "The static unique identifier for this application instance or tenant."
+            },
+            {
+              "name": "userId",
+              "description": "The Firebase Authentication UID of the business location that owns this transaction."
             },
             {
               "name": "transactionId",
-              "description": "The unique identifier of the Transaction."
+              "description": "The unique identifier for the transaction document."
             }
           ]
         }
       },
       {
-        "path": "/locals/{localId}/closures/{closureId}",
+        "path": "/artifacts/{appId}/users/{userId}/closures/{closureId}",
         "definition": {
           "entityName": "Closure",
           "schema": {
             "$ref": "#/backend/entities/Closure"
           },
-          "description": "Subcollection for financial closure reports for a specific local. Includes denormalized 'localId' for authorization independence.",
+          "description": "Contains summary reports of financial activity for closed shifts or business days at a specific location. Includes denormalized 'userId' for authorization independence.",
           "params": [
             {
-              "name": "localId",
-              "description": "The unique identifier of the owning Local, matching request.auth.uid."
+              "name": "appId",
+              "description": "The static unique identifier for this application instance or tenant."
+            },
+            {
+              "name": "userId",
+              "description": "The Firebase Authentication UID of the business location that owns this closure report."
             },
             {
               "name": "closureId",
-              "description": "The unique identifier of the Closure report."
+              "description": "The unique identifier for the closure document."
             }
           ]
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed around a clear, hierarchical, and user-centric ownership model, where each 'Local' represents the primary organizational unit and the owner of all its associated operational data. This design strictly adheres to the core principles, especially Authorization Independence and QAPs.\n\n**Authorization Independence:** The central strategy for achieving authorization independence is denormalization. Each `Local` entity is stored at `/locals/{localId}`, where `{localId}` directly corresponds to the `request.auth.uid` of the authenticated manager for that local. All subsequent operational data entities (Products, Stock Items, Orders, Transactions, Closures) are stored as subcollections under their respective parent `local` (e.g., `/locals/{localId}/products/{productId}`). Critically, every document within these subcollections (`Product`, `StockItem`, `Order`, `Transaction`, `Closure`) **MUST** include a `localId` field in its data payload, which explicitly duplicates the `{localId}` from its path. This allows security rules to evaluate access by comparing `request.auth.uid` directly with `resource.data.localId` without needing to perform `get()` operations on parent documents. This prevents rule complexity, avoids breaking atomic operations (like transactions or batched writes that create parent and child documents simultaneously), and enhances debuggability.\n\n**QAPs (Queries as Authorization Primitives):** This structure naturally supports QAPs through structural segregation. All data related to a specific local (products, stock items, orders, etc.) resides within that local's dedicated path, e.g., `/locals/{localId}/products`. Because all documents within a given `/locals/{localId}/...` subtree share the exact same security posture (i.e., they are owned and managed solely by `localId`), any `list` operation performed by the authenticated `localId` on any of these subcollections will inherently only retrieve data to which that user is authorized. The security rules will simply check `request.auth.uid == localId` (or `request.auth.uid == resource.data.localId`) for any read access, ensuring that rules are not used as filters and only authorized data is ever returned. This makes rule writing straightforward and highly performant for all query types.\n\nIn summary, the design provides distinct, self-contained data silos for each business local, enforced by path-based ownership and reinforced by denormalized `localId` fields within documents. This ensures robust security, simplifies rule development, and maximizes scalability and debuggability."
+    "reasoning": "The recommended Firestore structure is designed to enforce strict user-based data segregation and authorization independence, adhering to the core design principles. All data pertaining to a specific business location (represented by a UserProfile) is nested under a path that includes a static application ID and the user's unique Firebase UID. This pattern is: `/artifacts/{appId}/users/{userId}/<collection_name>/{documentId}`.\n\n**Authorization Independence (CRITICAL):**\nThis structure achieves authorization independence by embedding the `userId` directly into the Firestore path for all user-specific collections. For example, a Product document is stored at `/artifacts/{appId}/users/{userId}/products/{productId}`. When a user attempts to read or write to this path, Firestore security rules can directly compare `request.auth.uid` with the `{userId}` wildcard in the path. This eliminates the need for any `get()` operations in security rules to fetch parent documents or denormalized `userId` fields for authorization, thereby preventing complex hierarchical authorization dependencies and enabling atomic operations (transactions/batches) to succeed without rule failures related to missing parent data. Each document in the subcollections (Products, StockItems, Orders, Transactions, Closures) also explicitly stores a `userId` field, which acts as a denormalized reference to the owner. This redundancy within the document, combined with its presence in the path, reinforces ownership and simplifies rule logic by allowing a direct check: `request.auth.uid == resource.data.userId` AND `request.auth.uid == userId` (from the path).\n\n**QAPs (Rules are not Filters):**\nThis design inherently supports Query and Access Patterns (QAPs) for secure `list` operations. Because all user-specific data is strictly partitioned by `userId` in the path, any `list` query issued by a user is implicitly scoped to their own data. Security rules will grant read access only if `request.auth.uid` matches the `{userId}` in the collection path being queried. This ensures that users can only retrieve a list of documents that they are authorized to access, preventing data leakage and eliminating the need for client-side filtering or complex server-side filtering logic within security rules, thus optimizing performance and simplifying rule definitions."
   }
 }
