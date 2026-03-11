@@ -92,20 +92,14 @@ module.exports = {
           '100%': { transform: 'scale(1)', opacity: '1' },
         },
         'ready-pulse': {
-            '0%, 100%': {
-                transform: 'scale(1)',
-                boxShadow: '0 0 0 0 hsl(var(--primary) / 0.5)'
-            },
-            '70%': {
-                transform: 'scale(1)',
-                boxShadow: '0 0 0 15px hsl(var(--primary) / 0)'
-            },
-            '80%': {
-                transform: 'scale(1.02)',
-            },
-            '90%': {
-                transform: 'scale(1)',
-            }
+          '0%, 100%': {
+            transform: 'scale(1)',
+            opacity: 1,
+          },
+          '50%': {
+              transform: 'scale(1.05)',
+              opacity: 0.9,
+          },
         }
       },
       animation: {

@@ -229,7 +229,7 @@ export default function DashboardPage() {
 
           <div id="pos-grid" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {filteredProducts.map(p => (
-              <div key={p.id} onClick={() => handleOpenCustomize(p)} className="product-card bg-card text-card-foreground p-6 rounded-3xl border flex flex-col items-center text-center cursor-pointer shadow-sm">
+              <div key={p.id} onClick={() => handleOpenCustomize(p)} className="product-card bg-card text-card-foreground p-6 rounded-3xl border flex flex-col items-center text-center cursor-pointer">
                 <span className="text-4xl mb-3">{p.emoji}</span>
                 <h3 className="text-sm leading-tight mb-2 font-black">{p.name}</h3>
                 <p className="text-primary font-bold">${p.price.toLocaleString('es-AR')}</p>

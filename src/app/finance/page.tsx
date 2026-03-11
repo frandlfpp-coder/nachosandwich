@@ -102,15 +102,15 @@ export default function FinancePage() {
         {mode === 'hoy' && (
           <div id="finance-today">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-card text-card-foreground p-8 rounded-[2.5rem] border">
+              <div className="bg-card text-card-foreground p-8 rounded-3xl border">
                 <p className="text-[10px] opacity-40 mb-2 font-black uppercase">Efectivo (Turno Actual)</p>
                 <h3 className="text-4xl tracking-tighter text-primary font-black">${cash.toLocaleString('es-AR')}</h3>
               </div>
-              <div className="bg-card text-card-foreground p-8 rounded-[2.5rem] border">
+              <div className="bg-card text-card-foreground p-8 rounded-3xl border">
                 <p className="text-[10px] opacity-40 mb-2 font-black uppercase">Transferencia (Turno Actual)</p>
                 <h3 className="text-4xl tracking-tighter text-blue-600 font-black">${trans.toLocaleString('es-AR')}</h3>
               </div>
-              <div className="bg-zinc-900 text-white p-8 rounded-[2.5rem] shadow-xl">
+              <div className="bg-zinc-900 text-white p-8 rounded-3xl shadow-xl">
                 <p className="text-[10px] text-primary mb-2 font-black uppercase">Neto (Turno Actual)</p>
                 <h3 className="text-4xl tracking-tighter text-primary font-black">${total.toLocaleString('es-AR')}</h3>
               </div>
@@ -149,15 +149,15 @@ export default function FinancePage() {
         {mode === 'semanal' && (
           <div id="finance-weekly">
              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-               <div className="bg-card text-card-foreground p-8 rounded-[2.5rem] border">
+               <div className="bg-card text-card-foreground p-8 rounded-3xl border">
                 <p className="text-[10px] opacity-40 mb-2 font-black uppercase">Ingresos Totales (Semanal)</p>
                 <h3 className="text-4xl tracking-tighter text-green-600 font-black">${weeklyIngresos.toLocaleString('es-AR')}</h3>
               </div>
-              <div className="bg-card text-card-foreground p-8 rounded-[2.5rem] border">
+              <div className="bg-card text-card-foreground p-8 rounded-3xl border">
                 <p className="text-[10px] opacity-40 mb-2 font-black uppercase">Egresos Totales (Semanal)</p>
                 <h3 className="text-4xl tracking-tighter text-destructive font-black">${weeklyEgresos.toLocaleString('es-AR')}</h3>
               </div>
-              <div className="bg-card text-card-foreground p-8 rounded-[2.5rem] border">
+              <div className="bg-card text-card-foreground p-8 rounded-3xl border">
                 <p className="text-[10px] opacity-40 mb-2 font-black uppercase">Pagos Delivery (Semanal)</p>
                 <h3 className="text-4xl tracking-tighter text-blue-600 font-black">${weeklyDeliveryFees.toLocaleString('es-AR')}</h3>
               </div>
@@ -214,7 +214,7 @@ export default function FinancePage() {
         )}
       </section>
       <Dialog open={isModalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="bg-card w-full max-w-sm rounded-[3.5rem] p-10 animate-pop">
+        <DialogContent className="bg-card w-full max-w-sm rounded-3xl p-10 animate-pop">
           <DialogHeader>
             <DialogTitle className="text-2xl tracking-tighter mb-6 text-center font-black uppercase">
               {modalType === 'ingreso' ? 'Nueva Entrada' : 'Nueva Salida'}
