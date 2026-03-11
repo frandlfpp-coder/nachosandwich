@@ -74,26 +74,23 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const userPath = (collectionName: string) => user ? `/artifacts/${APP_ID}/users/${user.uid}/${collectionName}` : null;
 
-  const productsQuery = useMemoFirebase(() => user ? query(collection(firestore, userPath('products')!)) : null, [user, firestore]);
-  const { data: products = [] } = useCollection<Product>(productsQuery);
+  const { data: productsData } = useCollection<Product>(useMemoFirebase(() => (user && firestore) ? query(collection(firestore, userPath('products')!)) : null, [user, firestore]));
+  const products: Product[] = productsData ?? [];
 
-  const toppingsQuery = useMemoFirebase(() => user ? query(collection(firestore, userPath('toppings')!)) : null, [user, firestore]);
-  const { data: toppings = [] } = useCollection<Topping>(toppingsQuery);
-
-  const stockItemsQuery = useMemoFirebase(() => user ? query(collection(firestore, userPath('stockItems')!)) : null, [user, firestore]);
-  const { data: stockItems = [] } = useCollection<StockItem>(stockItemsQuery);
-
-  const ordersQuery = useMemoFirebase(() => user ? query(collection(firestore, userPath('orders')!), where('status', '==', 'pending')) : null, [user, firestore]);
-  const { data: ordersData = [] } = useCollection<Order>(ordersQuery);
+  const { data: toppingsData } = useCollection<Topping>(useMemoFirebase(() => (user && firestore) ? query(collection(firestore, userPath('toppings')!)) : null, [user, firestore]));
+  const toppings: Topping[] = toppingsData ?? [];
   
-  const completedOrdersQuery = useMemoFirebase(() => user ? query(collection(firestore, userPath('orders')!), where('status', '==', 'completed'), where('closureId', '==', null)) : null, [user, firestore]);
-  const { data: completedOrdersData = [] } = useCollection<Order>(completedOrdersQuery);
+  const { data: stockItemsData } = useCollection<StockItem>(useMemoFirebase(() => (user && firestore) ? query(collection(firestore, userPath('stockItems')!)) : null, [user, firestore]));
+  const stockItems: StockItem[] = stockItemsData ?? [];
   
-  const transactionsQuery = useMemoFirebase(() => user ? query(collection(firestore, userPath('transactions')!), where('closureId', '==', null)) : null, [user, firestore]);
-  const { data: transactionsData = [] } = useCollection<Transaction>(transactionsQuery);
+  const { data: rawOrdersData } = useCollection<Order>(useMemoFirebase(() => (user && firestore) ? query(collection(firestore, userPath('orders')!), where('status', '==', 'pending')) : null, [user, firestore]));
+  
+  const { data: rawCompletedOrdersData } = useCollection<Order>(useMemoFirebase(() => (user && firestore) ? query(collection(firestore, userPath('orders')!), where('status', '==', 'completed'), where('closureId', '==', null)) : null, [user, firestore]));
+  
+  const { data: rawTransactionsData } = useCollection<Transaction>(useMemoFirebase(() => (user && firestore) ? query(collection(firestore, userPath('transactions')!), where('closureId', '==', null)) : null, [user, firestore]));
 
-  const closuresQuery = useMemoFirebase(() => user ? query(collection(firestore, userPath('closures')!)) : null, [user, firestore]);
-  const { data: closuresData = [] } = useCollection<Closure>(closuresQuery);
+  const { data: rawClosuresData } = useCollection<Closure>(useMemoFirebase(() => (user && firestore) ? query(collection(firestore, userPath('closures')!)) : null, [user, firestore]));
+
 
   const toDateSafe = (value: any): Date | null => {
       if (!value) return null;
@@ -109,12 +106,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       return null;
   };
   
-  const orders = useMemo(() => ordersData?.map(o => ({...o, createdAt: toDateSafe(o.createdAt), updatedAt: toDateSafe(o.updatedAt) })) || [], [ordersData]);
-  const completedOrders = useMemo(() => completedOrdersData?.map(o => ({...o, createdAt: toDateSafe(o.createdAt), updatedAt: toDateSafe(o.updatedAt) })) || [], [completedOrdersData]);
-  const transactions = useMemo(() => transactionsData?.map(t => ({...t, createdAt: toDateSafe(t.createdAt) })) || [], [transactionsData]);
+  const orders = useMemo(() => (rawOrdersData ?? []).map(o => ({...o, createdAt: toDateSafe(o.createdAt), updatedAt: toDateSafe(o.updatedAt) })), [rawOrdersData]);
+  const completedOrders = useMemo(() => (rawCompletedOrdersData ?? []).map(o => ({...o, createdAt: toDateSafe(o.createdAt), updatedAt: toDateSafe(o.updatedAt) })), [rawCompletedOrdersData]);
+  const transactions = useMemo(() => (rawTransactionsData ?? []).map(t => ({...t, createdAt: toDateSafe(t.createdAt) })), [rawTransactionsData]);
 
   const closures = useMemo(() => {
-    return (closuresData || []).map((c: any) => ({
+    return (rawClosuresData ?? []).map((c: any) => ({
       ...c,
       closureDate: toDateSafe(c.closureDate),
       orders: (c.orders || []).map((o: any) => ({
@@ -127,7 +124,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         createdAt: toDateSafe(t.createdAt),
       })),
     }));
-  }, [closuresData]);
+  }, [rawClosuresData]);
 
   const { topProducts, topCustomers } = useMemo(() => {
     if (!closures) return { topProducts: [], topCustomers: [] };
@@ -170,6 +167,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, [completedOrders]);
 
   const switchLocal = async (local: 'nacho1' | 'nacho2' | 'prueba') => {
+    if (!auth) return;
     const email = `${local}@local.app`;
     if (user?.email === email) {
       return;
@@ -218,6 +216,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = async () => {
+    if (!auth) return;
     setCart([]);
     await signOut(auth);
   };
@@ -313,8 +312,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (!user || !firestore) return;
     
     // Use the raw data from the hooks, which still contains Timestamps
-    const rawOrdersToClose = [...ordersData, ...completedOrdersData].filter(o => o.status === 'completed' || o.status === 'picked-up');
-    const rawTransactionsToClose = transactionsData;
+    const rawOrdersToClose = [...(rawOrdersData ?? []), ...(rawCompletedOrdersData ?? [])].filter(o => o.status === 'completed' || o.status === 'picked-up');
+    const rawTransactionsToClose = rawTransactionsData ?? [];
 
     if (rawTransactionsToClose.length === 0 && rawOrdersToClose.length === 0) {
       toast({ title: 'No hay movimientos para cerrar.' });
@@ -488,15 +487,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   
   const value: AppContextType = {
     user, isUserLoading, logout, switchLocal, isSwitchingLocal, 
-    products: products || [], 
-    toppings: toppings || [], 
+    products, 
+    toppings, 
     cart, addToCart,
     updateCartQty, clearCart, cartTotal, cartCount, 
     orders, 
     completedOrders,
     completedDeliveriesThisShift,
     addOrder, completeOrder, pickupOrder, cancelOrder, 
-    stockItems: stockItems || [], 
+    stockItems, 
     updateStock, 
     transactions,
     closures, addTransaction, deleteTransaction, closeDay, addProduct, deleteProduct, updateProduct,
@@ -515,3 +514,5 @@ export const useApp = () => {
   }
   return context;
 };
+
+    
