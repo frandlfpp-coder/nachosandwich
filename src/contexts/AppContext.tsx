@@ -95,23 +95,20 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const closuresQuery = useMemoFirebase(() => user ? query(collection(firestore, userPath('closures')!)) : null, [user, firestore]);
   const { data: closuresData = [] } = useCollection<Closure>(closuresQuery);
 
-  // Helper to safely convert different timestamp formats to a JS Date
   const toDateSafe = (value: any): Date | null => {
       if (!value) return null;
+      if (value instanceof Date) return value; // Already a Date
       if (value instanceof Timestamp) return value.toDate();
-      if (value instanceof Date) return value;
-      // Handle server-side rendered plain objects
       if (typeof value === 'object' && typeof value.seconds === 'number' && typeof value.nanoseconds === 'number') {
           return new Timestamp(value.seconds, value.nanoseconds).toDate();
       }
-      // Handle potential string representations if necessary, though less ideal
       const date = new Date(value);
       if (!isNaN(date.getTime())) {
-        return date;
+          return date;
       }
       return null;
-  }
-
+  };
+  
   const orders = useMemo(() => ordersData?.map(o => ({...o, createdAt: toDateSafe(o.createdAt), updatedAt: toDateSafe(o.updatedAt) })) || [], [ordersData]);
   const completedOrders = useMemo(() => completedOrdersData?.map(o => ({...o, createdAt: toDateSafe(o.createdAt), updatedAt: toDateSafe(o.updatedAt) })) || [], [completedOrdersData]);
   const transactions = useMemo(() => transactionsData?.map(t => ({...t, createdAt: toDateSafe(t.createdAt) })) || [], [transactionsData]);
@@ -177,22 +174,22 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (user?.email === email) {
       return;
     }
-
+  
     setIsSwitchingLocal(true);
     setCart([]);
-
+  
     if (auth.currentUser) {
       await signOut(auth);
     }
-
+  
     const password = 'password';
-
+  
     try {
-      // First, try to create the user.
+      // First, try to create the user. This is safer than trying to sign in.
       await createUserWithEmailAndPassword(auth, email, password);
       toast({ title: `Bienvenido. Cuenta creada para ${local.toUpperCase()}` });
     } catch (error: any) {
-      // If it fails because the email is already in use, then sign in.
+      // If creation fails because the email is already in use, then sign in.
       if (error.code === 'auth/email-already-in-use') {
         try {
           await signInWithEmailAndPassword(auth, email, password);
@@ -231,7 +228,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const allHistoricalOrders = closures.flatMap(c => c.orders || []);
     const lastOrderNumber = allHistoricalOrders.reduce((max, order) => Math.max(max, order.orderNumber || 0), 0);
     const lastOpenOrderNumber = [...orders, ...completedOrders].reduce((max, order) => Math.max(max, order.orderNumber || 0), 0);
-    const nextOrderNumber = Math.max(lastOrderNumber, lastOpenOrderNumber, 0) + 1;
+    const nextOrderNumber = Math.max(lastOrderNumber, lastOpenOrderNumber) + 1;
 
     const newOrder: Omit<Order, 'id'> = {
       ...orderData,
