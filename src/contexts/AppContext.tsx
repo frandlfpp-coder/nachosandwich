@@ -95,35 +95,41 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const closuresQuery = useMemoFirebase(() => user ? query(collection(firestore, userPath('closures')!)) : null, [user, firestore]);
   const { data: closuresData = [] } = useCollection<Closure>(closuresQuery);
 
-  const orders = useMemo(() => ordersData?.map(o => ({...o, createdAt: (o.createdAt as Timestamp)?.toDate(), updatedAt: (o.updatedAt as Timestamp)?.toDate() })) || [], [ordersData]);
-  const completedOrders = useMemo(() => completedOrdersData?.map(o => ({...o, createdAt: (o.createdAt as Timestamp)?.toDate(), updatedAt: (o.updatedAt as Timestamp)?.toDate() })) || [], [completedOrdersData]);
-  const transactions = useMemo(() => transactionsData?.map(t => ({...t, createdAt: (t.createdAt as Timestamp)?.toDate() })) || [], [transactionsData]);
+  // Helper to safely convert different timestamp formats to a JS Date
+  const toDateSafe = (value: any): Date | null => {
+      if (!value) return null;
+      if (value instanceof Timestamp) return value.toDate();
+      if (value instanceof Date) return value;
+      // Handle server-side rendered plain objects
+      if (typeof value === 'object' && typeof value.seconds === 'number' && typeof value.nanoseconds === 'number') {
+          return new Timestamp(value.seconds, value.nanoseconds).toDate();
+      }
+      // Handle potential string representations if necessary, though less ideal
+      const date = new Date(value);
+      if (!isNaN(date.getTime())) {
+        return date;
+      }
+      return null;
+  }
+
+  const orders = useMemo(() => ordersData?.map(o => ({...o, createdAt: toDateSafe(o.createdAt), updatedAt: toDateSafe(o.updatedAt) })) || [], [ordersData]);
+  const completedOrders = useMemo(() => completedOrdersData?.map(o => ({...o, createdAt: toDateSafe(o.createdAt), updatedAt: toDateSafe(o.updatedAt) })) || [], [completedOrdersData]);
+  const transactions = useMemo(() => transactionsData?.map(t => ({...t, createdAt: toDateSafe(t.createdAt) })) || [], [transactionsData]);
 
   const closures = useMemo(() => {
-    // Helper to safely convert different timestamp formats to a JS Date
-    const toDateSafe = (value: any): Date | null => {
-        if (!value) return null;
-        if (value instanceof Timestamp) return value.toDate();
-        if (value instanceof Date) return value;
-        if (typeof value === 'object' && typeof value.seconds === 'number') {
-            return new Timestamp(value.seconds, value.nanoseconds || 0).toDate();
-        }
-        return null;
-    }
-
-    return closuresData?.map(c => ({
-        ...c,
-        closureDate: toDateSafe(c.closureDate),
-        orders: (c.orders || []).map(o => ({
-            ...o,
-            createdAt: toDateSafe(o.createdAt),
-            updatedAt: toDateSafe(o.updatedAt),
-        })),
-        transactions: (c.transactions || []).map(t => ({
-            ...t,
-            createdAt: toDateSafe(t.createdAt),
-        })),
-    })) || [];
+    return (closuresData || []).map((c: any) => ({
+      ...c,
+      closureDate: toDateSafe(c.closureDate),
+      orders: (c.orders || []).map((o: any) => ({
+        ...o,
+        createdAt: toDateSafe(o.createdAt),
+        updatedAt: toDateSafe(o.updatedAt),
+      })),
+      transactions: (c.transactions || []).map((t: any) => ({
+        ...t,
+        createdAt: toDateSafe(t.createdAt),
+      })),
+    }));
   }, [closuresData]);
 
   const { topProducts, topCustomers } = useMemo(() => {
@@ -182,27 +188,31 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const password = 'password';
 
     try {
+      // First, try to create the user.
       await createUserWithEmailAndPassword(auth, email, password);
       toast({ title: `Bienvenido. Cuenta creada para ${local.toUpperCase()}` });
-    } catch (creationError: any) {
-      if (creationError.code === 'auth/email-already-in-use') {
+    } catch (error: any) {
+      // If it fails because the email is already in use, then sign in.
+      if (error.code === 'auth/email-already-in-use') {
         try {
           await signInWithEmailAndPassword(auth, email, password);
           toast({ title: `Sesión iniciada como ${local.toUpperCase()}` });
         } catch (signInError: any) {
+          // This is a critical failure - the account exists but the password is wrong.
           console.error('CRITICAL: Sign-in failed for existing user:', signInError);
           toast({
             variant: 'destructive',
-            title: 'Error de Autenticación',
+            title: 'Error de Autenticación Crítico',
             description: 'La contraseña del local es incorrecta. No se puede iniciar sesión.',
           });
         }
       } else {
-        console.error('Error creating user:', creationError);
+        // Handle other creation errors
+        console.error('Error creating user:', error);
         toast({
           variant: 'destructive',
           title: 'Error al Crear Cuenta',
-          description: creationError.message,
+          description: error.message,
         });
       }
     } finally {
@@ -221,6 +231,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const allHistoricalOrders = closures.flatMap(c => c.orders || []);
     const lastOrderNumber = allHistoricalOrders.reduce((max, order) => Math.max(max, order.orderNumber || 0), 0);
     const lastOpenOrderNumber = [...orders, ...completedOrders].reduce((max, order) => Math.max(max, order.orderNumber || 0), 0);
+    const nextOrderNumber = Math.max(lastOrderNumber, lastOpenOrderNumber, 0) + 1;
 
     const newOrder: Omit<Order, 'id'> = {
       ...orderData,
@@ -228,7 +239,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       status: 'pending',
-      orderNumber: Math.max(lastOrderNumber, lastOpenOrderNumber) + 1,
+      orderNumber: nextOrderNumber,
       closureId: null,
     };
     addDocumentNonBlocking(collection(firestore, userPath('orders')!), newOrder);
@@ -304,6 +315,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const closeDay = async () => {
     if (!user || !firestore) return;
     
+    // Use the raw data from the hooks, which still contains Timestamps
     const rawOrdersToClose = [...ordersData, ...completedOrdersData].filter(o => o.status === 'completed' || o.status === 'picked-up');
     const rawTransactionsToClose = transactionsData;
 

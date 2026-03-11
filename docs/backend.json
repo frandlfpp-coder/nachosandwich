@@ -57,6 +57,36 @@
         "userId"
       ]
     },
+    "Topping": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Topping",
+      "type": "object",
+      "description": "Represents an additional item that can be added to a product.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Topping entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the topping."
+        },
+        "price": {
+          "type": "number",
+          "description": "The additional price for the topping."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Topping)"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "price",
+        "userId"
+      ]
+    },
     "StockItem": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "StockItem",
@@ -239,148 +269,47 @@
     ]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/artifacts/{appId}/users/{userId}",
-        "definition": {
-          "entityName": "UserProfile",
-          "schema": {
-            "$ref": "#/backend/entities/UserProfile"
-          },
-          "description": "Stores the profile data for an authenticated business location/user. This document's ID corresponds to the Firebase Authentication UID. It serves as the root for all other user-specific data.",
-          "params": [
-            {
-              "name": "appId",
-              "description": "The static unique identifier for this application instance or tenant."
-            },
-            {
-              "name": "userId",
-              "description": "The Firebase Authentication UID of the user, which is also the ID of the UserProfile document."
-            }
-          ]
-        }
+    "/artifacts/{appId}/users/{userId}": {
+      "schema": {
+        "$ref": "#/backend/entities/UserProfile"
       },
-      {
-        "path": "/artifacts/{appId}/users/{userId}/products/{productId}",
-        "definition": {
-          "entityName": "Product",
-          "schema": {
-            "$ref": "#/backend/entities/Product"
-          },
-          "description": "Contains product listings for a specific business location. Includes denormalized 'userId' for authorization independence.",
-          "params": [
-            {
-              "name": "appId",
-              "description": "The static unique identifier for this application instance or tenant."
-            },
-            {
-              "name": "userId",
-              "description": "The Firebase Authentication UID of the owner of this product."
-            },
-            {
-              "name": "productId",
-              "description": "The unique identifier for the product document."
-            }
-          ]
-        }
+      "description": "Stores the profile data for an authenticated business location/user. This document's ID corresponds to the Firebase Authentication UID. It serves as the root for all other user-specific data."
+    },
+    "/artifacts/{appId}/users/{userId}/products/{productId}": {
+      "schema": {
+        "$ref": "#/backend/entities/Product"
       },
-      {
-        "path": "/artifacts/{appId}/users/{userId}/stockItems/{stockItemId}",
-        "definition": {
-          "entityName": "StockItem",
-          "schema": {
-            "$ref": "#/backend/entities/StockItem"
-          },
-          "description": "Manages inventory items and raw ingredients for a specific business location. Includes denormalized 'userId' for authorization independence.",
-          "params": [
-            {
-              "name": "appId",
-              "description": "The static unique identifier for this application instance or tenant."
-            },
-            {
-              "name": "userId",
-              "description": "The Firebase Authentication UID of the owner of this stock item."
-            },
-            {
-              "name": "stockItemId",
-              "description": "The unique identifier for the stock item document."
-            }
-          ]
-        }
+      "description": "Contains product listings for a specific business location. Includes denormalized 'userId' for authorization independence."
+    },
+    "/artifacts/{appId}/users/{userId}/toppings/{toppingId}": {
+      "schema": {
+        "$ref": "#/backend/entities/Topping"
       },
-      {
-        "path": "/artifacts/{appId}/users/{userId}/orders/{orderId}",
-        "definition": {
-          "entityName": "Order",
-          "schema": {
-            "$ref": "#/backend/entities/Order"
-          },
-          "description": "Stores customer orders placed at a specific business location. Includes denormalized 'userId' for authorization independence.",
-          "params": [
-            {
-              "name": "appId",
-              "description": "The static unique identifier for this application instance or tenant."
-            },
-            {
-              "name": "userId",
-              "description": "The Firebase Authentication UID of the business location that owns this order."
-            },
-            {
-              "name": "orderId",
-              "description": "The unique identifier for the order document."
-            }
-          ]
-        }
+      "description": "Contains toppings for a specific business location. Includes denormalized 'userId' for authorization independence."
+    },
+    "/artifacts/{appId}/users/{userId}/stockItems/{stockItemId}": {
+      "schema": {
+        "$ref": "#/backend/entities/StockItem"
       },
-      {
-        "path": "/artifacts/{appId}/users/{userId}/transactions/{transactionId}",
-        "definition": {
-          "entityName": "Transaction",
-          "schema": {
-            "$ref": "#/backend/entities/Transaction"
-          },
-          "description": "Records individual financial movements (income/expense) for a specific business location. Includes denormalized 'userId' for authorization independence.",
-          "params": [
-            {
-              "name": "appId",
-              "description": "The static unique identifier for this application instance or tenant."
-            },
-            {
-              "name": "userId",
-              "description": "The Firebase Authentication UID of the business location that owns this transaction."
-            },
-            {
-              "name": "transactionId",
-              "description": "The unique identifier for the transaction document."
-            }
-          ]
-        }
+      "description": "Manages inventory items and raw ingredients for a specific business location. Includes denormalized 'userId' for authorization independence."
+    },
+    "/artifacts/{appId}/users/{userId}/orders/{orderId}": {
+      "schema": {
+        "$ref": "#/backend/entities/Order"
       },
-      {
-        "path": "/artifacts/{appId}/users/{userId}/closures/{closureId}",
-        "definition": {
-          "entityName": "Closure",
-          "schema": {
-            "$ref": "#/backend/entities/Closure"
-          },
-          "description": "Contains summary reports of financial activity for closed shifts or business days at a specific location. Includes denormalized 'userId' for authorization independence.",
-          "params": [
-            {
-              "name": "appId",
-              "description": "The static unique identifier for this application instance or tenant."
-            },
-            {
-              "name": "userId",
-              "description": "The Firebase Authentication UID of the business location that owns this closure report."
-            },
-            {
-              "name": "closureId",
-              "description": "The unique identifier for the closure document."
-            }
-          ]
-        }
-      }
-    ],
-    "reasoning": "The recommended Firestore structure is designed to enforce strict user-based data segregation and authorization independence, adhering to the core design principles. All data pertaining to a specific business location (represented by a UserProfile) is nested under a path that includes a static application ID and the user's unique Firebase UID. This pattern is: `/artifacts/{appId}/users/{userId}/<collection_name>/{documentId}`.\n\n**Authorization Independence (CRITICAL):**\nThis structure achieves authorization independence by embedding the `userId` directly into the Firestore path for all user-specific collections. For example, a Product document is stored at `/artifacts/{appId}/users/{userId}/products/{productId}`. When a user attempts to read or write to this path, Firestore security rules can directly compare `request.auth.uid` with the `{userId}` wildcard in the path. This eliminates the need for any `get()` operations in security rules to fetch parent documents or denormalized `userId` fields for authorization, thereby preventing complex hierarchical authorization dependencies and enabling atomic operations (transactions/batches) to succeed without rule failures related to missing parent data. Each document in the subcollections (Products, StockItems, Orders, Transactions, Closures) also explicitly stores a `userId` field, which acts as a denormalized reference to the owner. This redundancy within the document, combined with its presence in the path, reinforces ownership and simplifies rule logic by allowing a direct check: `request.auth.uid == resource.data.userId` AND `request.auth.uid == userId` (from the path).\n\n**QAPs (Rules are not Filters):**\nThis design inherently supports Query and Access Patterns (QAPs) for secure `list` operations. Because all user-specific data is strictly partitioned by `userId` in the path, any `list` query issued by a user is implicitly scoped to their own data. Security rules will grant read access only if `request.auth.uid` matches the `{userId}` in the collection path being queried. This ensures that users can only retrieve a list of documents that they are authorized to access, preventing data leakage and eliminating the need for client-side filtering or complex server-side filtering logic within security rules, thus optimizing performance and simplifying rule definitions."
+      "description": "Stores customer orders placed at a specific business location. Includes denormalized 'userId' for authorization independence."
+    },
+    "/artifacts/{appId}/users/{userId}/transactions/{transactionId}": {
+      "schema": {
+        "$ref": "#/backend/entities/Transaction"
+      },
+      "description": "Records individual financial movements (income/expense) for a specific business location. Includes denormalized 'userId' for authorization independence."
+    },
+    "/artifacts/{appId}/users/{userId}/closures/{closureId}": {
+      "schema": {
+        "$ref": "#/backend/entities/Closure"
+      },
+      "description": "Contains summary reports of financial activity for closed shifts or business days at a specific location. Includes denormalized 'userId' for authorization independence."
+    }
   }
 }

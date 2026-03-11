@@ -26,52 +26,26 @@ service cloud.firestore {
     // Helper Functions
     // --------------------------------
 
-    /**
-     * Checks if a user is authenticated.
-     */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /**
-     * Checks if the currently authenticated user's UID matches the given userId.
-     * This is the foundation of the ownership model.
-     * @param userId The UID to check against the authenticated user.
-     */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /**
-     * Verifies ownership for an existing document. Used for update and delete operations.
-     * @param userId The UID of the document owner.
-     */
     function isExistingOwner(userId) {
       return isOwner(userId) && resource != null;
     }
-
-    /**
-     * Validates that the 'id' field of a new UserProfile matches the user's auth UID.
-     * Enforces consistency between the document's ID and its internal data.
-     */
+    
     function isCreatingOwnProfile(userId) {
       return isOwner(userId) && request.resource.data.id == request.auth.uid;
     }
 
-
-
-    /**
-     * Validates that the 'userId' field in a new subcollection document matches the owner's auth UID.
-     * This ensures every new document is correctly linked to its owner.
-     */
     function isCreatingOwnSubcollectionDoc(userId) {
         return isOwner(userId) && request.resource.data.userId == request.auth.uid;
     }
 
-    /**
-      * Ensures that the 'userId' field on an existing subcollection document cannot be changed.
-      * This prevents re-assigning ownership of a document.
-      */
     function isUserIdImmutable() {
         return request.resource.data.userId == resource.data.userId;
     }
@@ -80,112 +54,60 @@ service cloud.firestore {
     // Collection Rules
     // --------------------------------
 
-    match /artifacts/{appId} {
+    match /artifacts/{appId}/users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false; 
+      allow create: if isCreatingOwnProfile(userId);
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+    }
 
-      /**
-       * @description Controls access to a user's own profile document.
-       * @path /artifacts/{appId}/users/{userId}
-       * @allow (create) An authenticated user creating their own profile document for the first time.
-       * @deny (get) An authenticated user trying to read another user's profile.
-       * @principle Restricts access to a user's own data tree and allows self-creation of a root profile.
-       */
-      match /users/{userId} {
-        allow get: if isOwner(userId);
-        allow list: if false; // A user should never need to list their own single profile document.
-        allow create: if isCreatingOwnProfile(userId);
-        allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-        allow delete: if isExistingOwner(userId);
+    match /artifacts/{appId}/users/{userId}/products/{productId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isCreatingOwnSubcollectionDoc(userId);
+      allow update: if isExistingOwner(userId) && isUserIdImmutable();
+      allow delete: if isExistingOwner(userId);
+    }
 
-        /**
-         * @description Secures product documents owned by a user.
-         * @path /artifacts/{appId}/users/{userId}/products/{productId}
-         * @allow (create) An authenticated user adding a new product to their own product list.
-         * @deny (update) A user trying to modify a product owned by another user.
-         * @principle Enforces document ownership for all operations and validates relational integrity.
-         */
-        match /products/{productId} {
-          allow get: if isOwner(userId);
-          allow list: if isOwner(userId);
-          allow create: if isCreatingOwnSubcollectionDoc(userId);
-          allow update: if isExistingOwner(userId) && isUserIdImmutable();
-          allow delete: if isExistingOwner(userId);
-        }
+    match /artifacts/{appId}/users/{userId}/toppings/{toppingId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isCreatingOwnSubcollectionDoc(userId);
+      allow update: if isExistingOwner(userId) && isUserIdImmutable();
+      allow delete: if isExistingOwner(userId);
+    }
 
-        /**
-         * @description Secures topping documents owned by a user.
-         * @path /artifacts/{appId}/users/{userId}/toppings/{toppingId}
-         * @allow (list) An authenticated user listing all toppings they own.
-         * @deny (create) A user trying to create a topping under another user's profile.
-         * @principle Enforces document ownership for all operations and validates relational integrity.
-         */
-        match /toppings/{toppingId} {
-          allow get: if isOwner(userId);
-          allow list: if isOwner(userId);
-          allow create: if isCreatingOwnSubcollectionDoc(userId);
-          allow update: if isExistingOwner(userId) && isUserIdImmutable();
-          allow delete: if isExistingOwner(userId);
-        }
+    match /artifacts/{appId}/users/{userId}/stockItems/{stockItemId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isCreatingOwnSubcollectionDoc(userId);
+      allow update: if isExistingOwner(userId) && isUserIdImmutable();
+      allow delete: if isExistingOwner(userId);
+    }
 
-        /**
-         * @description Secures inventory stock items owned by a user.
-         * @path /artifacts/{appId}/users/{userId}/stockItems/{stockItemId}
-         * @allow (list) An authenticated user listing all stock items they own.
-         * @deny (create) A user trying to create a stock item under another user's profile.
-         * @principle Enforces document ownership for all operations and validates relational integrity.
-         */
-        match /stockItems/{stockItemId} {
-          allow get: if isOwner(userId);
-          allow list: if isOwner(userId);
-          allow create: if isCreatingOwnSubcollectionDoc(userId);
-          allow update: if isExistingOwner(userId) && isUserIdImmutable();
-          allow delete: if isExistingOwner(userId);
-        }
+    match /artifacts/{appId}/users/{userId}/orders/{orderId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isCreatingOwnSubcollectionDoc(userId);
+      allow update: if isExistingOwner(userId) && isUserIdImmutable();
+      allow delete: if isExistingOwner(userId);
+    }
 
-        /**
-         * @description Secures customer orders owned by a user.
-         * @path /artifacts/{appId}/users/{userId}/orders/{orderId}
-         * @allow (get) An authenticated user reading the details of one of their own orders.
-         * @deny (delete) A user trying to delete an order that belongs to someone else.
-         * @principle Enforces document ownership for all operations and validates relational integrity.
-         */
-        match /orders/{orderId} {
-          allow get: if isOwner(userId);
-          allow list: if isOwner(userId);
-          allow create: if isCreatingOwnSubcollectionDoc(userId);
-          allow update: if isExistingOwner(userId) && isUserIdImmutable();
-          allow delete: if isExistingOwner(userId);
-        }
+    match /artifacts/{appId}/users/{userId}/transactions/{transactionId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isCreatingOwnSubcollectionDoc(userId);
+      allow update: if isExistingOwner(userId) && isUserIdImmutable();
+      allow delete: if isExistingOwner(userId);
+    }
 
-        /**
-         * @description Secures financial transaction records owned by a user.
-         * @path /artifacts/{appId}/users/{userId}/transactions/{transactionId}
-         * @allow (create) An authenticated user recording a new transaction for their business.
-         * @deny (list) A user attempting to list financial transactions belonging to another user.
-         * @principle Enforces document ownership for all operations and validates relational integrity.
-         */
-        match /transactions/{transactionId} {
-          allow get: if isOwner(userId);
-          allow list: if isOwner(userId);
-          allow create: if isCreatingOwnSubcollectionDoc(userId);
-          allow update: if isExistingOwner(userId) && isUserIdImmutable();
-          allow delete: if isExistingOwner(userId);
-        }
-
-        /**
-         * @description Secures end-of-day financial closure reports owned by a user.
-         * @path /artifacts/{appId}/users/{userId}/closures/{closureId}
-         * @allow (get) An authenticated user retrieving a historical closure report they created.
-         * @deny (update) A user trying to alter a closure report owned by another business.
-         * @principle Enforces document ownership for all operations and validates relational integrity.
-         */
-        match /closures/{closureId} {
-          allow get: if isOwner(userId);
-          allow list: if isOwner(userId);
-          allow create: if isCreatingOwnSubcollectionDoc(userId);
-          allow update: if isExistingOwner(userId) && isUserIdImmutable();
-          allow delete: if isExistingOwner(userId);
-        }
-      }
+    match /artifacts/{appId}/users/{userId}/closures/{closureId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isCreatingOwnSubcollectionDoc(userId);
+      allow update: if isExistingOwner(userId) && isUserIdImmutable();
+      allow delete: if isExistingOwner(userId);
     }
   }
 }
