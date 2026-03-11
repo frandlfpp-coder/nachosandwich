@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useMemo } from 'react';
-import { Product, CartItem, Order, StockItem, Transaction, Closure, RankedProduct, RankedCustomer, NewOrderPayload } from '@/lib/types';
+import { Product, Topping, CartItem, Order, StockItem, Transaction, Closure, RankedProduct, RankedCustomer, NewOrderPayload } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { 
   useUser, 
@@ -87,6 +87,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   
   const { data: rawCompletedOrdersData } = useCollection<Order>(useMemoFirebase(() => (user && firestore) ? query(collection(firestore, userPath('orders')!), where('status', '==', 'completed'), where('closureId', '==', null)) : null, [user, firestore]));
   
+  const { data: rawPickedUpOrdersData } = useCollection<Order>(useMemoFirebase(() => (user && firestore) ? query(collection(firestore, userPath('orders')!), where('status', '==', 'picked-up'), where('closureId', '==', null)) : null, [user, firestore]));
+
   const { data: rawTransactionsData } = useCollection<Transaction>(useMemoFirebase(() => (user && firestore) ? query(collection(firestore, userPath('transactions')!), where('closureId', '==', null)) : null, [user, firestore]));
 
   const { data: rawClosuresData } = useCollection<Closure>(useMemoFirebase(() => (user && firestore) ? query(collection(firestore, userPath('closures')!)) : null, [user, firestore]));
@@ -312,7 +314,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (!user || !firestore) return;
     
     // Use the raw data from the hooks, which still contains Timestamps
-    const rawOrdersToClose = [...(rawOrdersData ?? []), ...(rawCompletedOrdersData ?? [])].filter(o => o.status === 'completed' || o.status === 'picked-up');
+    const rawCompletedOrders = rawCompletedOrdersData ?? [];
+    const rawPickedUpOrders = rawPickedUpOrdersData ?? [];
+    const rawOrdersToClose = [...rawCompletedOrders, ...rawPickedUpOrders];
     const rawTransactionsToClose = rawTransactionsData ?? [];
 
     if (rawTransactionsToClose.length === 0 && rawOrdersToClose.length === 0) {

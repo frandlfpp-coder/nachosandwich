@@ -81,7 +81,7 @@ export default function ComandasPage() {
           <div>
             <h3 className="text-2xl font-bold mb-4">Listas para Retirar</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {completedOrders.length > 0 ? completedOrders.filter(o => !o.closureId).map(o => (
+              {completedOrders.length > 0 ? completedOrders.map(o => (
                  <div key={o.id} className="bg-card text-card-foreground rounded-2xl p-6 border animate-pop">
                     <div className="flex justify-between items-start mb-6">
                         <div>
