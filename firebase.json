@@ -1,0 +1,11 @@
+{
+  "hosting": {
+    "source": ".",
+    "appAssociation": "AUTO",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}
