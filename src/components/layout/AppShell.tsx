@@ -19,10 +19,10 @@ export default function AppShell({ children }: AppShellProps) {
   // Show a loading screen while authentication is in progress or local is switching.
   if (isUserLoading || isSwitchingLocal) {
     return (
-      <div className="fixed inset-0 bg-zinc-950 flex items-center justify-center">
+      <div className="fixed inset-0 bg-background flex items-center justify-center">
         <div id="loading-spinner" className="flex flex-col items-center gap-4">
           <Loader2 className="w-10 h-10 text-primary animate-spin" />
-          <p className="text-white text-[9px] tracking-widest">CARGANDO...</p>
+          <p className="text-foreground text-[9px] tracking-widest">CARGANDO...</p>
         </div>
       </div>
     );
@@ -36,7 +36,7 @@ export default function AppShell({ children }: AppShellProps) {
         <main className="flex-1 flex flex-col relative overflow-hidden bg-secondary">
           <div className="flex-1 flex items-center justify-center text-center p-8">
             <div className="flex flex-col items-center gap-4 animate-pop">
-              <div className="bg-primary w-24 h-24 rounded-[2rem] flex items-center justify-center mx-auto mb-4 shadow-2xl shadow-blue-500/20">
+              <div className="bg-primary w-24 h-24 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-2xl shadow-primary/20">
                 <Zap className="h-12 w-12 text-primary-foreground" strokeWidth={2.5} />
               </div>
               <h1 className="text-2xl font-black tracking-tighter">Bienvenido a NACHO+</h1>

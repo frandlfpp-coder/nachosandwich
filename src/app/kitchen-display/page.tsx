@@ -9,13 +9,13 @@ export default function KitchenDisplayPage() {
   const { isClient } = useTheme();
 
   return (
-    <div className="bg-zinc-900 min-h-screen text-white p-8">
+    <div className="bg-background min-h-screen text-foreground p-8">
       <h1 className="text-6xl font-black text-center mb-12 text-primary tracking-tighter">
         PEDIDOS PENDIENTES
       </h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
         {orders.map(order => (
-          <div key={order.id} className="bg-card text-card-foreground rounded-3xl p-8 flex flex-col animate-pop shadow-2xl">
+          <div key={order.id} className="bg-card text-card-foreground rounded-2xl p-6 flex flex-col animate-pop shadow-2xl border">
             <div className="flex justify-between items-center border-b-2 pb-4 mb-4">
               <span className="text-5xl font-black">#{order.orderNumber}</span>
               <div className="text-right">

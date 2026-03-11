@@ -44,9 +44,9 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="hidden md:flex flex-col w-72 bg-zinc-950 text-white p-8 shrink-0">
+    <aside className="hidden md:flex flex-col w-72 bg-card text-card-foreground p-8 shrink-0 border-r">
       <div className="mb-12 flex items-center gap-4">
-        <div className="bg-primary p-2 rounded-xl text-primary-foreground">
+        <div className="bg-primary p-2 rounded-lg text-primary-foreground">
           <Zap className="h-6 w-6" />
         </div>
         <div className="flex flex-col overflow-hidden">
@@ -66,10 +66,10 @@ export default function Sidebar() {
             variant="ghost"
             disabled={!user}
             className={cn(
-              'w-full justify-start p-4 rounded-2xl text-base transition-all flex items-center gap-4 font-black uppercase',
+              'w-full justify-start p-4 rounded-xl text-base transition-all flex items-center gap-4 font-black uppercase',
               pathname === item.href
                 ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                : 'hover:bg-zinc-900',
+                : 'hover:bg-secondary',
               !user && 'opacity-50 cursor-not-allowed'
             )}
           >
@@ -79,7 +79,7 @@ export default function Sidebar() {
       </nav>
       <div className="space-y-2">
          <Select onValueChange={handleLocalChange} value={currentLocal}>
-            <SelectTrigger className="w-full bg-zinc-900 border-zinc-800 focus:ring-primary font-black uppercase">
+            <SelectTrigger className="w-full bg-secondary border-border focus:ring-primary font-black uppercase">
                 <SelectValue placeholder="SELECCIONAR LOCAL" />
             </SelectTrigger>
             <SelectContent>
@@ -91,8 +91,8 @@ export default function Sidebar() {
          <div className="flex items-center gap-2">
             <Button
               onClick={toggleTheme}
-              variant="ghost"
-              className="w-full justify-center p-4 text-zinc-500 text-xs hover:text-white font-black h-auto flex-1"
+              variant="outline"
+              className="w-full justify-center p-4 text-muted-foreground text-xs hover:text-foreground font-black h-auto flex-1"
             >
               {isClient ? (theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />) : <div className="h-5 w-5" />}
               <span className="sr-only">Cambiar tema</span>
@@ -101,9 +101,9 @@ export default function Sidebar() {
               onClick={() => {
                 if (confirm('¿Cerrar sesión del local actual?')) logout();
               }}
-              variant="ghost"
+              variant="outline"
               disabled={!user}
-              className="w-full p-4 text-zinc-500 text-xs hover:text-red-400 font-black h-auto disabled:opacity-50 disabled:hover:text-zinc-500 flex-1 uppercase"
+              className="w-full p-4 text-muted-foreground text-xs hover:text-destructive font-black h-auto disabled:opacity-50 disabled:hover:text-muted-foreground flex-1 uppercase"
             >
               Cerrar Sesión
             </Button>

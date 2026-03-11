@@ -115,7 +115,7 @@ export default function DashboardPage() {
             if (!isOpen) setProductToCustomize(null);
             setCustomizeModalOpen(isOpen);
         }}>
-            <DialogContent className="bg-card w-full max-w-lg rounded-3xl p-10 animate-pop">
+            <DialogContent className="bg-card w-full max-w-lg rounded-2xl p-10 animate-pop">
                 <DialogHeader>
                     <DialogTitle className="text-3xl tracking-tighter mb-4 text-center font-black">{productToCustomize.name}</DialogTitle>
                 </DialogHeader>
@@ -123,7 +123,7 @@ export default function DashboardPage() {
                     {toppings.length > 0 && (
                         <div>
                             <h4 className="font-bold mb-2">Añadir Toppings</h4>
-                            <ScrollArea className="h-40 border rounded-2xl p-4">
+                            <ScrollArea className="h-40 border rounded-xl p-4">
                                 <div className="space-y-3">
                                 {toppings.map(topping => (
                                     <div key={topping.id} className="flex items-center justify-between">
@@ -148,13 +148,13 @@ export default function DashboardPage() {
                             placeholder="Ej: sin cebolla, bien cocido..."
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
-                            className="bg-slate-100 dark:bg-zinc-800"
+                            className="bg-secondary"
                         />
                     </div>
                 </div>
                 <DialogFooter className="mt-8 sm:justify-between items-center">
                     <span className="text-2xl font-black">Total: ${calculatedPrice.toLocaleString('es-AR')}</span>
-                    <Button onClick={handleAddToCart} className="w-full sm:w-auto bg-primary text-primary-foreground py-4 px-8 rounded-2xl text-lg shadow-xl font-black h-auto">
+                    <Button onClick={handleAddToCart} className="w-full sm:w-auto bg-primary text-primary-foreground py-4 px-8 rounded-xl text-lg shadow-xl font-black h-auto">
                         Añadir al Pedido
                     </Button>
                 </DialogFooter>
@@ -164,8 +164,8 @@ export default function DashboardPage() {
   };
 
   const CartComponent = () => (
-    <div className="w-full lg:w-[400px] bg-card text-card-foreground rounded-3xl shadow-xl border flex flex-col overflow-hidden lg:h-full">
-      <div className="p-8 bg-slate-100 dark:bg-zinc-800/50 border-b flex justify-between items-center">
+    <div className="w-full lg:w-[400px] bg-card text-card-foreground rounded-2xl shadow-xl border flex flex-col overflow-hidden lg:h-full">
+      <div className="p-8 bg-secondary/50 border-b flex justify-between items-center">
         <h2 className="text-sm tracking-widest opacity-60 font-black">Tu Pedido</h2>
         <Button onClick={clearCart} variant="link" className="text-xs text-destructive underline font-black p-0 h-auto">Vaciar</Button>
       </div>
@@ -174,7 +174,7 @@ export default function DashboardPage() {
           <div className="py-20 text-center opacity-20 text-xs font-black">Carrito Vacío</div>
         ) : (
           cart.map(item => (
-            <div key={item.id} className="flex items-center gap-4 bg-slate-100 dark:bg-zinc-800 p-4 rounded-3xl animate-pop border">
+            <div key={item.id} className="flex items-center gap-4 bg-secondary p-4 rounded-xl animate-pop border">
               <div className="flex-1">
                 <h4 className="text-sm leading-tight font-black">{item.product.name}</h4>
                 {item.toppings.length > 0 && (
@@ -199,7 +199,7 @@ export default function DashboardPage() {
           <span className="text-[10px] opacity-40 font-black">Total</span>
           <span className="text-5xl tracking-tighter text-primary font-black">${cartTotal.toLocaleString('es-AR')}</span>
         </div>
-        <Button onClick={() => cart.length > 0 ? setCheckoutOpen(true) : toast({ title: 'CARRITO VACÍO' })} className="w-full bg-primary text-primary-foreground py-6 rounded-3xl text-xl shadow-xl active:scale-95 transition-all font-black h-auto">
+        <Button onClick={() => cart.length > 0 ? setCheckoutOpen(true) : toast({ title: 'CARRITO VACÍO' })} className="w-full bg-primary text-primary-foreground py-6 rounded-xl text-xl shadow-xl active:scale-95 transition-all font-black h-auto">
           Comandar
         </Button>
       </div>
@@ -214,7 +214,7 @@ export default function DashboardPage() {
             type="text"
             id="pos-search"
             placeholder="Buscar producto..."
-            className="w-full p-5 rounded-3xl bg-card border-2 outline-none focus:border-primary transition-all font-black h-auto"
+            className="w-full p-5 rounded-xl bg-card border-2 outline-none focus:border-primary transition-all font-black h-auto"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
           />
@@ -229,7 +229,7 @@ export default function DashboardPage() {
 
           <div id="pos-grid" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {filteredProducts.map(p => (
-              <div key={p.id} onClick={() => handleOpenCustomize(p)} className="product-card bg-card text-card-foreground p-6 rounded-3xl border flex flex-col items-center text-center cursor-pointer">
+              <div key={p.id} onClick={() => handleOpenCustomize(p)} className="product-card bg-card text-card-foreground p-4 rounded-xl border flex flex-col items-center text-center cursor-pointer">
                 <span className="text-4xl mb-3">{p.emoji}</span>
                 <h3 className="text-sm leading-tight mb-2 font-black">{p.name}</h3>
                 <p className="text-primary font-bold">${p.price.toLocaleString('es-AR')}</p>
@@ -244,7 +244,7 @@ export default function DashboardPage() {
                     <span className="text-xs opacity-60">{cartCount} items</span>
                     <span className="text-2xl font-black text-primary">${cartTotal.toLocaleString('es-AR')}</span>
                 </div>
-                <Button onClick={() => cart.length > 0 ? setCheckoutOpen(true) : toast({ title: 'CARRITO VACÍO' })} className="bg-primary text-primary-foreground py-4 px-8 rounded-2xl text-lg shadow-xl active:scale-95 transition-all font-black h-auto">
+                <Button onClick={() => cart.length > 0 ? setCheckoutOpen(true) : toast({ title: 'CARRITO VACÍO' })} className="bg-primary text-primary-foreground py-4 px-8 rounded-xl text-lg shadow-xl active:scale-95 transition-all font-black h-auto">
                   Comandar
                 </Button>
             </div>
@@ -257,7 +257,7 @@ export default function DashboardPage() {
       <CustomizeProductModal />
 
       <Dialog open={isCheckoutOpen} onOpenChange={setCheckoutOpen}>
-        <DialogContent className="bg-card w-full max-w-md rounded-3xl p-10 animate-pop">
+        <DialogContent className="bg-card w-full max-w-md rounded-2xl p-10 animate-pop">
           <DialogHeader>
             <DialogTitle className="text-3xl tracking-tighter mb-8 text-center font-black">Confirmar Comanda</DialogTitle>
           </DialogHeader>
@@ -268,18 +268,18 @@ export default function DashboardPage() {
             </div>
             {isDelivery && (
                 <div className="space-y-3 animate-pop mb-4">
-                    <Input id="check-phone" type="tel" placeholder="Número de Teléfono" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} className="w-full p-5 rounded-2xl bg-slate-100 dark:bg-zinc-800 outline-none font-black h-auto" />
-                    <Input id="check-delivery-fee" type="number" placeholder="Costo Envío" value={deliveryFee} onChange={(e) => setDeliveryFee(e.target.value)} className="w-full p-5 rounded-2xl bg-slate-100 dark:bg-zinc-800 outline-none font-black h-auto" />
+                    <Input id="check-phone" type="tel" placeholder="Número de Teléfono" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} className="w-full p-5 rounded-xl bg-secondary outline-none font-black h-auto" />
+                    <Input id="check-delivery-fee" type="number" placeholder="Costo Envío" value={deliveryFee} onChange={(e) => setDeliveryFee(e.target.value)} className="w-full p-5 rounded-xl bg-secondary outline-none font-black h-auto" />
                 </div>
             )}
-            <Input id="check-name" type="text" placeholder="Nombre Cliente" value={customerName} onChange={(e) => setCustomerName(e.target.value)} className="w-full p-5 rounded-2xl bg-slate-100 dark:bg-zinc-800 outline-none font-black h-auto" />
+            <Input id="check-name" type="text" placeholder="Nombre Cliente" value={customerName} onChange={(e) => setCustomerName(e.target.value)} className="w-full p-5 rounded-xl bg-secondary outline-none font-black h-auto" />
             <div className="flex gap-2">
-              <Button onClick={() => setPayMethod('Efectivo')} className={`flex-1 py-4 rounded-2xl border-2 font-black ${payMethod === 'Efectivo' ? 'bg-lime-100 border-primary' : 'bg-slate-100 dark:bg-zinc-800 border-transparent'}`}>💵 Efectivo</Button>
-              <Button onClick={() => setPayMethod('Transferencia')} className={`flex-1 py-4 rounded-2xl border-2 font-black ${payMethod === 'Transferencia' ? 'bg-blue-100 border-blue-500' : 'bg-slate-100 dark:bg-zinc-800 border-transparent'}`}>📱 Transfe</Button>
+              <Button onClick={() => setPayMethod('Efectivo')} className={`flex-1 py-4 rounded-xl border-2 font-black ${payMethod === 'Efectivo' ? 'bg-lime-100 border-primary' : 'bg-secondary border-transparent'}`}>💵 Efectivo</Button>
+              <Button onClick={() => setPayMethod('Transferencia')} className={`flex-1 py-4 rounded-xl border-2 font-black ${payMethod === 'Transferencia' ? 'bg-blue-100 border-blue-500' : 'bg-secondary border-transparent'}`}>📱 Transfe</Button>
             </div>
             <div className="pt-6 flex flex-col sm:flex-row gap-4">
               <Button onClick={() => setCheckoutOpen(false)} variant="ghost" className="w-full sm:w-auto order-last sm:order-first sm:flex-1 py-5 opacity-40 font-black">Atrás</Button>
-              <Button onClick={handleConfirmSale} className="w-full sm:w-auto sm:flex-[2] bg-primary text-primary-foreground py-5 rounded-3xl text-xl shadow-xl font-black h-auto">Enviar a Cocina</Button>
+              <Button onClick={handleConfirmSale} className="w-full sm:w-auto sm:flex-[2] bg-primary text-primary-foreground py-5 rounded-xl text-xl shadow-xl font-black h-auto">Enviar a Cocina</Button>
             </div>
           </div>
         </DialogContent>

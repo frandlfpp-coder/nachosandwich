@@ -62,7 +62,7 @@ export default function MobileHeader() {
     <>
       <header className="md:hidden bg-card border-b px-6 py-4 flex justify-between items-center shrink-0 sticky top-0 z-40">
         <Link href="/dashboard" className="flex items-center gap-3">
-          <div className="bg-primary p-2 rounded-xl text-primary-foreground">
+          <div className="bg-primary p-2 rounded-lg text-primary-foreground">
             <Zap className="h-5 w-5" />
           </div>
           <div className="flex flex-col">
@@ -75,13 +75,13 @@ export default function MobileHeader() {
           </div>
         </Link>
         <div className="flex items-center">
-            <Button onClick={toggleTheme} variant="ghost" className="p-3 rounded-2xl h-auto">
+            <Button onClick={toggleTheme} variant="ghost" className="p-3 rounded-xl h-auto">
               {isClient ? (theme === 'light' ? <Moon className="h-6 w-6" /> : <Sun className="h-6 w-6" />) : <div className="h-6 w-6" />}
               <span className="sr-only">Cambiar Tema</span>
             </Button>
             <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
-                <Button variant="ghost" className="relative p-3 rounded-2xl h-auto">
+                <Button variant="ghost" className="relative p-3 rounded-xl h-auto">
                 <ShoppingCart className="h-6 w-6" />
                 {cartCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] w-5 h-5 flex items-center justify-center rounded-full border-2 border-card">
@@ -120,10 +120,10 @@ export default function MobileHeader() {
       </nav>
 
       <Dialog open={isSwitchLocalOpen} onOpenChange={setSwitchLocalOpen}>
-        <DialogContent className="bg-card w-full max-w-sm rounded-[3.5rem] p-10 animate-pop">
+        <DialogContent className="bg-card w-full max-w-sm rounded-2xl p-10 animate-pop">
           <DialogHeader><DialogTitle className="text-2xl tracking-tighter mb-6 text-center font-black uppercase">Cambiar de Local</DialogTitle></DialogHeader>
           <Select onValueChange={handleLocalChange} value={currentLocal}>
-              <SelectTrigger className="w-full p-5 bg-slate-100 dark:bg-zinc-800 border-2 border-slate-200 dark:border-zinc-700 rounded-2xl outline-none text-center text-sm focus:border-primary transition-all font-black h-auto uppercase">
+              <SelectTrigger className="w-full p-5 bg-secondary border-2 border-border rounded-xl outline-none text-center text-sm focus:border-primary transition-all font-black h-auto uppercase">
                   <SelectValue placeholder="SELECCIONAR LOCAL" />
               </SelectTrigger>
               <SelectContent>

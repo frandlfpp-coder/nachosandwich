@@ -67,8 +67,8 @@ module.exports = {
       },
       borderRadius: {
         lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        md: 'calc(var(--radius) - 4px)',
+        sm: 'calc(var(--radius) - 8px)',
       },
       keyframes: {
         'accordion-down': {
@@ -94,11 +94,9 @@ module.exports = {
         'ready-pulse': {
           '0%, 100%': {
             transform: 'scale(1)',
-            opacity: 1,
           },
           '50%': {
-              transform: 'scale(1.05)',
-              opacity: 0.9,
+              transform: 'scale(1.03)',
           },
         }
       },

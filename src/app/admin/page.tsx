@@ -175,7 +175,7 @@ export default function AdminPage() {
   return (
     <AppShell>
       <section className="space-y-8">
-        <div className="bg-card text-card-foreground rounded-3xl p-8 border">
+        <div className="bg-card text-card-foreground rounded-2xl p-6 border">
             <h2 className="text-2xl font-black mb-6">Modo TV</h2>
             <div className="flex flex-col sm:flex-row gap-4">
                 <Button asChild variant="outline" className="flex-1 h-auto py-4 text-xs font-black">
@@ -194,13 +194,13 @@ export default function AdminPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-card text-card-foreground rounded-3xl p-8 border">
+            <div className="bg-card text-card-foreground rounded-2xl p-6 border">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-black flex items-center gap-2"><Trophy className="text-amber-400"/> Top Productos</h2>
               </div>
               <div className="space-y-2">
                 {topProducts.length > 0 ? topProducts.map((p, index) => (
-                  <div key={p.id} className="flex justify-between items-center p-4 bg-slate-100 dark:bg-zinc-800 rounded-2xl text-[10px] font-black">
+                  <div key={p.id} className="flex justify-between items-center p-4 bg-secondary rounded-lg text-[10px] font-black">
                     <span className="flex items-center gap-2">
                         <span className="text-lg w-6 text-center">{index + 1}.</span>
                         <span>{p.emoji && `${p.emoji} `}{p.name}</span>
@@ -212,13 +212,13 @@ export default function AdminPage() {
                 )}
               </div>
             </div>
-            <div className="bg-card text-card-foreground rounded-3xl p-8 border">
+            <div className="bg-card text-card-foreground rounded-2xl p-6 border">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-black flex items-center gap-2"><Star className="text-yellow-400"/> Top Clientes</h2>
               </div>
               <div className="space-y-2">
                 {topCustomers.length > 0 ? topCustomers.map((c, index) => (
-                  <div key={c.name} className="flex justify-between items-center p-4 bg-slate-100 dark:bg-zinc-800 rounded-2xl text-[10px] font-black">
+                  <div key={c.name} className="flex justify-between items-center p-4 bg-secondary rounded-lg text-[10px] font-black">
                     <span className="flex items-center gap-2">
                         <span className="text-lg w-6 text-center">{index + 1}.</span>
                         <span className="uppercase">{c.name}</span>
@@ -235,14 +235,14 @@ export default function AdminPage() {
             </div>
         </div>
 
-        <div className="bg-card text-card-foreground rounded-3xl p-8 border">
+        <div className="bg-card text-card-foreground rounded-2xl p-6 border">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-black">Listos para retirar</h2>
           </div>
           <div className="space-y-2">
             {completedOrders.length > 0 ? (
                 completedOrders.map(o => (
-                  <div key={o.id} className="flex flex-col sm:flex-row justify-between items-center p-4 bg-slate-100 dark:bg-zinc-800 rounded-2xl text-xs font-black animate-pop gap-2">
+                  <div key={o.id} className="flex flex-col sm:flex-row justify-between items-center p-4 bg-secondary rounded-lg text-xs font-black animate-pop gap-2">
                     <span className="uppercase">#{o.orderNumber} - {o.customerName}</span>
                     <Button onClick={() => pickupOrder(o.id)} size="sm" className="bg-primary text-primary-foreground rounded-xl text-[10px] font-black h-auto px-4 py-2 w-full sm:w-auto">
                       <Check className="mr-2 h-3 w-3" />
@@ -256,14 +256,14 @@ export default function AdminPage() {
           </div>
         </div>
 
-        <div className="bg-card text-card-foreground rounded-3xl p-8 border">
+        <div className="bg-card text-card-foreground rounded-2xl p-6 border">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-black">Productos</h2>
-            <Button onClick={() => setProductModalOpen(true)} className="bg-slate-100 dark:bg-zinc-800 text-foreground px-6 py-2 rounded-xl text-[10px] font-black h-auto">+ Nuevo</Button>
+            <Button onClick={() => setProductModalOpen(true)} className="bg-secondary text-foreground px-6 py-2 rounded-xl text-[10px] font-black h-auto">+ Nuevo</Button>
           </div>
           <div className="space-y-2">
             {products.map(p => (
-              <div key={p.id} className="flex justify-between items-center p-4 bg-slate-100 dark:bg-zinc-800 rounded-2xl text-[10px] font-black">
+              <div key={p.id} className="flex justify-between items-center p-4 bg-secondary rounded-lg text-[10px] font-black">
                 <span>{p.emoji && `${p.emoji} `}{p.name} - ${p.price.toLocaleString('es-AR')} <span className="text-[9px] opacity-60">({p.category})</span></span>
                 <div className="flex items-center gap-2">
                     <Button onClick={() => openEditProductModal(p)} size="icon" variant="ghost" className="h-auto w-auto p-1 text-muted-foreground hover:text-primary">
@@ -276,14 +276,14 @@ export default function AdminPage() {
           </div>
         </div>
 
-        <div className="bg-card text-card-foreground rounded-3xl p-8 border">
+        <div className="bg-card text-card-foreground rounded-2xl p-6 border">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-black">Toppings</h2>
-            <Button onClick={() => setToppingModalOpen(true)} className="bg-slate-100 dark:bg-zinc-800 text-foreground px-6 py-2 rounded-xl text-[10px] font-black h-auto">+ Nuevo</Button>
+            <Button onClick={() => setToppingModalOpen(true)} className="bg-secondary text-foreground px-6 py-2 rounded-xl text-[10px] font-black h-auto">+ Nuevo</Button>
           </div>
           <div className="space-y-2">
             {toppings.map(t => (
-              <div key={t.id} className="flex justify-between items-center p-4 bg-slate-100 dark:bg-zinc-800 rounded-2xl text-[10px] font-black">
+              <div key={t.id} className="flex justify-between items-center p-4 bg-secondary rounded-lg text-[10px] font-black">
                 <span>{t.name} - ${t.price.toLocaleString('es-AR')}</span>
                  <div className="flex items-center gap-2">
                     <Button onClick={() => openEditToppingModal(t)} size="icon" variant="ghost" className="h-auto w-auto p-1 text-muted-foreground hover:text-primary">
@@ -296,14 +296,14 @@ export default function AdminPage() {
           </div>
         </div>
 
-        <div className="bg-card text-card-foreground rounded-3xl p-8 border">
+        <div className="bg-card text-card-foreground rounded-2xl p-6 border">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-black">Insumos</h2>
-            <Button onClick={() => setStockModalOpen(true)} className="bg-slate-100 dark:bg-zinc-800 text-foreground px-6 py-2 rounded-xl text-[10px] font-black h-auto">+ Nuevo</Button>
+            <Button onClick={() => setStockModalOpen(true)} className="bg-secondary text-foreground px-6 py-2 rounded-xl text-[10px] font-black h-auto">+ Nuevo</Button>
           </div>
           <div className="space-y-2">
             {stockItems.map(i => (
-              <div key={i.id} className="flex justify-between p-4 bg-slate-100 dark:bg-zinc-800 rounded-2xl text-[10px] font-black">
+              <div key={i.id} className="flex justify-between p-4 bg-secondary rounded-lg text-[10px] font-black">
                 <span>{i.name} ({i.unit})</span>
                 <button onClick={() => handleDeleteStockItem(i)} className="text-destructive font-black">✕</button>
               </div>
@@ -312,7 +312,7 @@ export default function AdminPage() {
         </div>
       </section>
 
-      <div className="bg-card rounded-3xl p-8 border-2 border-destructive/50 mt-8">
+      <div className="bg-card rounded-2xl p-6 border-2 border-destructive/50 mt-8">
         <h2 className="text-2xl font-black mb-4 text-destructive">Zona Peligrosa</h2>
         <div className="space-y-4">
             <div>
@@ -338,13 +338,13 @@ export default function AdminPage() {
 
       {/* Product Modal */}
       <Dialog open={isProductModalOpen} onOpenChange={setProductModalOpen}>
-        <DialogContent className="bg-card w-full max-w-sm rounded-3xl p-10 animate-pop">
+        <DialogContent className="bg-card w-full max-w-sm rounded-2xl p-10 animate-pop">
           <DialogHeader><DialogTitle className="text-2xl tracking-tighter mb-6 text-center font-black">Nuevo Producto</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <Input value={newProductEmoji} onChange={e => setNewProductEmoji(e.target.value)} placeholder="Emoji (Opcional)" className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black h-auto" />
-            <Input value={newProductName} onChange={e => setNewProductName(e.target.value)} placeholder="Nombre" className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black h-auto" />
+            <Input value={newProductEmoji} onChange={e => setNewProductEmoji(e.target.value)} placeholder="Emoji (Opcional)" className="w-full p-4 rounded-xl bg-secondary outline-none font-black h-auto" />
+            <Input value={newProductName} onChange={e => setNewProductName(e.target.value)} placeholder="Nombre" className="w-full p-4 rounded-xl bg-secondary outline-none font-black h-auto" />
             <Select value={newProductCategory} onValueChange={(value) => setNewProductCategory(value as ProductCategory)}>
-              <SelectTrigger className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black h-auto text-sm">
+              <SelectTrigger className="w-full p-4 rounded-xl bg-secondary outline-none font-black h-auto text-sm">
                 <SelectValue placeholder="Categoría" />
               </SelectTrigger>
               <SelectContent>
@@ -356,52 +356,52 @@ export default function AdminPage() {
                 <SelectItem value="Baguette">Baguette</SelectItem>
               </SelectContent>
             </Select>
-            <Input type="number" value={newProductPrice} onChange={e => setNewProductPrice(e.target.value)} placeholder="Precio $" className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black h-auto" />
+            <Input type="number" value={newProductPrice} onChange={e => setNewProductPrice(e.target.value)} placeholder="Precio $" className="w-full p-4 rounded-xl bg-secondary outline-none font-black h-auto" />
           </div>
           <DialogFooter className="mt-6 sm:justify-center flex-col sm:flex-row gap-2">
             <Button variant="ghost" onClick={() => setProductModalOpen(false)} className="w-full sm:w-auto py-4 opacity-40 font-black h-auto">Atrás</Button>
-            <Button onClick={handleSaveProduct} className="w-full sm:w-auto bg-primary text-primary-foreground py-4 rounded-2xl font-black h-auto">Guardar</Button>
+            <Button onClick={handleSaveProduct} className="w-full sm:w-auto bg-primary text-primary-foreground py-4 rounded-xl font-black h-auto">Guardar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       
       {/* Stock Modal */}
       <Dialog open={isStockModalOpen} onOpenChange={setStockModalOpen}>
-        <DialogContent className="bg-card w-full max-w-sm rounded-3xl p-10 animate-pop">
+        <DialogContent className="bg-card w-full max-w-sm rounded-2xl p-10 animate-pop">
           <DialogHeader><DialogTitle className="text-2xl tracking-tighter mb-6 text-center font-black">Nuevo Insumo</DialogTitle></DialogHeader>
-          <Input value={newStockName} onChange={e => setNewStockName(e.target.value)} placeholder="Nombre" className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black mb-3 h-auto" />
-          <Input value={newStockUnit} onChange={e => setNewStockUnit(e.target.value)} placeholder="Unidad (KG, UNID)" className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black mb-6 h-auto" />
+          <Input value={newStockName} onChange={e => setNewStockName(e.target.value)} placeholder="Nombre" className="w-full p-4 rounded-xl bg-secondary outline-none font-black mb-3 h-auto" />
+          <Input value={newStockUnit} onChange={e => setNewStockUnit(e.target.value)} placeholder="Unidad (KG, UNID)" className="w-full p-4 rounded-xl bg-secondary outline-none font-black mb-6 h-auto" />
           <DialogFooter className="sm:justify-center flex-col sm:flex-row gap-2">
             <Button variant="ghost" onClick={() => setStockModalOpen(false)} className="w-full sm:w-auto py-4 opacity-40 font-black h-auto">Atrás</Button>
-            <Button onClick={handleSaveStockItem} className="w-full sm:w-auto bg-primary text-primary-foreground py-4 rounded-2xl font-black h-auto">Crear</Button>
+            <Button onClick={handleSaveStockItem} className="w-full sm:w-auto bg-primary text-primary-foreground py-4 rounded-xl font-black h-auto">Crear</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       
       {/* Topping Modal */}
       <Dialog open={isToppingModalOpen} onOpenChange={setToppingModalOpen}>
-        <DialogContent className="bg-card w-full max-w-sm rounded-3xl p-10 animate-pop">
+        <DialogContent className="bg-card w-full max-w-sm rounded-2xl p-10 animate-pop">
           <DialogHeader><DialogTitle className="text-2xl tracking-tighter mb-6 text-center font-black">Nuevo Topping</DialogTitle></DialogHeader>
-          <Input value={newToppingName} onChange={e => setNewToppingName(e.target.value)} placeholder="Nombre (Ej: Cheddar)" className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black mb-3 h-auto" />
-          <Input type="number" value={newToppingPrice} onChange={e => setNewToppingPrice(e.target.value)} placeholder="Precio $" className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black mb-6 h-auto" />
+          <Input value={newToppingName} onChange={e => setNewToppingName(e.target.value)} placeholder="Nombre (Ej: Cheddar)" className="w-full p-4 rounded-xl bg-secondary outline-none font-black mb-3 h-auto" />
+          <Input type="number" value={newToppingPrice} onChange={e => setNewToppingPrice(e.target.value)} placeholder="Precio $" className="w-full p-4 rounded-xl bg-secondary outline-none font-black mb-6 h-auto" />
           <DialogFooter className="sm:justify-center flex-col sm:flex-row gap-2">
             <Button variant="ghost" onClick={() => setToppingModalOpen(false)} className="w-full sm:w-auto py-4 opacity-40 font-black h-auto">Atrás</Button>
-            <Button onClick={handleSaveTopping} className="w-full sm:w-auto bg-primary text-primary-foreground py-4 rounded-2xl font-black h-auto">Guardar</Button>
+            <Button onClick={handleSaveTopping} className="w-full sm:w-auto bg-primary text-primary-foreground py-4 rounded-xl font-black h-auto">Guardar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Edit Product Modal */}
       <Dialog open={isEditProductModalOpen} onOpenChange={setEditProductModalOpen}>
-        <DialogContent className="bg-card w-full max-w-sm rounded-3xl p-10 animate-pop">
+        <DialogContent className="bg-card w-full max-w-sm rounded-2xl p-10 animate-pop">
           <DialogHeader>
             <DialogTitle className="text-2xl tracking-tighter mb-6 text-center font-black">Editar Producto</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <Input value={editedProductEmoji} onChange={e => setEditedProductEmoji(e.target.value)} placeholder="Emoji (Opcional)" className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black h-auto" />
-            <Input value={editedProductName} onChange={e => setEditedProductName(e.target.value)} placeholder="Nombre" className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black h-auto" />
+            <Input value={editedProductEmoji} onChange={e => setEditedProductEmoji(e.target.value)} placeholder="Emoji (Opcional)" className="w-full p-4 rounded-xl bg-secondary outline-none font-black h-auto" />
+            <Input value={editedProductName} onChange={e => setEditedProductName(e.target.value)} placeholder="Nombre" className="w-full p-4 rounded-xl bg-secondary outline-none font-black h-auto" />
             <Select value={editedProductCategory} onValueChange={(value) => setEditedProductCategory(value as ProductCategory)}>
-              <SelectTrigger className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black h-auto text-sm">
+              <SelectTrigger className="w-full p-4 rounded-xl bg-secondary outline-none font-black h-auto text-sm">
                 <SelectValue placeholder="Categoría" />
               </SelectTrigger>
               <SelectContent>
@@ -413,18 +413,18 @@ export default function AdminPage() {
                 <SelectItem value="Baguette">Baguette</SelectItem>
               </SelectContent>
             </Select>
-            <Input type="number" value={editedProductPrice} onChange={e => setEditedProductPrice(e.target.value)} placeholder="Precio $" className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black h-auto" />
+            <Input type="number" value={editedProductPrice} onChange={e => setEditedProductPrice(e.target.value)} placeholder="Precio $" className="w-full p-4 rounded-xl bg-secondary outline-none font-black h-auto" />
           </div>
           <DialogFooter className="mt-6 sm:justify-center flex-col sm:flex-row gap-2">
             <Button variant="ghost" onClick={() => setEditProductModalOpen(false)} className="w-full sm:w-auto py-4 opacity-40 font-black h-auto">Cancelar</Button>
-            <Button onClick={handleUpdateProduct} className="w-full sm:w-auto bg-primary text-primary-foreground py-4 rounded-2xl font-black h-auto">Guardar Cambios</Button>
+            <Button onClick={handleUpdateProduct} className="w-full sm:w-auto bg-primary text-primary-foreground py-4 rounded-xl font-black h-auto">Guardar Cambios</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Edit Topping Modal */}
       <Dialog open={isEditToppingModalOpen} onOpenChange={setEditToppingModalOpen}>
-        <DialogContent className="bg-card w-full max-w-sm rounded-3xl p-10 animate-pop">
+        <DialogContent className="bg-card w-full max-w-sm rounded-2xl p-10 animate-pop">
           <DialogHeader>
             <DialogTitle className="text-2xl tracking-tighter mb-6 text-center font-black">Editar Precio de Topping</DialogTitle>
           </DialogHeader>
@@ -438,11 +438,11 @@ export default function AdminPage() {
             value={editedToppingPrice} 
             onChange={e => setEditedToppingPrice(e.target.value)} 
             placeholder="Nuevo Precio $" 
-            className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black mb-6 h-auto" 
+            className="w-full p-4 rounded-xl bg-secondary outline-none font-black mb-6 h-auto" 
           />
           <DialogFooter className="sm:justify-center flex-col sm:flex-row gap-2">
             <Button variant="ghost" onClick={() => setEditToppingModalOpen(false)} className="w-full sm:w-auto py-4 opacity-40 font-black h-auto">Cancelar</Button>
-            <Button onClick={handleUpdateTopping} className="w-full sm:w-auto bg-primary text-primary-foreground py-4 rounded-2xl font-black h-auto">Guardar</Button>
+            <Button onClick={handleUpdateTopping} className="w-full sm:w-auto bg-primary text-primary-foreground py-4 rounded-xl font-black h-auto">Guardar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

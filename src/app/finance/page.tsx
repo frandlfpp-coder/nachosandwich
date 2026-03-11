@@ -102,27 +102,27 @@ export default function FinancePage() {
         {mode === 'hoy' && (
           <div id="finance-today">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-card text-card-foreground p-8 rounded-3xl border">
+              <div className="bg-card text-card-foreground p-6 rounded-2xl border">
                 <p className="text-[10px] opacity-40 mb-2 font-black uppercase">Efectivo (Turno Actual)</p>
                 <h3 className="text-4xl tracking-tighter text-primary font-black">${cash.toLocaleString('es-AR')}</h3>
               </div>
-              <div className="bg-card text-card-foreground p-8 rounded-3xl border">
+              <div className="bg-card text-card-foreground p-6 rounded-2xl border">
                 <p className="text-[10px] opacity-40 mb-2 font-black uppercase">Transferencia (Turno Actual)</p>
                 <h3 className="text-4xl tracking-tighter text-blue-600 font-black">${trans.toLocaleString('es-AR')}</h3>
               </div>
-              <div className="bg-zinc-900 text-white p-8 rounded-3xl shadow-xl">
+              <div className="bg-zinc-900 text-white p-6 rounded-2xl shadow-xl">
                 <p className="text-[10px] text-primary mb-2 font-black uppercase">Neto (Turno Actual)</p>
                 <h3 className="text-4xl tracking-tighter text-primary font-black">${total.toLocaleString('es-AR')}</h3>
               </div>
             </div>
             <div className="flex justify-end gap-4 mb-8">
-              <Button onClick={() => openFinanceModal('ingreso')} className="bg-card border-2 px-6 py-3 rounded-2xl text-[10px] font-black h-auto uppercase">+ Entrada</Button>
-              <Button onClick={() => openFinanceModal('egreso')} className="bg-card border-2 px-6 py-3 rounded-2xl text-[10px] text-destructive font-black h-auto uppercase">- Salida</Button>
-              <Button onClick={handleCloseDay} className="bg-black text-primary px-8 py-3 rounded-2xl text-[10px] border border-primary font-black shadow-lg h-auto uppercase">Cerrar Caja</Button>
+              <Button onClick={() => openFinanceModal('ingreso')} className="bg-card border px-6 py-3 rounded-xl text-[10px] font-black h-auto uppercase">+ Entrada</Button>
+              <Button onClick={() => openFinanceModal('egreso')} className="bg-card border px-6 py-3 rounded-xl text-[10px] text-destructive font-black h-auto uppercase">- Salida</Button>
+              <Button onClick={handleCloseDay} className="bg-black text-primary px-8 py-3 rounded-xl text-[10px] border border-primary font-black shadow-lg h-auto uppercase">Cerrar Caja</Button>
             </div>
             <div className="space-y-3">
               {transactions.map(t => (
-                <div key={t.id} className="flex justify-between items-center p-4 bg-card rounded-2xl border text-[10px] animate-pop font-black">
+                <div key={t.id} className="flex justify-between items-center p-4 bg-card rounded-xl border text-[10px] animate-pop font-black">
                   <div className='flex flex-col'>
                     <span className="uppercase">{t.concept}</span>
                     <span className='text-[8px] opacity-50 font-normal'>{isClient ? t.createdAt?.toLocaleString('es-AR') : '...'}</span>
@@ -149,15 +149,15 @@ export default function FinancePage() {
         {mode === 'semanal' && (
           <div id="finance-weekly">
              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-               <div className="bg-card text-card-foreground p-8 rounded-3xl border">
+               <div className="bg-card text-card-foreground p-6 rounded-2xl border">
                 <p className="text-[10px] opacity-40 mb-2 font-black uppercase">Ingresos Totales (Semanal)</p>
                 <h3 className="text-4xl tracking-tighter text-green-600 font-black">${weeklyIngresos.toLocaleString('es-AR')}</h3>
               </div>
-              <div className="bg-card text-card-foreground p-8 rounded-3xl border">
+              <div className="bg-card text-card-foreground p-6 rounded-2xl border">
                 <p className="text-[10px] opacity-40 mb-2 font-black uppercase">Egresos Totales (Semanal)</p>
                 <h3 className="text-4xl tracking-tighter text-destructive font-black">${weeklyEgresos.toLocaleString('es-AR')}</h3>
               </div>
-              <div className="bg-card text-card-foreground p-8 rounded-3xl border">
+              <div className="bg-card text-card-foreground p-6 rounded-2xl border">
                 <p className="text-[10px] opacity-40 mb-2 font-black uppercase">Pagos Delivery (Semanal)</p>
                 <h3 className="text-4xl tracking-tighter text-blue-600 font-black">${weeklyDeliveryFees.toLocaleString('es-AR')}</h3>
               </div>
@@ -169,7 +169,7 @@ export default function FinancePage() {
         {mode === 'historial' && (
           <div className="space-y-4">
              {closures.map(c => (
-              <div key={c.id} className="bg-card p-6 rounded-3xl border animate-pop">
+              <div key={c.id} className="bg-card p-6 rounded-2xl border animate-pop">
                 <div className="flex justify-between items-start mb-4">
                   <span className="text-[10px] opacity-40 capitalize font-black">
                     {isClient ? c.closureDate?.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'short' }) : '...'}
@@ -180,15 +180,15 @@ export default function FinancePage() {
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-4 text-[9px] text-center font-black mb-4 uppercase">
-                    <div className='bg-slate-100 dark:bg-zinc-800 p-2 rounded-lg'>
+                    <div className='bg-secondary p-2 rounded-lg'>
                         <p className='opacity-60'>Ingresos</p>
                         <p className='text-green-600 dark:text-lime-500 text-sm'>${(c.totalIngresos || 0).toLocaleString('es-AR')}</p>
                     </div>
-                    <div className='bg-slate-100 dark:bg-zinc-800 p-2 rounded-lg'>
+                    <div className='bg-secondary p-2 rounded-lg'>
                         <p className='opacity-60'>Egresos</p>
                         <p className='text-destructive text-sm'>${(c.totalEgresos || 0).toLocaleString('es-AR')}</p>
                     </div>
-                    <div className='bg-slate-100 dark:bg-zinc-800 p-2 rounded-lg'>
+                    <div className='bg-secondary p-2 rounded-lg'>
                         <p className='opacity-60'>Transacciones</p>
                         <p className='text-blue-600 text-sm'>{c.totalTransacciones || 0}</p>
                     </div>
@@ -214,7 +214,7 @@ export default function FinancePage() {
         )}
       </section>
       <Dialog open={isModalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="bg-card w-full max-w-sm rounded-3xl p-10 animate-pop">
+        <DialogContent className="bg-card w-full max-w-sm rounded-2xl p-10 animate-pop">
           <DialogHeader>
             <DialogTitle className="text-2xl tracking-tighter mb-6 text-center font-black uppercase">
               {modalType === 'ingreso' ? 'Nueva Entrada' : 'Nueva Salida'}
@@ -223,17 +223,17 @@ export default function FinancePage() {
           <div className="space-y-4">
             <div>
               <Label htmlFor="concept" className="text-xs opacity-70">Concepto</Label>
-              <Input id="concept" value={concept} onChange={e => setConcept(e.target.value)} placeholder="EJ: PAGO PROVEEDOR" className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none uppercase font-black mb-3 h-auto" />
+              <Input id="concept" value={concept} onChange={e => setConcept(e.target.value)} placeholder="EJ: PAGO PROVEEDOR" className="w-full p-4 rounded-xl bg-secondary outline-none uppercase font-black mb-3 h-auto" />
             </div>
             <div>
               <Label htmlFor="amount" className="text-xs opacity-70">Monto</Label>
-              <Input id="amount" type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="$" className="w-full p-4 rounded-xl bg-slate-100 dark:bg-zinc-800 outline-none font-black h-auto" />
+              <Input id="amount" type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="$" className="w-full p-4 rounded-xl bg-secondary outline-none font-black h-auto" />
             </div>
              <div>
               <Label className="text-xs opacity-70">Método de Pago</Label>
               <div className="flex gap-2 mt-1">
-                  <Button onClick={() => setPaymentMethod('Efectivo')} className={cn('flex-1 py-4 rounded-2xl border-2 font-black h-auto text-sm', paymentMethod === 'Efectivo' ? 'bg-lime-200 border-primary text-foreground dark:bg-lime-900 dark:text-white' : 'bg-slate-100 dark:bg-zinc-800 border-transparent text-foreground/60 hover:bg-slate-200 dark:hover:bg-zinc-700')}>💵 Efectivo</Button>
-                  <Button onClick={() => setPaymentMethod('Transferencia')} className={cn('flex-1 py-4 rounded-2xl border-2 font-black h-auto text-sm', paymentMethod === 'Transferencia' ? 'bg-blue-100 border-blue-500 text-foreground dark:bg-blue-900 dark:text-white' : 'bg-slate-100 dark:bg-zinc-800 border-transparent text-foreground/60 hover:bg-slate-200 dark:hover:bg-zinc-700')}>📱 Transfe</Button>
+                  <Button onClick={() => setPaymentMethod('Efectivo')} className={cn('flex-1 py-4 rounded-xl border-2 font-black h-auto text-sm', paymentMethod === 'Efectivo' ? 'bg-lime-200 border-primary text-foreground dark:bg-lime-900 dark:text-white' : 'bg-secondary border-transparent text-foreground/60 hover:bg-slate-200 dark:hover:bg-zinc-700')}>💵 Efectivo</Button>
+                  <Button onClick={() => setPaymentMethod('Transferencia')} className={cn('flex-1 py-4 rounded-xl border-2 font-black h-auto text-sm', paymentMethod === 'Transferencia' ? 'bg-blue-100 border-blue-500 text-foreground dark:bg-blue-900 dark:text-white' : 'bg-secondary border-transparent text-foreground/60 hover:bg-slate-200 dark:hover:bg-zinc-700')}>📱 Transfe</Button>
               </div>
             </div>
           </div>
@@ -241,7 +241,7 @@ export default function FinancePage() {
             <DialogClose asChild>
                 <Button variant="ghost" className="w-full sm:w-auto py-4 opacity-40 font-black h-auto uppercase">Atrás</Button>
             </DialogClose>
-            <Button onClick={handleAddTransaction} className="w-full sm:w-auto bg-primary text-primary-foreground py-4 rounded-2xl font-black h-auto uppercase">Guardar</Button>
+            <Button onClick={handleAddTransaction} className="w-full sm:w-auto bg-primary text-primary-foreground py-4 rounded-xl font-black h-auto uppercase">Guardar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
