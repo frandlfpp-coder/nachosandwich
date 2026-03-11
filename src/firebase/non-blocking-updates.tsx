@@ -8,6 +8,8 @@ import {
   CollectionReference,
   DocumentReference,
   SetOptions,
+  WriteBatch,
+  writeBatch,
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import {FirestorePermissionError} from '@/firebase/errors';
@@ -16,8 +18,8 @@ import {FirestorePermissionError} from '@/firebase/errors';
  * Initiates a setDoc operation for a document reference.
  * Does NOT await the write operation internally.
  */
-export function setDocumentNonBlocking(docRef: DocumentReference, data: any, options: SetOptions) {
-  setDoc(docRef, data, options).catch(error => {
+export function setDocumentNonBlocking(docRef: DocumentReference, data: any, options?: SetOptions) {
+  setDoc(docRef, data, options || {}).catch(error => {
     errorEmitter.emit(
       'permission-error',
       new FirestorePermissionError({
@@ -85,5 +87,23 @@ export function deleteDocumentNonBlocking(docRef: DocumentReference) {
           operation: 'delete',
         })
       )
+    });
+}
+
+/**
+ * Commits a batch write operation.
+ * Does NOT await the commit operation internally.
+ */
+export function commitBatchNonBlocking(batch: WriteBatch) {
+    batch.commit().catch(error => {
+        // Emitting a generic batch error. In a real app, you might want to
+        // iterate through the operations in the batch to create more specific errors.
+        errorEmitter.emit(
+            'permission-error',
+            new FirestorePermissionError({
+                path: 'batch operation',
+                operation: 'write',
+            })
+        );
     });
 }

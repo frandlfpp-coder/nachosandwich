@@ -4,6 +4,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { AppProvider } from '@/contexts/AppContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -29,10 +30,12 @@ export default function RootLayout({
       </head>
       <body className="font-body overflow-x-hidden antialiased text-foreground">
         <ThemeProvider>
+          <FirebaseClientProvider>
             <AppProvider>
               {children}
               <Toaster />
             </AppProvider>
+          </FirebaseClientProvider>
         </ThemeProvider>
       </body>
     </html>
