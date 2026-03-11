@@ -14,9 +14,8 @@ import {
   deleteDocumentNonBlocking,
   commitBatchNonBlocking
 } from '@/firebase';
-import { initiateEmailSignIn, initiateEmailSignUp } from '@/firebase/non-blocking-login';
 import { collection, doc, serverTimestamp, query, where, writeBatch, Timestamp } from 'firebase/firestore';
-import { signOut } from 'firebase/auth';
+import { signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 
 const APP_ID = 'nacho-plus-pos';
 
@@ -145,9 +144,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     });
 
     const sortedProducts: RankedProduct[] = Object.entries(productCounts).map(([id, data]) => ({ id, ...data })).sort((a, b) => b.count - a.count).slice(0, 5);
-    const sortedCustomers: RankedCustomer[] = Object.values(customerSpending).sort((a, b) => b.totalSpent - a.totalSpent).slice(0, 5);
+    const customers: RankedCustomer[] = Object.values(customerSpending).sort((a, b) => b.totalSpent - a.totalSpent).slice(0, 5);
 
-    return { topProducts: sortedProducts, topCustomers: sortedCustomers };
+    return { topProducts: sortedProducts, topCustomers: customers };
   }, [closures]);
   
   const completedDeliveriesThisShift = useMemo(() => {
@@ -160,26 +159,35 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const switchLocal = async (local: 'nacho1' | 'nacho2' | 'prueba') => {
     const email = `${local}@local.com`;
     if (user?.email === email) return;
-    
+
     setIsSwitchingLocal(true);
     setCart([]);
-    await signOut(auth);
-
-    // Hardcoded password for simplicity
-    const password = 'password'; 
     
-    initiateEmailSignIn(auth, email, password);
-    // Try to sign up if sign in fails (for first time use)
-    setTimeout(() => {
-        if (!auth.currentUser || auth.currentUser.email !== email) {
-            initiateEmailSignUp(auth, email, password);
-        }
-    }, 1500);
+    if (auth.currentUser) {
+        await signOut(auth);
+    }
 
-    setTimeout(() => {
-        setIsSwitchingLocal(false);
-        toast({ title: `Cambiado a ${local.toUpperCase()}` });
-    }, 2000);
+    const password = 'password';
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      toast({ title: `Sesión iniciada como ${local.toUpperCase()}` });
+    } catch (error: any) {
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+        try {
+          await createUserWithEmailAndPassword(auth, email, password);
+          toast({ title: `Cuenta creada para ${local.toUpperCase()}` });
+        } catch (signUpError: any) {
+          console.error("Error creating user:", signUpError);
+          toast({ variant: 'destructive', title: "Error al crear la cuenta", description: signUpError.message });
+        }
+      } else {
+        console.error("Error signing in:", error);
+        toast({ variant: 'destructive', title: "Error al iniciar sesión", description: error.message });
+      }
+    } finally {
+      setIsSwitchingLocal(false);
+    }
   };
 
   const logout = async () => {
