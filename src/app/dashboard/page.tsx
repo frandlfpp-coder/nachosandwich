@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { X } from 'lucide-react';
-import { Product, Order, Topping, ProductCategory } from '@/lib/types';
+import { Product, Order, Topping, ProductCategory, NewOrderPayload } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -64,13 +64,10 @@ export default function DashboardPage() {
     }
 
     const name = customerName.trim().toUpperCase() || "SIN NOMBRE";
-    const orderNumber = Math.floor(Math.random() * 9000) + 1000;
     
-    const orderData: Partial<Order> = {
+    const orderData: NewOrderPayload = {
       customerName: name,
       items: cart,
-      orderNumber: orderNumber,
-      status: 'pending',
       isDelivery: isDelivery,
       paymentMethod: payMethod,
     };
@@ -80,7 +77,7 @@ export default function DashboardPage() {
         orderData.deliveryFee = parsedDeliveryFee;
     }
     
-    addOrder(orderData as Omit<Order, 'id' | 'createdAt' | 'localId'>);
+    addOrder(orderData);
     
     clearCart();
     setCheckoutOpen(false);

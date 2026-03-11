@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useMemo } from 'react';
-import { Product, CartItem, Order, StockItem, Transaction, Closure, Topping, RankedProduct, RankedCustomer } from '@/lib/types';
+import { Product, CartItem, Order, StockItem, Transaction, Closure, Topping, RankedProduct, RankedCustomer, NewOrderPayload } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { 
   useUser, 
@@ -12,7 +12,6 @@ import {
   addDocumentNonBlocking,
   updateDocumentNonBlocking,
   deleteDocumentNonBlocking,
-  setDocumentNonBlocking,
   commitBatchNonBlocking
 } from '@/firebase';
 import { initiateEmailSignIn, initiateEmailSignUp } from '@/firebase/non-blocking-login';
@@ -38,7 +37,7 @@ type AppContextType = {
   orders: Order[];
   completedOrders: Order[];
   completedDeliveriesThisShift: Order[];
-  addOrder: (orderData: Omit<Order, 'id' | 'createdAt' | 'localId'>) => void,
+  addOrder: (orderData: NewOrderPayload) => void,
   completeOrder: (orderId: string) => void;
   pickupOrder: (orderId: string) => void;
   cancelOrder: (orderId: string) => void;
@@ -46,7 +45,7 @@ type AppContextType = {
   updateStock: (itemId: string, delta: number) => void;
   transactions: Transaction[]; // Represents OPEN transactions for the current shift
   closures: Closure[];
-  addTransaction: (transaction: Omit<Transaction, 'id' | 'createdAt' | 'localId'>) => void;
+  addTransaction: (transaction: Omit<Transaction, 'id' | 'createdAt' | 'localId' | 'closureId'>) => void;
   deleteTransaction: (id: string) => void;
   closeDay: () => Promise<void>;
   addProduct: (product: Omit<Product, 'id' | 'localId' | 'createdAt' | 'updatedAt'>) => void;
@@ -97,13 +96,33 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const closuresQuery = useMemoFirebase(() => user ? query(collection(firestore, userPath('closures')!)) : null, [user, firestore]);
   const { data: closuresData = [] } = useCollection<Closure>(closuresQuery);
 
+  const orders = useMemo(() => ordersData?.map(o => ({...o, createdAt: (o.createdAt as Timestamp)?.toDate(), updatedAt: (o.updatedAt as Timestamp)?.toDate() })) || [], [ordersData]);
+  const completedOrders = useMemo(() => completedOrdersData?.map(o => ({...o, createdAt: (o.createdAt as Timestamp)?.toDate(), updatedAt: (o.updatedAt as Timestamp)?.toDate() })) || [], [completedOrdersData]);
+  const transactions = useMemo(() => transactionsData?.map(t => ({...t, createdAt: (t.createdAt as Timestamp)?.toDate() })) || [], [transactionsData]);
+
+  const closures = useMemo(() => {
+    return closuresData?.map(c => ({
+        ...c,
+        closureDate: (c.closureDate as Timestamp)?.toDate(),
+        orders: (c.orders || []).map(o => ({
+            ...o,
+            createdAt: (o.createdAt as any)?.toDate(),
+            updatedAt: (o.updatedAt as any)?.toDate(),
+        })),
+        transactions: (c.transactions || []).map(t => ({
+            ...t,
+            createdAt: (t.createdAt as any)?.toDate(),
+        })),
+    })) || [];
+  }, [closuresData]);
+
   const { topProducts, topCustomers } = useMemo(() => {
-    if (!closuresData) return { topProducts: [], topCustomers: [] };
+    if (!closures) return { topProducts: [], topCustomers: [] };
 
     const productCounts: { [key: string]: { name: string; emoji?: string; count: number } } = {};
     const customerSpending: { [key: string]: { name: string; totalSpent: number; orderCount: number } } = {};
 
-    closuresData.forEach((closure: Closure) => {
+    closures.forEach((closure: Closure) => {
         (closure.orders || []).forEach((order: Order) => {
             const customerName = order.customerName.trim().toUpperCase();
             if (customerName !== 'SIN NOMBRE' && customerName.trim() !== '') {
@@ -128,16 +147,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const sortedProducts: RankedProduct[] = Object.entries(productCounts).map(([id, data]) => ({ id, ...data })).sort((a, b) => b.count - a.count).slice(0, 5);
     const sortedCustomers: RankedCustomer[] = Object.values(customerSpending).sort((a, b) => b.totalSpent - a.totalSpent).slice(0, 5);
 
-    return { topProducts, topCustomers };
-  }, [closuresData]);
-
-  const orders = useMemo(() => ordersData?.map(o => ({...o, createdAt: (o.createdAt as Timestamp)?.toDate(), updatedAt: (o.updatedAt as Timestamp)?.toDate() })) || [], [ordersData]);
-  const completedOrders = useMemo(() => completedOrdersData?.map(o => ({...o, createdAt: (o.createdAt as Timestamp)?.toDate(), updatedAt: (o.updatedAt as Timestamp)?.toDate() })) || [], [completedOrdersData]);
-  const transactions = useMemo(() => transactionsData?.map(t => ({...t, createdAt: (t.createdAt as Timestamp)?.toDate() })) || [], [transactionsData]);
-
+    return { topProducts: sortedProducts, topCustomers: sortedCustomers };
+  }, [closures]);
+  
   const completedDeliveriesThisShift = useMemo(() => {
-    // This now correctly filters only completed orders that are for delivery
-    // and sorts them by the time they were completed.
     return completedOrders
       .filter(o => o.isDelivery)
       .sort((a, b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0));
@@ -206,10 +219,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const cartTotal = cart.reduce((sum, item) => sum + item.finalPrice * item.qty, 0);
   const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
 
-  const addOrder = (orderData: Omit<Order, 'id' | 'createdAt' | 'localId'>) => {
+  const addOrder = (orderData: NewOrderPayload) => {
     if (!user || !firestore) return;
-    const allHistoricalOrders = [...orders, ...completedOrders, ...closures.flatMap((c: Closure) => c.orders || [])];
-    const lastOrderNumber = allHistoricalOrders.reduce((max, order) => order.orderNumber > max ? order.orderNumber : max, 0);
+    
+    const allHistoricalOrders = [...orders, ...completedOrders, ...closures.flatMap(c => c.orders || [])];
+    const lastOrderNumber = allHistoricalOrders.reduce((max, order) => Math.max(max, order.orderNumber || 0), 0);
 
     const newOrder: Omit<Order, 'id'> = {
       ...orderData,
@@ -217,7 +231,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       status: 'pending',
-      orderNumber: lastOrderNumber + 1,
+      orderNumber: (lastOrderNumber || 0) + 1,
       closureId: null,
     };
     addDocumentNonBlocking(collection(firestore, userPath('orders')!), newOrder);
@@ -409,11 +423,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     toast({ variant: 'destructive', title: "Función no implementada", description: "El borrado masivo debe hacerse desde la consola de Firebase." });
   };
   
-  const closures = closuresData?.map(c => ({
-    ...c,
-    closureDate: (c.closureDate as Timestamp)?.toDate(),
-  })) || [];
-
   const value: AppContextType = {
     user, isUserLoading, logout, switchLocal, isSwitchingLocal, 
     products: products || [], 

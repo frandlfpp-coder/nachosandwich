@@ -45,6 +45,15 @@ export type Order = {
   closureId?: string;
 };
 
+// Type for the data payload when creating a new order
+export type NewOrderPayload = Pick<Order, 
+  'customerName' | 
+  'items' | 
+  'paymentMethod' | 
+  'isDelivery'
+> & Partial<Pick<Order, 'customerPhone' | 'deliveryFee'>>;
+
+
 export type StockItem = {
   id: string;
   localId: string;
