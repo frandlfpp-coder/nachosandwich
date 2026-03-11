@@ -86,13 +86,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const { data: stockItems = [] } = useCollection<StockItem>(stockItemsQuery);
 
   const ordersQuery = useMemoFirebase(() => user ? query(collection(firestore, userPath('orders')!), where('status', '==', 'pending')) : null, [user, firestore]);
-  const { data: orders = [] } = useCollection<Order>(ordersQuery);
+  const { data: ordersData = [] } = useCollection<Order>(ordersQuery);
   
   const completedOrdersQuery = useMemoFirebase(() => user ? query(collection(firestore, userPath('orders')!), where('status', '==', 'completed'), where('closureId', '==', null)) : null, [user, firestore]);
-  const { data: completedOrders = [] } = useCollection<Order>(completedOrdersQuery);
+  const { data: completedOrdersData = [] } = useCollection<Order>(completedOrdersQuery);
   
   const transactionsQuery = useMemoFirebase(() => user ? query(collection(firestore, userPath('transactions')!), where('closureId', '==', null)) : null, [user, firestore]);
-  const { data: transactions = [] } = useCollection<Transaction>(transactionsQuery);
+  const { data: transactionsData = [] } = useCollection<Transaction>(transactionsQuery);
 
   const closuresQuery = useMemoFirebase(() => user ? query(collection(firestore, userPath('closures')!)) : null, [user, firestore]);
   const { data: closuresData = [] } = useCollection<Closure>(closuresQuery);
@@ -103,7 +103,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const productCounts: { [key: string]: { name: string; emoji?: string; count: number } } = {};
     const customerSpending: { [key: string]: { name: string; totalSpent: number; orderCount: number } } = {};
 
-    closuresData.forEach((closure: any) => {
+    closuresData.forEach((closure: Closure) => {
         (closure.orders || []).forEach((order: Order) => {
             const customerName = order.customerName.trim().toUpperCase();
             if (customerName !== 'SIN NOMBRE' && customerName.trim() !== '') {
@@ -131,11 +131,18 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return { topProducts, topCustomers };
   }, [closuresData]);
 
+  const orders = useMemo(() => ordersData?.map(o => ({...o, createdAt: (o.createdAt as Timestamp)?.toDate(), updatedAt: (o.updatedAt as Timestamp)?.toDate() })) || [], [ordersData]);
+  const completedOrders = useMemo(() => completedOrdersData?.map(o => ({...o, createdAt: (o.createdAt as Timestamp)?.toDate(), updatedAt: (o.updatedAt as Timestamp)?.toDate() })) || [], [completedOrdersData]);
+  const transactions = useMemo(() => transactionsData?.map(t => ({...t, createdAt: (t.createdAt as Timestamp)?.toDate() })) || [], [transactionsData]);
+
   const completedDeliveriesThisShift = useMemo(() => {
-    return orders.filter(o => o.isDelivery && (o.status === 'completed' || o.status === 'picked-up') && !o.closureId)
-      .concat(completedOrders.filter(o => o.isDelivery && !o.closureId))
-      .sort((a,b) => (b.updatedAt?.toMillis() || 0) - (a.updatedAt?.toMillis() || 0));
-  }, [orders, completedOrders]);
+    // This now correctly filters only completed orders that are for delivery
+    // and sorts them by the time they were completed.
+    return completedOrders
+      .filter(o => o.isDelivery)
+      .sort((a, b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0));
+  }, [completedOrders]);
+
 
   const switchLocal = async (local: 'nacho1' | 'nacho2' | 'prueba') => {
     const email = `${local}@local.com`;
@@ -201,7 +208,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const addOrder = (orderData: Omit<Order, 'id' | 'createdAt' | 'localId'>) => {
     if (!user || !firestore) return;
-    const allHistoricalOrders = [...orders, ...completedOrders, ...closures.flatMap((c: any) => c.orders || [])];
+    const allHistoricalOrders = [...orders, ...completedOrders, ...closures.flatMap((c: Closure) => c.orders || [])];
     const lastOrderNumber = allHistoricalOrders.reduce((max, order) => order.orderNumber > max ? order.orderNumber : max, 0);
 
     const newOrder: Omit<Order, 'id'> = {
@@ -294,8 +301,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
     
     const batch = writeBatch(firestore);
-    const closureId = `c${Date.now()}`;
-
+    
     const totalDeliveryFees = ordersToClose.filter(o => o.isDelivery && o.deliveryFee).reduce((sum, o) => sum + (o.deliveryFee || 0), 0);
     const totalIngresos = transactionsToClose.filter(t => t.type === 'ingreso').reduce((sum, t) => sum + t.amount, 0);
     const totalEgresos = transactionsToClose.filter(t => t.type === 'egreso').reduce((sum, t) => sum + t.amount, 0);
@@ -414,13 +420,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     toppings: toppings || [], 
     cart, addToCart,
     updateCartQty, clearCart, cartTotal, cartCount, 
-    orders: orders.map(o => ({...o, createdAt: (o.createdAt as Timestamp)?.toDate() })) || [], 
-    completedOrders: completedOrders.map(o => ({...o, createdAt: (o.createdAt as Timestamp)?.toDate(), updatedAt: (o.updatedAt as Timestamp)?.toDate() })) || [],
+    orders, 
+    completedOrders,
     completedDeliveriesThisShift,
     addOrder, completeOrder, pickupOrder, cancelOrder, 
     stockItems: stockItems || [], 
     updateStock, 
-    transactions: transactions.map(t => ({...t, createdAt: (t.createdAt as Timestamp)?.toDate() })) || [],
+    transactions,
     closures, addTransaction, deleteTransaction, closeDay, addProduct, deleteProduct, updateProduct,
     addStockItem, deleteStockItem, addTopping, deleteTopping, updateTopping, deleteAllLocalData,
     clearFinancialHistory,
