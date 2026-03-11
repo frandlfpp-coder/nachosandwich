@@ -44,15 +44,15 @@ type AppContextType = {
   updateStock: (itemId: string, delta: number) => void;
   transactions: Transaction[]; // Represents OPEN transactions for the current shift
   closures: Closure[];
-  addTransaction: (transaction: Omit<Transaction, 'id' | 'createdAt' | 'localId' | 'closureId'>) => void;
+  addTransaction: (transaction: Omit<Transaction, 'id' | 'createdAt' | 'userId' | 'closureId'>) => void;
   deleteTransaction: (id: string) => void;
   closeDay: () => Promise<void>;
-  addProduct: (product: Omit<Product, 'id' | 'localId' | 'createdAt' | 'updatedAt'>) => void;
+  addProduct: (product: Omit<Product, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => void;
   deleteProduct: (id: string) => void;
-  updateProduct: (id: string, updates: Partial<Omit<Product, 'id' | 'localId' | 'createdAt'>>) => void;
-  addStockItem: (item: Omit<StockItem, 'id' | 'stock'| 'localId' | 'createdAt' | 'updatedAt'>) => void;
+  updateProduct: (id: string, updates: Partial<Omit<Product, 'id' | 'userId' | 'createdAt'>>) => void;
+  addStockItem: (item: Omit<StockItem, 'id' | 'stock'| 'userId' | 'createdAt' | 'updatedAt'>) => void;
   deleteStockItem: (id: string) => void;
-  addTopping: (topping: Omit<Topping, 'id' | 'localId' | 'createdAt' | 'updatedAt'>) => void;
+  addTopping: (topping: Omit<Topping, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => void;
   deleteTopping: (id: string) => void;
   updateTopping: (id: string, price: number) => void;
   deleteAllLocalData: () => Promise<void>;
@@ -103,19 +103,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     // Helper to safely convert different timestamp formats to a JS Date
     const toDateSafe = (value: any): Date | null => {
         if (!value) return null;
-        // Handles Firestore Timestamps
-        if (value instanceof Timestamp) {
-            return value.toDate();
-        }
-        // Handles cases where it might already be a JS Date
-        if (value instanceof Date) {
-            return value;
-        }
-        // Handles objects serialized from Timestamps { seconds, nanoseconds }
+        if (value instanceof Timestamp) return value.toDate();
+        if (value instanceof Date) return value;
         if (typeof value === 'object' && typeof value.seconds === 'number') {
             return new Timestamp(value.seconds, value.nanoseconds || 0).toDate();
         }
-        return null; // Return null if format is unrecognized
+        return null;
     }
 
     return closuresData?.map(c => ({
@@ -174,18 +167,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, [completedOrders]);
 
   const switchLocal = async (local: 'nacho1' | 'nacho2' | 'prueba') => {
-    // Using a new email domain (@local.app) to bypass any old, problematic accounts
-    // that may have been created with an inconsistent password during development.
-    // This effectively provides a clean slate for authentication.
     const email = `${local}@local.app`;
     if (user?.email === email) {
-      return; // Already logged into the correct local.
+      return;
     }
 
     setIsSwitchingLocal(true);
     setCart([]);
 
-    // Step 1: Ensure the current user is signed out before proceeding.
     if (auth.currentUser) {
       await signOut(auth);
     }
@@ -193,17 +182,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const password = 'password';
 
     try {
-      // Step 2: Attempt to CREATE the user. This is the most reliable flow.
       await createUserWithEmailAndPassword(auth, email, password);
       toast({ title: `Bienvenido. Cuenta creada para ${local.toUpperCase()}` });
     } catch (creationError: any) {
-      // Step 3: If creation fails because the user already exists, sign in.
       if (creationError.code === 'auth/email-already-in-use') {
         try {
           await signInWithEmailAndPassword(auth, email, password);
           toast({ title: `Sesión iniciada como ${local.toUpperCase()}` });
         } catch (signInError: any) {
-          // This block indicates a critical error, like a password mismatch on an existing account.
           console.error('CRITICAL: Sign-in failed for existing user:', signInError);
           toast({
             variant: 'destructive',
@@ -212,7 +198,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           });
         }
       } else {
-        // Handle other, unexpected creation errors (e.g., network issues).
         console.error('Error creating user:', creationError);
         toast({
           variant: 'destructive',
@@ -239,7 +224,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
     const newOrder: Omit<Order, 'id'> = {
       ...orderData,
-      localId: user.uid,
+      userId: user.uid,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       status: 'pending',
@@ -294,11 +279,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     updateDocumentNonBlocking(itemRef, { stock: newStock, updatedAt: serverTimestamp() });
   };
   
-  const addTransaction = (transaction: Omit<Transaction, 'id' | 'createdAt' | 'localId' | 'closureId'>) => {
+  const addTransaction = (transaction: Omit<Transaction, 'id' | 'createdAt' | 'userId' | 'closureId'>) => {
     if (!user || !firestore) return;
     const newTransaction = {
       ...transaction,
-      localId: user.uid,
+      userId: user.uid,
       createdAt: serverTimestamp(),
       closureId: null,
     };
@@ -319,8 +304,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const closeDay = async () => {
     if (!user || !firestore) return;
     
-    // Use the raw data from Firestore hooks (ordersData, completedOrdersData, transactionsData)
-    // to ensure Firestore Timestamps are preserved when writing the new closure document.
     const rawOrdersToClose = [...ordersData, ...completedOrdersData].filter(o => o.status === 'completed' || o.status === 'picked-up');
     const rawTransactionsToClose = transactionsData;
 
@@ -336,7 +319,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const totalEgresos = rawTransactionsToClose.filter(t => t.type === 'egreso').reduce((sum, t) => sum + t.amount, 0);
 
     const newClosureDoc = {
-      localId: user.uid,
+      userId: user.uid,
       closureDate: serverTimestamp(),
       totalIngresos,
       totalEgresos,
@@ -345,8 +328,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       balanceTransferencia: rawTransactionsToClose.filter(t => t.paymentMethod === 'Transferencia').reduce((s,t)=>s+(t.type==='ingreso'?t.amount:-t.amount), 0),
       totalTransacciones: rawTransactionsToClose.length,
       totalDeliveryFees,
-      orders: rawOrdersToClose, // Embed raw data with Timestamps
-      transactions: rawTransactionsToClose, // Embed raw data with Timestamps
+      orders: rawOrdersToClose,
+      transactions: rawTransactionsToClose,
     };
     
     const closureRef = doc(collection(firestore, userPath('closures')!));
@@ -366,11 +349,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     toast({ title: "Caja cerrada con éxito" });
   };
   
-  const addProduct = (product: Omit<Product, 'id'|'localId'|'createdAt'|'updatedAt'>) => {
+  const addProduct = (product: Omit<Product, 'id'|'userId'|'createdAt'|'updatedAt'>) => {
     if (!user || !firestore) return;
     const newProduct = {
       ...product,
-      localId: user.uid,
+      userId: user.uid,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
@@ -382,17 +365,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     deleteDocumentNonBlocking(doc(firestore, userPath('products')!, id));
   };
   
-  const updateProduct = (id: string, updates: Partial<Omit<Product, 'id' | 'localId' | 'createdAt'>>) => {
+  const updateProduct = (id: string, updates: Partial<Omit<Product, 'id' | 'userId' | 'createdAt'>>) => {
     if (!user || !firestore) return;
     const productRef = doc(firestore, userPath('products')!, id);
     updateDocumentNonBlocking(productRef, { ...updates, updatedAt: serverTimestamp() });
   };
 
-  const addStockItem = (item: Omit<StockItem, 'id' | 'stock'|'localId'|'createdAt'|'updatedAt'>) => {
+  const addStockItem = (item: Omit<StockItem, 'id' | 'stock'|'userId'|'createdAt'|'updatedAt'>) => {
     if (!user || !firestore) return;
     const newStockItem = {
       ...item,
-      localId: user.uid,
+      userId: user.uid,
       stock: 0,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
@@ -405,11 +388,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     deleteDocumentNonBlocking(doc(firestore, userPath('stockItems')!, id));
   };
   
-  const addTopping = (topping: Omit<Topping, 'id' | 'localId' | 'createdAt' | 'updatedAt'>) => {
+  const addTopping = (topping: Omit<Topping, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
     if (!user || !firestore) return;
     const newTopping = {
       ...topping,
-      localId: user.uid,
+      userId: user.uid,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };

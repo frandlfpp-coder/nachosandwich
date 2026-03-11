@@ -112,6 +112,21 @@ service cloud.firestore {
         }
 
         /**
+         * @description Secures topping documents owned by a user.
+         * @path /artifacts/{appId}/users/{userId}/toppings/{toppingId}
+         * @allow (list) An authenticated user listing all toppings they own.
+         * @deny (create) A user trying to create a topping under another user's profile.
+         * @principle Enforces document ownership for all operations and validates relational integrity.
+         */
+        match /toppings/{toppingId} {
+          allow get: if isOwner(userId);
+          allow list: if isOwner(userId);
+          allow create: if isCreatingOwnSubcollectionDoc(userId);
+          allow update: if isExistingOwner(userId) && isUserIdImmutable();
+          allow delete: if isExistingOwner(userId);
+        }
+
+        /**
          * @description Secures inventory stock items owned by a user.
          * @path /artifacts/{appId}/users/{userId}/stockItems/{stockItemId}
          * @allow (list) An authenticated user listing all stock items they own.

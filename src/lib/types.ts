@@ -1,6 +1,6 @@
 export type Topping = {
   id: string;
-  localId: string;
+  userId: string;
   name: string;
   price: number;
   createdAt: any;
@@ -11,7 +11,7 @@ export type ProductCategory = 'Sandwich de Miga' | 'Lomitos' | 'Pebetes' | 'Barr
 
 export type Product = {
   id: string;
-  localId: string;
+  userId: string;
   name: string;
   price: number;
   emoji?: string;
@@ -31,7 +31,7 @@ export type CartItem = {
 
 export type Order = {
   id:string;
-  localId: string;
+  userId: string;
   customerName: string;
   items: CartItem[];
   paymentMethod: 'Efectivo' | 'Transferencia';
@@ -56,7 +56,7 @@ export type NewOrderPayload = Pick<Order,
 
 export type StockItem = {
   id: string;
-  localId: string;
+  userId: string;
   name: string;
   unit: string;
   stock: number;
@@ -66,7 +66,7 @@ export type StockItem = {
 
 export type Transaction = {
   id: string;
-  localId: string;
+  userId: string;
   concept: string;
   amount: number;
   paymentMethod: 'Efectivo' | 'Transferencia';
@@ -77,7 +77,7 @@ export type Transaction = {
 
 export type Closure = {
   id: string;
-  localId: string;
+  userId: string;
   closureDate: any;
   totalIngresos: number;
   totalEgresos: number;
