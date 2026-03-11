@@ -32,7 +32,7 @@ export default function KitchenDisplayPage() {
               </div>
             </div>
             <ul className="space-y-3 flex-1 text-lg">
-              {order.items.map(item => (
+              {(order.items || []).map(item => (
                 item.product ? (
                   <li key={item.id} className="font-bold">
                     <span>{item.qty}x {item.product.name}</span>

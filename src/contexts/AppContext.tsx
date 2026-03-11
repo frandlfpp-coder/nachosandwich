@@ -246,7 +246,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const order = [...orders, ...completedOrders].find(o => o.id === orderId);
     if (!order) return;
 
-    const orderTotal = order.items.reduce((sum, item) => sum + item.finalPrice * item.qty, 0);
+    const orderTotal = (order.items || []).reduce((sum, item) => sum + item.finalPrice * item.qty, 0);
     addTransaction({
       concept: `VENTA: ${order.customerName}`,
       amount: orderTotal,

@@ -40,7 +40,7 @@ export default function KitchenPage() {
                 </div>
               )}
               <ul className="text-sm space-y-3 mb-8 border-l-4 border-primary pl-4 font-black">
-                {o.items.map(i => (
+                {(o.items || []).map(i => (
                   <li key={i.id}>
                     <span>{i.qty}x {i.product.name}</span>
                     {i.toppings.length > 0 && (

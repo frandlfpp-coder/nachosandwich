@@ -19,7 +19,7 @@ export default function DeliveryPage() {
   }, [orders]);
 
   const calculateOrderTotal = (order: Order) => {
-    return order.items.reduce((total, item) => total + item.finalPrice * item.qty, 0);
+    return (order.items || []).reduce((total, item) => total + item.finalPrice * item.qty, 0);
   }
 
   const totalToPayDriver = useMemo(() => {
@@ -76,7 +76,7 @@ export default function DeliveryPage() {
                     <div className="mb-6">
                         <p className="text-[10px] opacity-40 mb-1 font-black">Items</p>
                         <ul className="text-sm space-y-2 font-black border-l-4 border-slate-100 dark:border-zinc-800 pl-3">
-                            {o.items.map(i => (
+                            {(o.items || []).map(i => (
                               i.product ? (
                                 <li key={i.id}>
                                   <span>{i.qty}x {i.product.name}</span>

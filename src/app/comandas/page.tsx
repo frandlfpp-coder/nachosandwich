@@ -50,7 +50,7 @@ export default function ComandasPage() {
                     </div>
                   )}
                   <ul className="text-sm space-y-3 mb-8 border-l-4 border-primary pl-4 font-black flex-1">
-                    {o.items.map(i => (
+                    {(o.items || []).map(i => (
                       i.product ? (
                         <li key={i.id}>
                           <span>{i.qty}x {i.product.name}</span>

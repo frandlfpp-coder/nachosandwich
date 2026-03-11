@@ -33,7 +33,7 @@ export type Order = {
   id:string;
   userId: string;
   customerName: string;
-  items: CartItem[];
+  items?: CartItem[];
   paymentMethod: 'Efectivo' | 'Transferencia';
   createdAt: any;
   orderNumber: number;
@@ -47,11 +47,12 @@ export type Order = {
 
 // Type for the data payload when creating a new order
 export type NewOrderPayload = Pick<Order, 
-  'customerName' | 
-  'items' | 
+  'customerName' |
   'paymentMethod' | 
   'isDelivery'
-> & Partial<Pick<Order, 'customerPhone' | 'deliveryFee'>>;
+> & {
+  items: CartItem[];
+} & Partial<Pick<Order, 'customerPhone' | 'deliveryFee'>>;
 
 
 export type StockItem = {
