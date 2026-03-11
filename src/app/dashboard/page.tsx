@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AppShell from '@/components/layout/AppShell';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -11,13 +11,162 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Product, Topping, ProductCategory, NewOrderPayload } from '@/lib/types';
+import { Product, Topping, ProductCategory, NewOrderPayload, CartItem } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const productCategories: ProductCategory[] = ['Sandwich de Miga', 'Lomitos', 'Pebetes', 'Barroluco', 'Tostados', 'Baguette'];
 
+// Sub-component for Customizing a Product
+const CustomizeProductModal = ({ 
+  isOpen, 
+  onOpenChange, 
+  product, 
+  toppings, 
+  onAddToCart 
+} : {
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+  product: Product | null;
+  toppings: Topping[];
+  onAddToCart: (product: Product, options: { toppings: Topping[], notes?: string }) => void;
+}) => {
+  const [selectedToppings, setSelectedToppings] = useState<Topping[]>([]);
+  const [notes, setNotes] = useState('');
+
+  // Reset state when modal opens for a new product
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedToppings([]);
+      setNotes('');
+    }
+  }, [isOpen, product]);
+
+  if (!product) return null;
+
+  const handleToppingToggle = (topping: Topping) => {
+    setSelectedToppings(prev => 
+      prev.find(t => t.id === topping.id) 
+        ? prev.filter(t => t.id !== topping.id)
+        : [...prev, topping]
+    );
+  };
+  
+  const calculatedPrice = product.price + selectedToppings.reduce((sum, t) => sum + t.price, 0);
+
+  const handleConfirmAddToCart = () => {
+      onAddToCart(product, { toppings: selectedToppings, notes });
+  };
+
+  return (
+      <Dialog open={isOpen} onOpenChange={onOpenChange}>
+          <DialogContent className="bg-card w-full max-w-lg rounded-2xl p-10 animate-pop">
+              <DialogHeader>
+                  <DialogTitle className="text-3xl tracking-tighter mb-4 text-center font-black uppercase">{product.name}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-6">
+                  {toppings.length > 0 && (
+                      <div>
+                          <h4 className="font-bold mb-2">Añadir Toppings</h4>
+                          <ScrollArea className="h-40 border rounded-xl p-4">
+                              <div className="space-y-3">
+                              {toppings.map(topping => (
+                                  <div key={topping.id} className="flex items-center justify-between">
+                                      <div className="flex items-center gap-3">
+                                          <Checkbox 
+                                              id={`topping-${topping.id}`}
+                                              onCheckedChange={() => handleToppingToggle(topping)}
+                                              checked={!!selectedToppings.find(t => t.id === topping.id)}
+                                          />
+                                          <Label htmlFor={`topping-${topping.id}`} className="font-semibold uppercase">{topping.name}</Label>
+                                      </div>
+                                      <span className="text-sm font-bold text-primary">+${topping.price.toLocaleString('es-AR')}</span>
+                                  </div>
+                              ))}
+                              </div>
+                          </ScrollArea>
+                      </div>
+                  )}
+                  <div>
+                      <h4 className="font-bold mb-2">Notas para Cocina</h4>
+                      <Textarea 
+                          placeholder="Ej: sin cebolla, bien cocido..."
+                          value={notes}
+                          onChange={(e) => setNotes(e.target.value)}
+                          className="bg-secondary"
+                      />
+                  </div>
+              </div>
+              <DialogFooter className="mt-8 sm:justify-between items-center">
+                  <span className="text-2xl font-black">Total: ${calculatedPrice.toLocaleString('es-AR')}</span>
+                  <Button onClick={handleConfirmAddToCart} className="w-full sm:w-auto bg-primary text-primary-foreground py-4 px-8 rounded-xl text-lg shadow-xl font-black h-auto">
+                      Añadir al Pedido
+                  </Button>
+              </DialogFooter>
+          </DialogContent>
+      </Dialog>
+  );
+};
+
+
+// Sub-component for the Cart
+const CartComponent = ({
+  cart,
+  onClearCart,
+  onUpdateQty,
+  cartTotal,
+  onCheckout
+} : {
+  cart: CartItem[];
+  onClearCart: () => void;
+  onUpdateQty: (id: string, delta: number) => void;
+  cartTotal: number;
+  onCheckout: () => void;
+}) => (
+  <div className="w-full lg:w-[400px] bg-card text-card-foreground rounded-2xl shadow-xl border flex flex-col overflow-hidden lg:h-full">
+    <div className="p-6 bg-card border-b flex justify-between items-center">
+      <h2 className="text-lg tracking-tight font-black">Tu Pedido</h2>
+      <Button onClick={onClearCart} variant="link" className="text-xs text-destructive hover:underline font-black p-0 h-auto">Vaciar</Button>
+    </div>
+    <div className="flex-1 overflow-y-auto p-6 space-y-4">
+      {cart.length === 0 ? (
+        <div className="py-20 text-center opacity-40 text-xs font-black">Carrito Vacio</div>
+      ) : (
+        cart.map(item => (
+          <div key={item.id} className="flex items-center gap-4 bg-secondary p-4 rounded-lg animate-pop">
+            <div className="flex-1">
+              <h4 className="text-sm leading-tight font-black uppercase">{item.product?.name}</h4>
+              {item.toppings.length > 0 && (
+                <p className="text-[10px] text-muted-foreground font-semibold">+ {item.toppings.map(t => t.name).join(', ')}</p>
+              )}
+              {item.notes && (
+                <p className="text-[10px] text-destructive font-semibold italic">Nota: {item.notes}</p>
+              )}
+              <span className="text-primary font-bold">${(item.finalPrice * item.qty).toLocaleString('es-AR')}</span>
+            </div>
+            <div className="flex items-center gap-3 bg-background px-3 py-1 rounded-xl border">
+              <Button onClick={() => onUpdateQty(item.id, -1)} variant="ghost" className="font-black px-2 text-destructive h-auto w-auto p-0 text-lg hover:bg-transparent">-</Button>
+              <span className="text-xs font-black w-4 text-center">{item.qty}</span>
+              <Button onClick={() => onUpdateQty(item.id, 1)} variant="ghost" className="font-black px-2 text-primary h-auto w-auto p-0 text-lg hover:bg-transparent">+</Button>
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+    <div className="p-6 bg-card border-t space-y-6">
+      <div className="flex justify-between items-center">
+        <span className="text-sm opacity-60 font-black">Total</span>
+        <span className="text-4xl tracking-tighter text-foreground font-black">${cartTotal.toLocaleString('es-AR')}</span>
+      </div>
+      <Button onClick={onCheckout} className="w-full bg-primary text-primary-foreground py-6 rounded-xl text-xl shadow-lg active:scale-95 transition-all font-black h-auto">
+        Comandar
+      </Button>
+    </div>
+  </div>
+);
+
+// Main Page Component
 export default function DashboardPage() {
   const { products, toppings, cart, addToCart, updateCartQty, clearCart, cartTotal, cartCount, addOrder } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
@@ -86,124 +235,20 @@ export default function DashboardPage() {
     setDeliveryFee('');
     toast({ title: '¡Comanda Enviada!' });
   };
-  
-  const CustomizeProductModal = () => {
-    const [selectedToppings, setSelectedToppings] = useState<Topping[]>([]);
-    const [notes, setNotes] = useState('');
 
-    if (!productToCustomize) return null;
+  const handleAddToCartAndCloseModal = (product: Product, options: { toppings: Topping[], notes?: string }) => {
+    addToCart(product, options);
+    setCustomizeModalOpen(false);
+    setProductToCustomize(null);
+  }
 
-    const handleToppingToggle = (topping: Topping) => {
-      setSelectedToppings(prev => 
-        prev.find(t => t.id === topping.id) 
-          ? prev.filter(t => t.id !== topping.id)
-          : [...prev, topping]
-      );
-    };
-    
-    const calculatedPrice = productToCustomize.price + selectedToppings.reduce((sum, t) => sum + t.price, 0);
-
-    const handleAddToCart = () => {
-        addToCart(productToCustomize, { toppings: selectedToppings, notes });
-        setCustomizeModalOpen(false);
-        setProductToCustomize(null);
-    };
-
-    return (
-        <Dialog open={isCustomizeModalOpen} onOpenChange={(isOpen) => {
-            if (!isOpen) setProductToCustomize(null);
-            setCustomizeModalOpen(isOpen);
-        }}>
-            <DialogContent className="bg-card w-full max-w-lg rounded-2xl p-10 animate-pop">
-                <DialogHeader>
-                    <DialogTitle className="text-3xl tracking-tighter mb-4 text-center font-black uppercase">{productToCustomize.name}</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-6">
-                    {toppings.length > 0 && (
-                        <div>
-                            <h4 className="font-bold mb-2">Añadir Toppings</h4>
-                            <ScrollArea className="h-40 border rounded-xl p-4">
-                                <div className="space-y-3">
-                                {toppings.map(topping => (
-                                    <div key={topping.id} className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <Checkbox 
-                                                id={`topping-${topping.id}`}
-                                                onCheckedChange={() => handleToppingToggle(topping)}
-                                                checked={!!selectedToppings.find(t => t.id === topping.id)}
-                                            />
-                                            <Label htmlFor={`topping-${topping.id}`} className="font-semibold uppercase">{topping.name}</Label>
-                                        </div>
-                                        <span className="text-sm font-bold text-primary">+${topping.price.toLocaleString('es-AR')}</span>
-                                    </div>
-                                ))}
-                                </div>
-                            </ScrollArea>
-                        </div>
-                    )}
-                    <div>
-                        <h4 className="font-bold mb-2">Notas para Cocina</h4>
-                        <Textarea 
-                            placeholder="Ej: sin cebolla, bien cocido..."
-                            value={notes}
-                            onChange={(e) => setNotes(e.target.value)}
-                            className="bg-secondary"
-                        />
-                    </div>
-                </div>
-                <DialogFooter className="mt-8 sm:justify-between items-center">
-                    <span className="text-2xl font-black">Total: ${calculatedPrice.toLocaleString('es-AR')}</span>
-                    <Button onClick={handleAddToCart} className="w-full sm:w-auto bg-primary text-primary-foreground py-4 px-8 rounded-xl text-lg shadow-xl font-black h-auto">
-                        Añadir al Pedido
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    );
-  };
-
-  const CartComponent = () => (
-    <div className="w-full lg:w-[400px] bg-card text-card-foreground rounded-2xl shadow-xl border flex flex-col overflow-hidden lg:h-full">
-      <div className="p-6 bg-card border-b flex justify-between items-center">
-        <h2 className="text-lg tracking-tight font-black">Tu Pedido</h2>
-        <Button onClick={clearCart} variant="link" className="text-xs text-destructive hover:underline font-black p-0 h-auto">Vaciar</Button>
-      </div>
-      <div className="flex-1 overflow-y-auto p-6 space-y-4">
-        {cart.length === 0 ? (
-          <div className="py-20 text-center opacity-40 text-xs font-black">Carrito Vacio</div>
-        ) : (
-          cart.map(item => (
-            <div key={item.id} className="flex items-center gap-4 bg-secondary p-4 rounded-lg animate-pop">
-              <div className="flex-1">
-                <h4 className="text-sm leading-tight font-black uppercase">{item.product.name}</h4>
-                {item.toppings.length > 0 && (
-                  <p className="text-[10px] text-muted-foreground font-semibold">+ {item.toppings.map(t => t.name).join(', ')}</p>
-                )}
-                {item.notes && (
-                  <p className="text-[10px] text-destructive font-semibold italic">Nota: {item.notes}</p>
-                )}
-                <span className="text-primary font-bold">${(item.finalPrice * item.qty).toLocaleString('es-AR')}</span>
-              </div>
-              <div className="flex items-center gap-3 bg-background px-3 py-1 rounded-xl border">
-                <Button onClick={() => updateCartQty(item.id, -1)} variant="ghost" className="font-black px-2 text-destructive h-auto w-auto p-0 text-lg hover:bg-transparent">-</Button>
-                <span className="text-xs font-black w-4 text-center">{item.qty}</span>
-                <Button onClick={() => updateCartQty(item.id, 1)} variant="ghost" className="font-black px-2 text-primary h-auto w-auto p-0 text-lg hover:bg-transparent">+</Button>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-      <div className="p-6 bg-card border-t space-y-6">
-        <div className="flex justify-between items-center">
-          <span className="text-sm opacity-60 font-black">Total</span>
-          <span className="text-4xl tracking-tighter text-foreground font-black">${cartTotal.toLocaleString('es-AR')}</span>
-        </div>
-        <Button onClick={() => cart.length > 0 ? setCheckoutOpen(true) : toast({ title: 'CARRITO VACÍO' })} className="w-full bg-primary text-primary-foreground py-6 rounded-xl text-xl shadow-lg active:scale-95 transition-all font-black h-auto">
-          Comandar
-        </Button>
-      </div>
-    </div>
-  );
+  const handleCheckout = () => {
+    if (cart.length > 0) {
+      setCheckoutOpen(true);
+    } else {
+      toast({ title: 'CARRITO VACÍO' });
+    }
+  }
 
   return (
     <AppShell>
@@ -243,17 +288,32 @@ export default function DashboardPage() {
                     <span className="text-xs opacity-60">{cartCount} items</span>
                     <span className="text-2xl font-black text-primary">${cartTotal.toLocaleString('es-AR')}</span>
                 </div>
-                <Button onClick={() => cart.length > 0 ? setCheckoutOpen(true) : toast({ title: 'CARRITO VACÍO' })} className="bg-primary text-primary-foreground py-4 px-8 rounded-xl text-lg shadow-xl active:scale-95 transition-all font-black h-auto">
+                <Button onClick={handleCheckout} className="bg-primary text-primary-foreground py-4 px-8 rounded-xl text-lg shadow-xl active:scale-95 transition-all font-black h-auto">
                   Comandar
                 </Button>
             </div>
           </div>
         ) : (
-          <CartComponent />
+          <CartComponent 
+            cart={cart}
+            onClearCart={clearCart}
+            onUpdateQty={updateCartQty}
+            cartTotal={cartTotal}
+            onCheckout={handleCheckout}
+          />
         )}
       </section>
       
-      <CustomizeProductModal />
+      <CustomizeProductModal 
+        isOpen={isCustomizeModalOpen}
+        onOpenChange={(isOpen) => {
+          if(!isOpen) setProductToCustomize(null);
+          setCustomizeModalOpen(isOpen)
+        }}
+        product={productToCustomize}
+        toppings={toppings}
+        onAddToCart={handleAddToCartAndCloseModal}
+      />
 
       <Dialog open={isCheckoutOpen} onOpenChange={setCheckoutOpen}>
         <DialogContent className="bg-card w-full max-w-md rounded-2xl p-10 animate-pop">
