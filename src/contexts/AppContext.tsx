@@ -139,11 +139,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                 if (!customerSpending[customerName]) {
                     customerSpending[customerName] = { name: customerName, totalSpent: 0, orderCount: 0 };
                 }
-                const orderTotal = order.items.reduce((sum, item) => sum + item.finalPrice * item.qty, 0);
+                const orderTotal = (order.items || []).reduce((sum, item) => sum + item.finalPrice * item.qty, 0);
                 customerSpending[customerName].totalSpent += orderTotal;
                 customerSpending[customerName].orderCount += 1;
             }
-            order.items.forEach(item => {
+            (order.items || []).forEach(item => {
                 if (item.product) {
                     if (!productCounts[item.product.id]) {
                         productCounts[item.product.id] = { name: item.product.name, emoji: item.product.emoji, count: 0 };
