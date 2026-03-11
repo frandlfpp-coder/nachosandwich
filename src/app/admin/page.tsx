@@ -9,7 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
-import { Tv, Check, Edit, Trash2, History } from 'lucide-react';
+import { Tv, Check, Edit, Trash2, History, Trophy, Star } from 'lucide-react';
 import { Product, Topping, ProductCategory, StockItem } from '@/lib/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -21,6 +21,7 @@ export default function AdminPage() {
     deleteAllLocalData,
     clearFinancialHistory,
     toppings, addTopping, deleteTopping, updateTopping,
+    topProducts, topCustomers
   } = useApp();
 
   const [isProductModalOpen, setProductModalOpen] = useState(false);
@@ -189,6 +190,48 @@ export default function AdminPage() {
                         TV Clientes
                     </Link>
                 </Button>
+            </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="bg-card text-card-foreground rounded-3xl p-8 border">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-black flex items-center gap-2"><Trophy className="text-amber-400"/> Top Productos</h2>
+              </div>
+              <div className="space-y-2">
+                {topProducts.length > 0 ? topProducts.map((p, index) => (
+                  <div key={p.id} className="flex justify-between items-center p-4 bg-slate-100 dark:bg-zinc-800 rounded-2xl text-[10px] font-black">
+                    <span className="flex items-center gap-2">
+                        <span className="text-lg w-6 text-center">{index + 1}.</span>
+                        <span>{p.emoji && `${p.emoji} `}{p.name}</span>
+                    </span>
+                    <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full">{p.count} vendidos</span>
+                  </div>
+                )) : (
+                  <p className="text-center text-xs opacity-50 font-black py-4">No hay datos suficientes.</p>
+                )}
+              </div>
+            </div>
+            <div className="bg-card text-card-foreground rounded-3xl p-8 border">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-black flex items-center gap-2"><Star className="text-yellow-400"/> Top Clientes</h2>
+              </div>
+              <div className="space-y-2">
+                {topCustomers.length > 0 ? topCustomers.map((c, index) => (
+                  <div key={c.name} className="flex justify-between items-center p-4 bg-slate-100 dark:bg-zinc-800 rounded-2xl text-[10px] font-black">
+                    <span className="flex items-center gap-2">
+                        <span className="text-lg w-6 text-center">{index + 1}.</span>
+                        <span className="uppercase">{c.name}</span>
+                    </span>
+                    <div className="text-right">
+                        <span className="text-primary block">${c.totalSpent.toLocaleString('es-AR')}</span>
+                        <span className="text-[9px] opacity-60">{c.orderCount} {c.orderCount > 1 ? 'pedidos' : 'pedido'}</span>
+                    </div>
+                  </div>
+                )) : (
+                  <p className="text-center text-xs opacity-50 font-black py-4">No hay datos suficientes.</p>
+                )}
+              </div>
             </div>
         </div>
 

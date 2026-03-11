@@ -78,3 +78,16 @@ export type Closure = {
   totalTransacciones: number;
   totalDeliveryFees: number;
 };
+
+export type RankedProduct = {
+  id: string;
+  name: string;
+  emoji?: string;
+  count: number;
+};
+
+export type RankedCustomer = {
+  name: string;
+  totalSpent: number;
+  orderCount: number;
+};

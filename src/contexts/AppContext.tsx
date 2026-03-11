@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Product, CartItem, Order, StockItem, Transaction, Closure, Topping } from '@/lib/types';
+import { Product, CartItem, Order, StockItem, Transaction, Closure, Topping, RankedProduct, RankedCustomer } from '@/lib/types';
 import { useFirebase, useCollection } from '@/firebase';
 import { collection, doc, serverTimestamp, increment, setDoc, getDocs, writeBatch } from 'firebase/firestore';
 import { signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, User } from 'firebase/auth';
@@ -47,6 +47,8 @@ type AppContextType = {
   updateTopping: (id: string, price: number) => void;
   deleteAllLocalData: () => Promise<void>;
   clearFinancialHistory: () => Promise<void>;
+  topProducts: RankedProduct[];
+  topCustomers: RankedCustomer[];
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -174,6 +176,48 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (!rawClosures) return [];
     return rawClosures.map(c => ({...c, closureDate: c.closureDate?.toDate()})).sort((a,b) => (b.closureDate?.getTime() || 0) - (a.closureDate?.getTime() || 0));
   }, [rawClosures]);
+
+  const { topProducts, topCustomers } = useMemo(() => {
+    if (!rawOrders) return { topProducts: [], topCustomers: [] };
+
+    const productCounts: { [key: string]: { name: string; emoji?: string; count: number } } = {};
+    const customerSpending: { [key: string]: { name: string; totalSpent: number; orderCount: number } } = {};
+
+    rawOrders.forEach(order => {
+        // Only count completed orders for rankings
+        if (order.status === 'completed' || order.status === 'picked-up') {
+            const customerName = order.customerName.trim().toUpperCase();
+            if (customerName !== 'SIN NOMBRE' && customerName.trim() !== '') {
+                if (!customerSpending[customerName]) {
+                    customerSpending[customerName] = { name: customerName, totalSpent: 0, orderCount: 0 };
+                }
+                const orderTotal = order.items.reduce((sum, item) => sum + item.finalPrice * item.qty, 0);
+                customerSpending[customerName].totalSpent += orderTotal;
+                customerSpending[customerName].orderCount += 1;
+            }
+            
+            order.items.forEach(item => {
+                if (item.product) { // Ensure product exists
+                    if (!productCounts[item.product.id]) {
+                        productCounts[item.product.id] = { name: item.product.name, emoji: item.product.emoji, count: 0 };
+                    }
+                    productCounts[item.product.id].count += item.qty;
+                }
+            });
+        }
+    });
+
+    const sortedProducts: RankedProduct[] = Object.entries(productCounts)
+        .map(([id, data]) => ({ id, ...data }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5); // Top 5
+
+    const sortedCustomers: RankedCustomer[] = Object.values(customerSpending)
+        .sort((a, b) => b.totalSpent - a.totalSpent)
+        .slice(0, 5); // Top 5
+
+    return { topProducts: sortedProducts, topCustomers: sortedCustomers };
+  }, [rawOrders]);
 
 
   // Cart logic
@@ -595,6 +639,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     updateTopping,
     deleteAllLocalData,
     clearFinancialHistory,
+    topProducts,
+    topCustomers,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
