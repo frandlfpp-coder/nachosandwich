@@ -1,10 +1,12 @@
 'use client';
 
 import { useApp } from '@/contexts/AppContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Bike } from 'lucide-react';
 
 export default function KitchenDisplayPage() {
   const { orders } = useApp(); // These are pending orders
+  const { isClient } = useTheme();
 
   return (
     <div className="bg-zinc-900 min-h-screen text-white p-8">
@@ -18,6 +20,9 @@ export default function KitchenDisplayPage() {
               <span className="text-5xl font-black">#{order.orderNumber}</span>
               <div className="text-right">
                 <span className="text-lg font-bold block">{order.customerName}</span>
+                <p className="text-xs opacity-60 font-semibold normal-case">
+                    {isClient ? order.createdAt?.toLocaleTimeString('es-AR') : '...'}
+                </p>
                  {order.isDelivery && (
                     <div className="flex items-center justify-end gap-2 mt-1 text-sm font-bold text-destructive normal-case">
                         <Bike className="w-4 h-4" />

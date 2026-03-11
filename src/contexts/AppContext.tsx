@@ -264,13 +264,18 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   // Data mutations
   const addOrder = (orderData: Omit<Order, 'id' | 'createdAt' | 'localId'>) => {
     if (!firebaseUser) return;
+
+    const currentShiftOrders = (rawOrders || []).filter(o => !o.closureId);
+    const lastOrderNumber = currentShiftOrders.reduce((max, order) => order.orderNumber > max ? order.orderNumber : max, 0);
+    const orderNumber = lastOrderNumber + 1;
+    
     const newOrder: any = {
       localId: firebaseUser.uid,
       createdAt: serverTimestamp(),
       status: 'pending',
       customerName: orderData.customerName,
       items: orderData.items,
-      orderNumber: orderData.orderNumber,
+      orderNumber: orderNumber,
       isDelivery: orderData.isDelivery,
       paymentMethod: orderData.paymentMethod || 'Efectivo',
     };

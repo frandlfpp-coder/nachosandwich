@@ -32,6 +32,7 @@ export default function ComandasPage() {
                   <div className="flex justify-between items-start mb-6">
                     <div>
                       <h3 className="text-xl font-black">{o.customerName}</h3>
+                      <p className="text-xs text-muted-foreground font-semibold">{isClient ? o.createdAt?.toLocaleTimeString('es-AR') : '...'}</p>
                       {o.isDelivery && (
                         <div className="flex items-center gap-2 mt-1 text-sm font-bold text-destructive">
                             <Bike className="w-4 h-4" />
