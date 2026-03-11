@@ -1,9 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingCart, ChefHat, Boxes, CircleDollarSign, Settings, LogOut, GitBranch, Zap, Bike, Sun, Moon, ClipboardList } from 'lucide-react';
+import { ShoppingCart, Boxes, CircleDollarSign, Settings, LogOut, GitBranch, Zap, Bike, ClipboardList } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
-import { useTheme } from '@/contexts/ThemeContext';
 import {
   Sheet,
   SheetContent,
@@ -39,7 +38,6 @@ const navItems = [
 
 export default function MobileHeader() {
   const { cartCount, logout, user, switchLocal } = useApp();
-  const { theme, toggleTheme, isClient } = useTheme();
   const [isSheetOpen, setSheetOpen] = useState(false);
   const [isSwitchLocalOpen, setSwitchLocalOpen] = useState(false);
   const pathname = usePathname();
@@ -75,10 +73,6 @@ export default function MobileHeader() {
           </div>
         </Link>
         <div className="flex items-center">
-            <Button onClick={toggleTheme} variant="ghost" className="p-3 rounded-xl h-auto">
-              {isClient ? (theme === 'light' ? <Moon className="h-6 w-6" /> : <Sun className="h-6 w-6" />) : <div className="h-6 w-6" />}
-              <span className="sr-only">Cambiar Tema</span>
-            </Button>
             <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
                 <Button variant="ghost" className="relative p-3 rounded-xl h-auto">
@@ -94,7 +88,6 @@ export default function MobileHeader() {
                 <SheetHeader>
                 <SheetTitle className="uppercase">Tu Pedido</SheetTitle>
                 </SheetHeader>
-                {/* Cart content will be rendered on the dashboard page via a portal or separate logic */}
                 <div className="py-20 text-center opacity-40 text-xs font-black uppercase">
                 Ve a la pestaña 'Ventas' para gestionar tu carrito.
                 </div>

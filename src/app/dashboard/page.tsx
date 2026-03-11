@@ -11,8 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { X } from 'lucide-react';
-import { Product, Order, Topping, ProductCategory, NewOrderPayload } from '@/lib/types';
+import { Product, Topping, ProductCategory, NewOrderPayload } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -117,7 +116,7 @@ export default function DashboardPage() {
         }}>
             <DialogContent className="bg-card w-full max-w-lg rounded-2xl p-10 animate-pop">
                 <DialogHeader>
-                    <DialogTitle className="text-3xl tracking-tighter mb-4 text-center font-black">{productToCustomize.name}</DialogTitle>
+                    <DialogTitle className="text-3xl tracking-tighter mb-4 text-center font-black uppercase">{productToCustomize.name}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-6">
                     {toppings.length > 0 && (
@@ -133,7 +132,7 @@ export default function DashboardPage() {
                                                 onCheckedChange={() => handleToppingToggle(topping)}
                                                 checked={!!selectedToppings.find(t => t.id === topping.id)}
                                             />
-                                            <Label htmlFor={`topping-${topping.id}`} className="font-semibold">{topping.name}</Label>
+                                            <Label htmlFor={`topping-${topping.id}`} className="font-semibold uppercase">{topping.name}</Label>
                                         </div>
                                         <span className="text-sm font-bold text-primary">+${topping.price.toLocaleString('es-AR')}</span>
                                     </div>
@@ -165,18 +164,18 @@ export default function DashboardPage() {
 
   const CartComponent = () => (
     <div className="w-full lg:w-[400px] bg-card text-card-foreground rounded-2xl shadow-xl border flex flex-col overflow-hidden lg:h-full">
-      <div className="p-8 bg-secondary/50 border-b flex justify-between items-center">
-        <h2 className="text-sm tracking-widest opacity-60 font-black">Tu Pedido</h2>
-        <Button onClick={clearCart} variant="link" className="text-xs text-destructive underline font-black p-0 h-auto">Vaciar</Button>
+      <div className="p-6 bg-card border-b flex justify-between items-center">
+        <h2 className="text-lg tracking-tight font-black">Tu Pedido</h2>
+        <Button onClick={clearCart} variant="link" className="text-xs text-destructive hover:underline font-black p-0 h-auto">Vaciar</Button>
       </div>
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
         {cart.length === 0 ? (
-          <div className="py-20 text-center opacity-20 text-xs font-black">Carrito Vacío</div>
+          <div className="py-20 text-center opacity-40 text-xs font-black">Carrito Vacio</div>
         ) : (
           cart.map(item => (
-            <div key={item.id} className="flex items-center gap-4 bg-secondary p-4 rounded-xl animate-pop border">
+            <div key={item.id} className="flex items-center gap-4 bg-secondary p-4 rounded-lg animate-pop">
               <div className="flex-1">
-                <h4 className="text-sm leading-tight font-black">{item.product.name}</h4>
+                <h4 className="text-sm leading-tight font-black uppercase">{item.product.name}</h4>
                 {item.toppings.length > 0 && (
                   <p className="text-[10px] text-muted-foreground font-semibold">+ {item.toppings.map(t => t.name).join(', ')}</p>
                 )}
@@ -194,12 +193,12 @@ export default function DashboardPage() {
           ))
         )}
       </div>
-      <div className="p-8 bg-card border-t space-y-6">
-        <div className="flex justify-between items-end">
-          <span className="text-[10px] opacity-40 font-black">Total</span>
-          <span className="text-5xl tracking-tighter text-primary font-black">${cartTotal.toLocaleString('es-AR')}</span>
+      <div className="p-6 bg-card border-t space-y-6">
+        <div className="flex justify-between items-center">
+          <span className="text-sm opacity-60 font-black">Total</span>
+          <span className="text-4xl tracking-tighter text-foreground font-black">${cartTotal.toLocaleString('es-AR')}</span>
         </div>
-        <Button onClick={() => cart.length > 0 ? setCheckoutOpen(true) : toast({ title: 'CARRITO VACÍO' })} className="w-full bg-primary text-primary-foreground py-6 rounded-xl text-xl shadow-xl active:scale-95 transition-all font-black h-auto">
+        <Button onClick={() => cart.length > 0 ? setCheckoutOpen(true) : toast({ title: 'CARRITO VACÍO' })} className="w-full bg-primary text-primary-foreground py-6 rounded-xl text-xl shadow-lg active:scale-95 transition-all font-black h-auto">
           Comandar
         </Button>
       </div>
@@ -214,25 +213,25 @@ export default function DashboardPage() {
             type="text"
             id="pos-search"
             placeholder="Buscar producto..."
-            className="w-full p-5 rounded-xl bg-card border-2 outline-none focus:border-primary transition-all font-black h-auto"
+            className="w-full p-5 rounded-lg bg-card border outline-none focus:ring-2 focus:ring-primary transition-all font-black h-auto text-base"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
           />
            <Tabs defaultValue="all" onValueChange={(value) => setActiveCategory(value as ProductCategory | 'all')} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 md:grid-cols-7 h-auto">
-                <TabsTrigger value="all" className="py-3 text-xs font-black">Todos</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 md:grid-cols-7 h-auto bg-transparent p-0 gap-2">
+                <TabsTrigger value="all" className="py-2 text-xs font-bold rounded-md data-[state=active]:bg-secondary data-[state=active]:text-foreground">Todos</TabsTrigger>
                 {productCategories.map(category => (
-                    <TabsTrigger key={category} value={category} className="py-3 text-xs font-black">{category}</TabsTrigger>
+                    <TabsTrigger key={category} value={category} className="py-2 text-xs font-bold rounded-md data-[state=active]:bg-secondary data-[state=active]:text-foreground">{category}</TabsTrigger>
                 ))}
             </TabsList>
           </Tabs>
 
           <div id="pos-grid" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {filteredProducts.map(p => (
-              <div key={p.id} onClick={() => handleOpenCustomize(p)} className="product-card bg-card text-card-foreground p-4 rounded-xl border flex flex-col items-center text-center cursor-pointer">
-                <span className="text-4xl mb-3">{p.emoji}</span>
-                <h3 className="text-sm leading-tight mb-2 font-black">{p.name}</h3>
-                <p className="text-primary font-bold">${p.price.toLocaleString('es-AR')}</p>
+              <div key={p.id} onClick={() => handleOpenCustomize(p)} className="bg-card text-card-foreground p-4 rounded-xl border flex flex-col items-center text-center cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1">
+                <span className="text-4xl mb-3">{p.emoji || '🥪'}</span>
+                <h3 className="text-sm leading-tight mb-2 font-black uppercase">{p.name}</h3>
+                <p className="text-primary font-bold text-lg">${p.price.toLocaleString('es-AR')}</p>
               </div>
             ))}
           </div>
@@ -259,7 +258,7 @@ export default function DashboardPage() {
       <Dialog open={isCheckoutOpen} onOpenChange={setCheckoutOpen}>
         <DialogContent className="bg-card w-full max-w-md rounded-2xl p-10 animate-pop">
           <DialogHeader>
-            <DialogTitle className="text-3xl tracking-tighter mb-8 text-center font-black">Confirmar Comanda</DialogTitle>
+            <DialogTitle className="text-3xl tracking-tighter mb-8 text-center font-black uppercase">Confirmar Comanda</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="flex items-center space-x-2 my-4 justify-center">
@@ -274,8 +273,8 @@ export default function DashboardPage() {
             )}
             <Input id="check-name" type="text" placeholder="Nombre Cliente" value={customerName} onChange={(e) => setCustomerName(e.target.value)} className="w-full p-5 rounded-xl bg-secondary outline-none font-black h-auto" />
             <div className="flex gap-2">
-              <Button onClick={() => setPayMethod('Efectivo')} className={`flex-1 py-4 rounded-xl border-2 font-black ${payMethod === 'Efectivo' ? 'bg-lime-100 border-primary' : 'bg-secondary border-transparent'}`}>💵 Efectivo</Button>
-              <Button onClick={() => setPayMethod('Transferencia')} className={`flex-1 py-4 rounded-xl border-2 font-black ${payMethod === 'Transferencia' ? 'bg-blue-100 border-blue-500' : 'bg-secondary border-transparent'}`}>📱 Transfe</Button>
+              <Button onClick={() => setPayMethod('Efectivo')} className={`flex-1 py-4 rounded-xl border-2 font-black ${payMethod === 'Efectivo' ? 'bg-primary/20 border-primary' : 'bg-secondary border-transparent'}`}>💵 Efectivo</Button>
+              <Button onClick={() => setPayMethod('Transferencia')} className={`flex-1 py-4 rounded-xl border-2 font-black ${payMethod === 'Transferencia' ? 'bg-blue-500/20 border-blue-500' : 'bg-secondary border-transparent'}`}>📱 Transfe</Button>
             </div>
             <div className="pt-6 flex flex-col sm:flex-row gap-4">
               <Button onClick={() => setCheckoutOpen(false)} variant="ghost" className="w-full sm:w-auto order-last sm:order-first sm:flex-1 py-5 opacity-40 font-black">Atrás</Button>

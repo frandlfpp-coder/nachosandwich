@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Zap, Sun, Moon } from 'lucide-react';
+import { Zap } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -14,7 +14,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useTheme } from '@/contexts/ThemeContext';
 
 const navItems = [
   { href: '/dashboard', label: 'Ventas' },
@@ -28,7 +27,6 @@ const navItems = [
 export default function Sidebar() {
   const pathname = usePathname();
   const { user, logout, switchLocal } = useApp();
-  const { theme, toggleTheme, isClient } = useTheme();
 
   const currentLocal = useMemo(() => {
     if (user?.email) {
@@ -44,7 +42,7 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="hidden md:flex flex-col w-72 bg-card text-card-foreground p-8 shrink-0 border-r">
+    <aside className="hidden md:flex flex-col w-72 bg-background text-foreground p-6 shrink-0 border-r dark">
       <div className="mb-12 flex items-center gap-4">
         <div className="bg-primary p-2 rounded-lg text-primary-foreground">
           <Zap className="h-6 w-6" />
@@ -66,10 +64,10 @@ export default function Sidebar() {
             variant="ghost"
             disabled={!user}
             className={cn(
-              'w-full justify-start p-4 rounded-xl text-base transition-all flex items-center gap-4 font-black uppercase',
+              'w-full justify-start p-4 rounded-lg text-base transition-all flex items-center gap-4 font-black uppercase text-left h-auto',
               pathname === item.href
                 ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                : 'hover:bg-secondary',
+                : 'hover:bg-secondary text-muted-foreground hover:text-foreground',
               !user && 'opacity-50 cursor-not-allowed'
             )}
           >
@@ -89,14 +87,6 @@ export default function Sidebar() {
             </SelectContent>
          </Select>
          <div className="flex items-center gap-2">
-            <Button
-              onClick={toggleTheme}
-              variant="outline"
-              className="w-full justify-center p-4 text-muted-foreground text-xs hover:text-foreground font-black h-auto flex-1"
-            >
-              {isClient ? (theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />) : <div className="h-5 w-5" />}
-              <span className="sr-only">Cambiar tema</span>
-            </Button>
             <Button
               onClick={() => {
                 if (confirm('¿Cerrar sesión del local actual?')) logout();
