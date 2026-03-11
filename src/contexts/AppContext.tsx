@@ -1,16 +1,17 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
 import { Product, CartItem, Order, StockItem, Transaction, Closure, Topping, RankedProduct, RankedCustomer } from '@/lib/types';
-import { useFirebase, useCollection } from '@/firebase';
-import { collection, doc, serverTimestamp, increment, setDoc, getDocs, writeBatch } from 'firebase/firestore';
-import { signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, User } from 'firebase/auth';
-import { addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 
+// Mock User type, since we are removing Firebase
+export type MockUser = {
+  uid: string;
+  email: string;
+};
+
 type AppContextType = {
-  user: User | null;
+  user: MockUser | null;
   isUserLoading: boolean;
   logout: () => void;
   switchLocal: (local: 'nacho1' | 'nacho2' | 'prueba') => Promise<void>;
@@ -53,138 +54,91 @@ type AppContextType = {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const { firestore, auth, user: firebaseUser, isUserLoading } = useFirebase();
-  const router = useRouter();
-  const { toast } = useToast();
+const createInitialData = () => ({
+  products: [
+    { id: 'p1', localId: '', name: 'LOMITO COMPLETO', price: 5800, category: 'Lomitos', emoji: '🥩', createdAt: new Date(), updatedAt: new Date() },
+    { id: 'p2', localId: '', name: 'JAMON Y QUESO', price: 2000, category: 'Sandwich de Miga', emoji: '🥪', createdAt: new Date(), updatedAt: new Date() },
+    { id: 'p3', localId: '', name: 'SALAME Y QUESO', price: 2200, category: 'Sandwich de Miga', emoji: '🥪', createdAt: new Date(), updatedAt: new Date() },
+    { id: 'p4', localId: '', name: 'BARROLUCO', price: 6500, category: 'Barroluco', emoji: '🍔', createdAt: new Date(), updatedAt: new Date() },
+    { id: 'p5', localId: '', name: 'PEBETE ESPECIAL', price: 3500, category: 'Pebetes', emoji: '🥖', createdAt: new Date(), updatedAt: new Date() },
+  ] as Product[],
+  toppings: [
+    { id: 't1', localId: '', name: 'CHEDDAR', price: 500, createdAt: new Date(), updatedAt: new Date() },
+    { id: 't2', localId: '', name: 'BACON', price: 700, createdAt: new Date(), updatedAt: new Date() },
+    { id: 't3', localId: '', name: 'HUEVO FRITO', price: 400, createdAt: new Date(), updatedAt: new Date() },
+  ] as Topping[],
+  stockItems: [
+    { id: 's1', localId: '', name: 'PAN DE LOMITO', unit: 'UNID', stock: 100, createdAt: new Date(), updatedAt: new Date() },
+    { id: 's2', localId: '', name: 'CARNE LOMO', unit: 'KG', stock: 20, createdAt: new Date(), updatedAt: new Date() },
+    { id: 's3', localId: '', name: 'PAPAS CONGELADAS', unit: 'KG', stock: 50, createdAt: new Date(), updatedAt: new Date() },
+  ] as StockItem[],
+  orders: [] as Order[],
+  transactions: [] as Transaction[],
+  closures: [] as Closure[],
+});
 
+type LocalData = ReturnType<typeof createInitialData>;
+
+export const AppProvider = ({ children }: { children: ReactNode }) => {
+  const { toast } = useToast();
+  const [user, setUser] = useState<MockUser | null>(null);
+  const [isUserLoading, setIsUserLoading] = useState(true);
   const [isSwitchingLocal, setIsSwitchingLocal] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
 
-  const switchLocal = async (local: 'nacho1' | 'nacho2' | 'prueba') => {
-    if (!auth || !firestore) return;
-    if (firebaseUser?.email?.startsWith(local)) return;
-
-    setIsSwitchingLocal(true);
-
-    const requiredPasswords: { [key: string]: string } = {
-      nacho1: 'ignacio369',
-      nacho2: 'ignacio369',
-      prueba: 'ignacio369',
-    };
-    const password = requiredPasswords[local];
-    const email = `${local}@local.com`;
-
-    try {
-      await signOut(auth);
-      await signInWithEmailAndPassword(auth, email, password);
-      toast({ title: `Cambiado a ${local.toUpperCase()}` });
-    } catch (signInError: any) {
-      if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/invalid-credential' || signInError.code === 'auth/wrong-password') {
-        try {
-          const { user: newUser } = await createUserWithEmailAndPassword(auth, email, password);
-          await setDoc(doc(firestore, 'locals', newUser.uid), {
-              id: newUser.uid,
-              email: email,
-              createdAt: serverTimestamp(),
-          });
-          toast({ title: `¡Bienvenido a ${local.toUpperCase()}!`, description: 'Hemos creado una nueva cuenta para tu local.' });
-        } catch (signUpError: any) {
-            toast({ variant: "destructive", title: 'Error al Registrar', description: signUpError.message });
-        }
-      } else {
-        toast({ variant: "destructive", title: 'Error de Autenticación', description: signInError.message });
-      }
-    } finally {
-        setIsSwitchingLocal(false);
-    }
-  };
-  
-  const logout = () => {
-    if (auth) {
-      signOut(auth);
-    }
-  };
+  const [data, setData] = useState<Record<string, LocalData>>({
+    nacho1: createInitialData(),
+    nacho2: createInitialData(),
+    prueba: createInitialData(),
+  });
 
   useEffect(() => {
-    if (!firebaseUser) {
-        clearCart();
+    setTimeout(() => setIsUserLoading(false), 500);
+  }, []);
+
+  const currentLocalData = user ? data[user.uid] : null;
+  
+  const setCurrentLocalData = (getNewData: (d: LocalData) => LocalData) => {
+    if (user) {
+      setData(prevData => ({ ...prevData, [user.uid]: getNewData(prevData[user.uid]) }));
     }
-  }, [firebaseUser])
+  };
 
-  // Data fetching
-  const productsQuery = useMemo(() => firebaseUser ? collection(firestore, 'locals', firebaseUser.uid, 'products') : null, [firestore, firebaseUser]);
-  const { data: products } = useCollection<Product>(productsQuery);
-  
-  const toppingsQuery = useMemo(() => firebaseUser ? collection(firestore, 'locals', firebaseUser.uid, 'toppings') : null, [firestore, firebaseUser]);
-  const { data: toppings } = useCollection<Topping>(toppingsQuery);
+  const switchLocal = async (local: 'nacho1' | 'nacho2' | 'prueba') => {
+    if (user?.uid === local) return;
+    setIsSwitchingLocal(true);
+    setCart([]);
+    // Simulate network delay
+    setTimeout(() => {
+      setUser({ uid: local, email: `${local}@local.com` });
+      setIsSwitchingLocal(false);
+      toast({ title: `Cambiado a ${local.toUpperCase()}` });
+    }, 300);
+  };
 
-  const stockItemsQuery = useMemo(() => firebaseUser ? collection(firestore, 'locals', firebaseUser.uid, 'stockItems') : null, [firestore, firebaseUser]);
-  const { data: stockItems } = useCollection<StockItem>(stockItemsQuery);
-  
-  const ordersQuery = useMemo(() => firebaseUser ? collection(firestore, 'locals', firebaseUser.uid, 'orders') : null, [firestore, firebaseUser]);
-  const { data: rawOrders } = useCollection<Order>(ordersQuery);
+  const logout = () => {
+    setUser(null);
+    setCart([]);
+  };
 
-  const orders = useMemo(() => {
-    if (!rawOrders) return [];
-    return rawOrders
-      .filter(o => o.status === 'pending')
-      .map(o => ({
-        ...o,
-        createdAt: o.createdAt?.toDate(),
-      })).sort((a,b) => (a.createdAt?.getTime() || 0) - (b.createdAt?.getTime() || 0));
-  }, [rawOrders]);
-
-  const completedOrders = useMemo(() => {
-    if (!rawOrders) return [];
-    return rawOrders
-      .filter(o => o.status === 'completed' && !o.closureId)
-      .map(o => ({
-        ...o,
-        updatedAt: o.updatedAt?.toDate(),
-        createdAt: o.createdAt?.toDate(),
-      }))
-      .sort((a,b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0));
-  }, [rawOrders]);
-  
-  const completedDeliveriesThisShift = useMemo(() => {
-    if (!rawOrders) return [];
-    return rawOrders
-      .filter(o => o.isDelivery && (o.status === 'completed' || o.status === 'picked-up') && !o.closureId)
-      .map(o => ({
-        ...o,
-        updatedAt: o.updatedAt?.toDate(),
-      }))
-      .sort((a,b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0));
-  }, [rawOrders]);
-
-  const transactionsQuery = useMemo(() => firebaseUser ? collection(firestore, 'locals', firebaseUser.uid, 'transactions') : null, [firestore, firebaseUser]);
-  const { data: rawTransactions } = useCollection<Transaction>(transactionsQuery);
-  
-  const openTransactions = useMemo(() => {
-    if (!rawTransactions) return [];
-    return rawTransactions
-      .filter(t => !t.closureId) // Filter for transactions not yet part of a closure
-      .map(t => ({...t, createdAt: t.createdAt?.toDate()}))
-      .sort((a,b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
-  }, [rawTransactions]);
-
-  const closuresQuery = useMemo(() => firebaseUser ? collection(firestore, 'locals', firebaseUser.uid, 'closures') : null, [firestore, firebaseUser]);
-  const { data: rawClosures } = useCollection<Closure>(closuresQuery);
-
-  const closures = useMemo(() => {
-    if (!rawClosures) return [];
-    return rawClosures.map(c => ({...c, closureDate: c.closureDate?.toDate()})).sort((a,b) => (b.closureDate?.getTime() || 0) - (a.closureDate?.getTime() || 0));
-  }, [rawClosures]);
+  const products = currentLocalData?.products || [];
+  const toppings = currentLocalData?.toppings || [];
+  const stockItems = currentLocalData?.stockItems || [];
+  const orders = currentLocalData?.orders.filter(o => o.status === 'pending').sort((a,b) => (new Date(a.createdAt).getTime() || 0) - (new Date(b.createdAt).getTime() || 0)) || [];
+  const completedOrders = currentLocalData?.orders.filter(o => o.status === 'completed' && !o.closureId).sort((a, b) => (new Date(b.updatedAt).getTime() || 0) - (new Date(a.updatedAt).getTime() || 0)) || [];
+  const completedDeliveriesThisShift = currentLocalData?.orders.filter(o => o.isDelivery && (o.status === 'completed' || o.status === 'picked-up') && !o.closureId).sort((a,b) => (new Date(b.updatedAt).getTime() || 0) - (new Date(a.updatedAt).getTime() || 0)) || [];
+  const transactions = currentLocalData?.transactions.filter(t => !t.closureId).sort((a,b) => (new Date(b.createdAt).getTime() || 0) - (new Date(a.createdAt).getTime() || 0)) || [];
+  const closures = currentLocalData?.closures.sort((a,b) => (new Date(b.closureDate).getTime() || 0) - (new Date(a.closureDate).getTime() || 0)) || [];
 
   const { topProducts, topCustomers } = useMemo(() => {
-    if (!rawOrders) return { topProducts: [], topCustomers: [] };
+    if (!currentLocalData) return { topProducts: [], topCustomers: [] };
+
+    const allOrders = [...currentLocalData.orders, ...currentLocalData.closures.flatMap((c: any) => c.orders || [])];
 
     const productCounts: { [key: string]: { name: string; emoji?: string; count: number } } = {};
     const customerSpending: { [key: string]: { name: string; totalSpent: number; orderCount: number } } = {};
 
-    rawOrders.forEach(order => {
-        // Only count completed orders for rankings
+    allOrders.forEach(order => {
         if (order.status === 'completed' || order.status === 'picked-up') {
             const customerName = order.customerName.trim().toUpperCase();
             if (customerName !== 'SIN NOMBRE' && customerName.trim() !== '') {
@@ -195,9 +149,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                 customerSpending[customerName].totalSpent += orderTotal;
                 customerSpending[customerName].orderCount += 1;
             }
-            
             order.items.forEach(item => {
-                if (item.product) { // Ensure product exists
+                if (item.product) {
                     if (!productCounts[item.product.id]) {
                         productCounts[item.product.id] = { name: item.product.name, emoji: item.product.emoji, count: 0 };
                     }
@@ -207,24 +160,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         }
     });
 
-    const sortedProducts: RankedProduct[] = Object.entries(productCounts)
-        .map(([id, data]) => ({ id, ...data }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 5); // Top 5
-
-    const sortedCustomers: RankedCustomer[] = Object.values(customerSpending)
-        .sort((a, b) => b.totalSpent - a.totalSpent)
-        .slice(0, 5); // Top 5
+    const sortedProducts: RankedProduct[] = Object.entries(productCounts).map(([id, data]) => ({ id, ...data })).sort((a, b) => b.count - a.count).slice(0, 5);
+    const sortedCustomers: RankedCustomer[] = Object.values(customerSpending).sort((a, b) => b.totalSpent - a.totalSpent).slice(0, 5);
 
     return { topProducts: sortedProducts, topCustomers: sortedCustomers };
-  }, [rawOrders]);
+  }, [currentLocalData]);
 
-
-  // Cart logic
   const addToCart = (product: Product, options: {toppings: Topping[], notes?: string}) => {
     const sortedToppingIds = options.toppings.map(t => t.id).sort().join(',');
     const uniqueItemId = `${product.id}|${sortedToppingIds}|${(options.notes || '').trim()}`;
-
     const existingItem = cart.find(item => item.id === uniqueItemId);
 
     if (existingItem) {
@@ -232,12 +176,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     } else {
         const finalPrice = product.price + options.toppings.reduce((total, t) => total + t.price, 0);
         const newCartItem: CartItem = {
-            id: uniqueItemId,
-            product,
-            qty: 1,
-            toppings: options.toppings,
-            notes: options.notes,
-            finalPrice,
+            id: uniqueItemId, product, qty: 1, toppings: options.toppings, notes: options.notes, finalPrice,
         };
         setCart(prevCart => [...prevCart, newCartItem]);
     }
@@ -248,9 +187,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setCart(prevCart => {
       const itemToUpdate = prevCart.find(item => item.id === cartItemId);
       if (itemToUpdate && itemToUpdate.qty + delta > 0) {
-        return prevCart.map(item =>
-          item.id === cartItemId ? { ...item, qty: item.qty + delta } : item
-        );
+        return prevCart.map(item => item.id === cartItemId ? { ...item, qty: item.qty + delta } : item);
       }
       return prevCart.filter(item => item.id !== cartItemId);
     });
@@ -261,391 +198,223 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const cartTotal = cart.reduce((sum, item) => sum + item.finalPrice * item.qty, 0);
   const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
 
-  // Data mutations
   const addOrder = (orderData: Omit<Order, 'id' | 'createdAt' | 'localId'>) => {
-    if (!firebaseUser) return;
-
-    const currentShiftOrders = (rawOrders || []).filter(o => !o.closureId);
-    const lastOrderNumber = currentShiftOrders.reduce((max, order) => order.orderNumber > max ? order.orderNumber : max, 0);
+    if (!user || !currentLocalData) return;
+    const allHistoricalOrders = [...currentLocalData.orders, ...currentLocalData.closures.flatMap((c: any) => c.orders || [])];
+    const lastOrderNumber = allHistoricalOrders.reduce((max, order) => order.orderNumber > max ? order.orderNumber : max, 0);
     const orderNumber = lastOrderNumber + 1;
-    
-    const newOrder: any = {
-      localId: firebaseUser.uid,
-      createdAt: serverTimestamp(),
+
+    const newOrder: Order = {
+      ...orderData,
+      id: `o${Date.now()}`,
+      localId: user.uid,
+      createdAt: new Date(),
+      updatedAt: new Date(),
       status: 'pending',
-      customerName: orderData.customerName,
-      items: orderData.items,
-      orderNumber: orderNumber,
-      isDelivery: orderData.isDelivery,
-      paymentMethod: orderData.paymentMethod || 'Efectivo',
+      orderNumber,
     };
-    
-    if (orderData.isDelivery) {
-        newOrder.customerPhone = orderData.customerPhone;
-        newOrder.deliveryFee = orderData.deliveryFee;
-    }
-    
-    addDocumentNonBlocking(collection(firestore, 'locals', firebaseUser.uid, 'orders'), newOrder);
+    setCurrentLocalData(d => ({ ...d, orders: [...d.orders, newOrder] }));
   };
 
   const completeOrder = (orderId: string) => {
-    if (!firebaseUser || !rawOrders) return;
-    
-    const orderToComplete = rawOrders.find(o => o.id === orderId);
+    if (!user || !currentLocalData) return;
+    const order = currentLocalData.orders.find(o => o.id === orderId);
+    if (!order) return;
 
-    if (!orderToComplete) {
-      toast({ variant: 'destructive', title: 'Error', description: 'No se pudo encontrar el pedido.' });
-      return;
-    }
-
-    const orderTotal = orderToComplete.items.reduce((sum, item) => sum + item.finalPrice * item.qty, 0);
-    
-    // Create the income transaction
-    const transactionData: Omit<Transaction, 'id' | 'createdAt' | 'localId'> = {
-      concept: `VENTA: ${orderToComplete.customerName}`,
+    const orderTotal = order.items.reduce((sum, item) => sum + item.finalPrice * item.qty, 0);
+    addTransaction({
+      concept: `VENTA: ${order.customerName}`,
       amount: orderTotal,
-      paymentMethod: orderToComplete.paymentMethod || 'Efectivo',
+      paymentMethod: order.paymentMethod || 'Efectivo',
       type: 'ingreso',
-    };
-    addTransaction(transactionData);
+    });
 
-    // Update order status
-    updateDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'orders', orderId), { status: 'completed', updatedAt: serverTimestamp() });
+    setCurrentLocalData(d => ({
+        ...d,
+        orders: d.orders.map(o => o.id === orderId ? { ...o, status: 'completed', updatedAt: new Date() } : o)
+    }));
     toast({ title: "Pedido completado y listo para retirar" });
   };
   
   const pickupOrder = (orderId: string) => {
-    if (!firebaseUser) return;
-    updateDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'orders', orderId), { status: 'picked-up', updatedAt: serverTimestamp() });
+    setCurrentLocalData(d => ({
+        ...d,
+        orders: d.orders.map(o => o.id === orderId ? { ...o, status: 'picked-up', updatedAt: new Date() } : o)
+    }));
     toast({title: "Pedido marcado como retirado"});
   };
 
   const cancelOrder = (orderId: string) => {
-    if (!firebaseUser) return;
-    deleteDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'orders', orderId));
+    setCurrentLocalData(d => ({ ...d, orders: d.orders.filter(o => o.id !== orderId) }));
     toast({ title: 'Pedido Cancelado' });
   };
 
   const updateStock = (itemId: string, delta: number) => {
-    if (!firebaseUser) return;
-    const item = stockItems?.find(i => i.id === itemId);
+    if (!currentLocalData) return;
+    const item = currentLocalData.stockItems.find(i => i.id === itemId);
     if(item && item.stock + delta < 0) {
         toast({variant: 'destructive', title: 'Stock no puede ser negativo'});
         return;
     }
-    updateDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'stockItems', itemId), { stock: increment(delta), updatedAt: serverTimestamp() });
+    setCurrentLocalData(d => ({
+        ...d,
+        stockItems: d.stockItems.map(i => i.id === itemId ? { ...i, stock: i.stock + delta, updatedAt: new Date() } : i)
+    }));
   };
   
   const addTransaction = (transaction: Omit<Transaction, 'id' | 'createdAt' | 'localId'>) => {
-    if (!firebaseUser) return;
-    const newTransaction = {
-        ...transaction,
-        localId: firebaseUser.uid,
-        createdAt: serverTimestamp(),
+    if (!user) return;
+    const newTransaction: Transaction = {
+      ...transaction,
+      id: `t${Date.now()}`,
+      localId: user.uid,
+      createdAt: new Date(),
     };
-    addDocumentNonBlocking(collection(firestore, 'locals', firebaseUser.uid, 'transactions'), newTransaction);
+    setCurrentLocalData(d => ({ ...d, transactions: [newTransaction, ...d.transactions] }));
   };
 
   const deleteTransaction = (id: string) => {
-    if (!firebaseUser) return;
-    const transaction = (rawTransactions || []).find(t => t.id === id);
+    if (!currentLocalData) return;
+    const transaction = currentLocalData.transactions.find(t => t.id === id);
     if (transaction && transaction.concept.startsWith('VENTA:')) {
-        toast({
-            variant: "destructive",
-            title: "Acción no permitida",
-            description: "Las transacciones de venta no se pueden eliminar manualmente.",
-        });
+        toast({ variant: "destructive", title: "Acción no permitida" });
         return;
     }
-    deleteDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'transactions', id));
+    setCurrentLocalData(d => ({ ...d, transactions: d.transactions.filter(t => t.id !== id) }));
     toast({ title: 'Movimiento eliminado' });
   };
 
   const closeDay = async () => {
-    if (!firebaseUser || !firestore) {
-      toast({ variant: 'destructive', title: 'Error de autenticación' });
-      return;
-    }
-    if (openTransactions.length === 0 && completedDeliveriesThisShift.length === 0) {
+    if (!user || !currentLocalData) return;
+    if (transactions.length === 0 && completedDeliveriesThisShift.length === 0) {
       toast({ title: 'No hay movimientos para cerrar.' });
       return;
     }
-
-    const ordersToClose = (rawOrders || []).filter(
-      o => (o.status === 'completed' || o.status === 'picked-up') && !o.closureId
-    );
     
-    const totalDeliveryFees = ordersToClose
-      .filter(o => o.isDelivery && o.deliveryFee)
-      .reduce((sum, o) => sum + (o.deliveryFee || 0), 0);
+    const ordersToClose = currentLocalData.orders.filter(o => (o.status === 'completed' || o.status === 'picked-up') && !o.closureId);
+    const transactionsToClose = currentLocalData.transactions.filter(t => !t.closureId);
+    
+    const closureId = `c${Date.now()}`;
 
-    const totalIngresos = openTransactions.filter(t => t.type === 'ingreso').reduce((sum, t) => sum + t.amount, 0);
-    const totalEgresos = openTransactions.filter(t => t.type === 'egreso').reduce((sum, t) => sum + t.amount, 0);
-    const neto = totalIngresos - totalEgresos;
-    const balanceEfectivo = openTransactions.filter(t => t.paymentMethod === 'Efectivo').reduce((sum, t) => sum + (t.type === 'ingreso' ? t.amount : -t.amount), 0);
-    const balanceTransferencia = openTransactions.filter(t => t.paymentMethod === 'Transferencia').reduce((sum, t) => sum + (t.type === 'ingreso' ? t.amount : -t.amount), 0);
-
-    const newClosureData: Omit<Closure, 'id'> = {
-      localId: firebaseUser.uid,
-      closureDate: serverTimestamp(),
+    const totalDeliveryFees = ordersToClose.filter(o => o.isDelivery && o.deliveryFee).reduce((sum, o) => sum + (o.deliveryFee || 0), 0);
+    const totalIngresos = transactionsToClose.filter(t => t.type === 'ingreso').reduce((sum, t) => sum + t.amount, 0);
+    const totalEgresos = transactionsToClose.filter(t => t.type === 'egreso').reduce((sum, t) => sum + t.amount, 0);
+    
+    const newClosure: any = { // Using any to attach orders/transactions for mock purposes
+      id: closureId,
+      localId: user.uid,
+      closureDate: new Date(),
       totalIngresos,
       totalEgresos,
-      neto,
-      balanceEfectivo,
-      balanceTransferencia,
-      totalTransacciones: openTransactions.length,
+      neto: totalIngresos - totalEgresos,
+      balanceEfectivo: transactionsToClose.filter(t => t.paymentMethod === 'Efectivo').reduce((s,t)=>s+(t.type==='ingreso'?t.amount:-t.amount), 0),
+      balanceTransferencia: transactionsToClose.filter(t => t.paymentMethod === 'Transferencia').reduce((s,t)=>s+(t.type==='ingreso'?t.amount:-t.amount), 0),
+      totalTransacciones: transactionsToClose.length,
       totalDeliveryFees,
+      orders: ordersToClose.map(o => ({...o, closureId})),
+      transactions: transactionsToClose.map(t => ({...t, closureId})),
     };
 
-    try {
-      const batch = writeBatch(firestore);
-      const closureRef = doc(collection(firestore, 'locals', firebaseUser.uid, 'closures'));
+    setCurrentLocalData(d => ({
+      ...d,
+      closures: [newClosure, ...d.closures],
+      orders: d.orders.map(o => ordersToClose.find(co => co.id === o.id) ? { ...o, closureId } : o),
+      transactions: d.transactions.map(t => transactionsToClose.find(ct => ct.id === t.id) ? { ...t, closureId } : t),
+    }));
       
-      batch.set(closureRef, newClosureData);
-
-      openTransactions.forEach(t => {
-        const transRef = doc(firestore, 'locals', firebaseUser.uid, 'transactions', t.id);
-        batch.update(transRef, { closureId: closureRef.id });
-      });
-
-      ordersToClose.forEach(o => {
-        const orderRef = doc(firestore, 'locals', firebaseUser.uid, 'orders', o.id);
-        batch.update(orderRef, { closureId: closureRef.id });
-      });
-      
-      await batch.commit();
-      
-      toast({ title: "Caja cerrada con éxito" });
-    } catch (error: any) {
-      console.error("Error al cerrar la caja:", error);
-      toast({ variant: "destructive", title: "Error al cerrar la caja", description: error.message });
-    }
+    toast({ title: "Caja cerrada con éxito" });
   };
 
-  const addProduct = (product: Omit<Product, 'id' | 'localId' | 'createdAt' | 'updatedAt'>) => {
-    if (!firebaseUser) return;
-    const newProduct = {
+  const addProduct = (product: Omit<Product, 'id'|'localId'|'createdAt'|'updatedAt'>) => {
+    if (!user) return;
+    const newProduct: Product = {
       ...product,
-      localId: firebaseUser.uid,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
+      id: `p${Date.now()}`,
+      localId: user.uid,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
-    addDocumentNonBlocking(collection(firestore, 'locals', firebaseUser.uid, 'products'), newProduct);
+    setCurrentLocalData(d => ({ ...d, products: [...d.products, newProduct] }));
   };
 
   const deleteProduct = (id: string) => {
-    if (!firebaseUser) return;
-    deleteDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'products', id));
-    // Also remove any items from the cart that use this product
-    setCart(prev => {
-        const productInCart = prev.some(item => item.product.id === id);
-        if (productInCart) {
-            toast({ title: "Producto eliminado del carrito" });
-        }
-        return prev.filter(item => item.product.id !== id);
-    });
+    setCurrentLocalData(d => ({ ...d, products: d.products.filter(p => p.id !== id) }));
   };
   
   const updateProduct = (id: string, updates: Partial<Omit<Product, 'id' | 'localId' | 'createdAt'>>) => {
-    if (!firebaseUser) return;
-    updateDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'products', id), { ...updates, updatedAt: serverTimestamp() });
-    
-    setCart(prev => {
-        let cartUpdated = false;
-        const newCart = prev.map(item => {
-            if (item.product.id === id) {
-                cartUpdated = true;
-                const updatedProduct = { ...item.product, ...updates };
-                const finalPrice = (updates.price ?? item.product.price) + item.toppings.reduce((total, t) => total + t.price, 0);
-                return { ...item, product: updatedProduct, finalPrice };
-            }
-            return item;
-        });
-
-        if (cartUpdated) {
-            toast({ title: "Producto actualizado", description: "Se actualizó el producto en tu carrito." });
-        }
-        return newCart;
-    });
-  }
+    setCurrentLocalData(d => ({
+        ...d,
+        products: d.products.map(p => p.id === id ? {...p, ...updates, updatedAt: new Date()} : p)
+    }));
+  };
 
   const addStockItem = (item: Omit<StockItem, 'id' | 'stock'|'localId'|'createdAt'|'updatedAt'>) => {
-    if (!firebaseUser) return;
-    const newStockItem = {
+    if (!user) return;
+    const newStockItem: StockItem = {
       ...item,
-      localId: firebaseUser.uid,
+      id: `s${Date.now()}`,
+      localId: user.uid,
       stock: 0,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
-    addDocumentNonBlocking(collection(firestore, 'locals', firebaseUser.uid, 'stockItems'), newStockItem);
+    setCurrentLocalData(d => ({ ...d, stockItems: [...d.stockItems, newStockItem] }));
   };
 
   const deleteStockItem = (id: string) => {
-    if (!firebaseUser) return;
-    deleteDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'stockItems', id));
+    setCurrentLocalData(d => ({ ...d, stockItems: d.stockItems.filter(i => i.id !== id) }));
   };
   
   const addTopping = (topping: Omit<Topping, 'id' | 'localId' | 'createdAt' | 'updatedAt'>) => {
-    if (!firebaseUser) return;
-    const newTopping = {
+    if (!user) return;
+    const newTopping: Topping = {
       ...topping,
-      localId: firebaseUser.uid,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
+      id: `t${Date.now()}`,
+      localId: user.uid,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
-    addDocumentNonBlocking(collection(firestore, 'locals', firebaseUser.uid, 'toppings'), newTopping);
+    setCurrentLocalData(d => ({ ...d, toppings: [...d.toppings, newTopping] }));
   };
 
   const deleteTopping = (id: string) => {
-    if (!firebaseUser) return;
-    deleteDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'toppings', id));
-     // Also remove any items from the cart that use this topping
-    setCart(prev => {
-        const cartHasTopping = prev.some(item => item.toppings.some(t => t.id === id));
-        if (cartHasTopping) {
-            toast({ title: "Topping eliminado", description: "Algunos productos fueron removidos de tu carrito." });
-        }
-        return prev.filter(item => !item.toppings.some(t => t.id === id));
-    });
+    setCurrentLocalData(d => ({ ...d, toppings: d.toppings.filter(t => t.id !== id) }));
   };
 
   const updateTopping = (id: string, price: number) => {
-    if (!firebaseUser) return;
-    updateDocumentNonBlocking(doc(firestore, 'locals', firebaseUser.uid, 'toppings', id), { price, updatedAt: serverTimestamp() });
-    // Also update cart items that use this topping
-    setCart(prev => {
-        let cartUpdated = false;
-        const newCart = prev.map(item => {
-            if (item.toppings.some(t => t.id === id)) {
-                cartUpdated = true;
-                const updatedToppings = item.toppings.map(t => t.id === id ? {...t, price} : t);
-                const finalPrice = item.product.price + updatedToppings.reduce((total, t) => total + t.price, 0);
-                return {...item, toppings: updatedToppings, finalPrice};
-            }
-            return item;
-        });
-        if (cartUpdated) {
-            toast({ title: "Topping actualizado", description: "Se actualizó el precio en tu carrito." });
-        }
-        return newCart;
-    });
+    setCurrentLocalData(d => ({
+        ...d,
+        toppings: d.toppings.map(t => t.id === id ? {...t, price, updatedAt: new Date()} : t)
+    }));
   };
 
   const deleteAllLocalData = async () => {
-    if (!firebaseUser || !firestore) {
-        toast({ variant: "destructive", title: "No estás autenticado." });
-        return;
-    }
-
+    if (!user) return;
     setIsSwitchingLocal(true);
-    toast({ title: "Borrando todos los datos, por favor espera..." });
-
-    const localId = firebaseUser.uid;
-    const collectionsToDelete = ['products', 'stockItems', 'orders', 'transactions', 'closures', 'toppings'];
-
-    try {
-        for (const collectionName of collectionsToDelete) {
-            const collectionRef = collection(firestore, 'locals', localId, collectionName);
-            const snapshot = await getDocs(collectionRef);
-            
-            if (snapshot.empty) continue;
-
-            for (let i = 0; i < snapshot.docs.length; i += 500) {
-                const batch = writeBatch(firestore);
-                const chunk = snapshot.docs.slice(i, i + 500);
-                chunk.forEach(docSnapshot => {
-                    batch.delete(docSnapshot.ref);
-                });
-                await batch.commit();
-            }
-        }
+    setTimeout(() => {
+        setCurrentLocalData(() => createInitialData());
         toast({ title: "¡Todos los datos del local han sido borrados!" });
-    } catch (error: any) {
-        console.error("Error al borrar datos:", error);
-        toast({ variant: "destructive", title: "Error al borrar los datos", description: error.message });
-    } finally {
         setIsSwitchingLocal(false);
-    }
+    }, 500);
   };
 
   const clearFinancialHistory = async () => {
-    if (!firebaseUser || !firestore) {
-        toast({ variant: 'destructive', title: 'No estás autenticado.' });
-        return;
-    }
-
+    if (!user) return;
     setIsSwitchingLocal(true);
-    toast({ title: 'Borrando historial financiero, por favor espera...' });
-
-    const localId = firebaseUser.uid;
-    const collectionsToDelete = ['orders', 'transactions', 'closures'];
-
-    try {
-        for (const collectionName of collectionsToDelete) {
-            const collectionRef = collection(firestore, 'locals', localId, collectionName);
-            const snapshot = await getDocs(collectionRef);
-            
-            if (snapshot.empty) continue;
-            
-            for (let i = 0; i < snapshot.docs.length; i += 500) {
-                const batch = writeBatch(firestore);
-                const chunk = snapshot.docs.slice(i, i + 500);
-                chunk.forEach(docSnapshot => {
-                    batch.delete(docSnapshot.ref);
-                });
-                await batch.commit();
-            }
-        }
+    setTimeout(() => {
+        setCurrentLocalData(d => ({ ...d, orders: [], transactions: [], closures: [] }));
         toast({ title: '¡Historial financiero borrado con éxito!' });
-    } catch (error: any) {
-        console.error('Error al borrar el historial financiero:', error);
-        toast({ variant: 'destructive', title: 'Error al borrar el historial', description: error.message });
-    } finally {
         setIsSwitchingLocal(false);
-    }
+    }, 500);
   };
 
-  const value = {
-    user: firebaseUser,
-    isUserLoading,
-    logout,
-    switchLocal,
-    isSwitchingLocal,
-    products: products || [],
-    toppings: toppings || [],
-    cart,
-    addToCart,
-    updateCartQty,
-    clearCart,
-    cartTotal,
-    cartCount,
-    orders: orders || [],
-    completedOrders: completedOrders || [],
-    completedDeliveriesThisShift,
-    addOrder,
-    completeOrder,
-    pickupOrder,
-    cancelOrder,
-    stockItems: stockItems || [],
-    updateStock,
-    transactions: openTransactions || [],
-    closures: closures || [],
-    addTransaction,
-    deleteTransaction,
-    closeDay,
-    addProduct,
-    deleteProduct,
-    updateProduct,
-    addStockItem,
-    deleteStockItem,
-    addTopping,
-    deleteTopping,
-    updateTopping,
-    deleteAllLocalData,
-    clearFinancialHistory,
-    topProducts,
-    topCustomers,
+  const value: AppContextType = {
+    user, isUserLoading, logout, switchLocal, isSwitchingLocal, products, toppings, cart, addToCart,
+    updateCartQty, clearCart, cartTotal, cartCount, orders, completedOrders, completedDeliveriesThisShift,
+    addOrder, completeOrder, pickupOrder, cancelOrder, stockItems, updateStock, transactions,
+    closures, addTransaction, deleteTransaction, closeDay, addProduct, deleteProduct, updateProduct,
+    addStockItem, deleteStockItem, addTopping, deleteTopping, updateTopping, deleteAllLocalData,
+    clearFinancialHistory, topProducts, topCustomers,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

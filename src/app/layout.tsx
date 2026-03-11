@@ -3,7 +3,6 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { AppProvider } from '@/contexts/AppContext';
-import { FirebaseClientProvider } from '@/firebase';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 
 const inter = Inter({
@@ -30,12 +29,10 @@ export default function RootLayout({
       </head>
       <body className="font-body overflow-x-hidden antialiased text-foreground">
         <ThemeProvider>
-          <FirebaseClientProvider>
             <AppProvider>
               {children}
               <Toaster />
             </AppProvider>
-          </FirebaseClientProvider>
         </ThemeProvider>
       </body>
     </html>
