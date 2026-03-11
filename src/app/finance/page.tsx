@@ -101,24 +101,24 @@ export default function FinancePage() {
 
         {mode === 'hoy' && (
           <div id="finance-today">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-card text-card-foreground p-6 rounded-2xl border">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+              <div className="bg-card text-card-foreground p-8 rounded-2xl border">
                 <p className="text-[10px] opacity-40 mb-2 font-black uppercase">Efectivo (Turno Actual)</p>
                 <h3 className="text-4xl tracking-tighter text-primary font-black">${cash.toLocaleString('es-AR')}</h3>
               </div>
-              <div className="bg-card text-card-foreground p-6 rounded-2xl border">
+              <div className="bg-card text-card-foreground p-8 rounded-2xl border">
                 <p className="text-[10px] opacity-40 mb-2 font-black uppercase">Transferencia (Turno Actual)</p>
                 <h3 className="text-4xl tracking-tighter text-blue-600 font-black">${trans.toLocaleString('es-AR')}</h3>
               </div>
-              <div className="bg-zinc-900 text-white p-6 rounded-2xl shadow-xl">
+              <div className="bg-zinc-900 text-white p-8 rounded-2xl shadow-xl">
                 <p className="text-[10px] text-primary mb-2 font-black uppercase">Neto (Turno Actual)</p>
                 <h3 className="text-4xl tracking-tighter text-primary font-black">${total.toLocaleString('es-AR')}</h3>
               </div>
             </div>
             <div className="flex justify-end gap-4 mb-8">
-              <Button onClick={() => openFinanceModal('ingreso')} className="bg-card border px-6 py-3 rounded-xl text-[10px] font-black h-auto uppercase">+ Entrada</Button>
-              <Button onClick={() => openFinanceModal('egreso')} className="bg-card border px-6 py-3 rounded-xl text-[10px] text-destructive font-black h-auto uppercase">- Salida</Button>
-              <Button onClick={handleCloseDay} className="bg-black text-primary px-8 py-3 rounded-xl text-[10px] border border-primary font-black shadow-lg h-auto uppercase">Cerrar Caja</Button>
+              <Button onClick={() => openFinanceModal('ingreso')} className="bg-card border px-8 py-4 rounded-xl text-[10px] font-black h-auto uppercase">+ Entrada</Button>
+              <Button onClick={() => openFinanceModal('egreso')} className="bg-card border px-8 py-4 rounded-xl text-[10px] text-destructive font-black h-auto uppercase">- Salida</Button>
+              <Button onClick={handleCloseDay} className="bg-black text-primary px-10 py-4 rounded-xl text-[10px] border border-primary font-black shadow-lg h-auto uppercase">Cerrar Caja</Button>
             </div>
             <div className="space-y-3">
               {transactions.map(t => (
@@ -148,16 +148,16 @@ export default function FinancePage() {
         
         {mode === 'semanal' && (
           <div id="finance-weekly">
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-               <div className="bg-card text-card-foreground p-6 rounded-2xl border">
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+               <div className="bg-card text-card-foreground p-8 rounded-2xl border">
                 <p className="text-[10px] opacity-40 mb-2 font-black uppercase">Ingresos Totales (Semanal)</p>
                 <h3 className="text-4xl tracking-tighter text-green-600 font-black">${weeklyIngresos.toLocaleString('es-AR')}</h3>
               </div>
-              <div className="bg-card text-card-foreground p-6 rounded-2xl border">
+              <div className="bg-card text-card-foreground p-8 rounded-2xl border">
                 <p className="text-[10px] opacity-40 mb-2 font-black uppercase">Egresos Totales (Semanal)</p>
                 <h3 className="text-4xl tracking-tighter text-destructive font-black">${weeklyEgresos.toLocaleString('es-AR')}</h3>
               </div>
-              <div className="bg-card text-card-foreground p-6 rounded-2xl border">
+              <div className="bg-card text-card-foreground p-8 rounded-2xl border">
                 <p className="text-[10px] opacity-40 mb-2 font-black uppercase">Pagos Delivery (Semanal)</p>
                 <h3 className="text-4xl tracking-tighter text-blue-600 font-black">${weeklyDeliveryFees.toLocaleString('es-AR')}</h3>
               </div>

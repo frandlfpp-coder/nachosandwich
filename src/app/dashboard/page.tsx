@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import AppShell from '@/components/layout/AppShell';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -185,10 +185,10 @@ export default function DashboardPage() {
   
   const [activeCategory, setActiveCategory] = useState<ProductCategory | 'all'>('all');
 
-  const filteredProducts = products.filter(p =>
+  const filteredProducts = useMemo(() => products.filter(p =>
     (activeCategory === 'all' || p.category === activeCategory) &&
     p.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ), [products, activeCategory, searchTerm]);
 
   const handleOpenCustomize = (product: Product) => {
     setProductToCustomize(product);

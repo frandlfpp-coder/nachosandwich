@@ -42,7 +42,7 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="hidden md:flex flex-col w-72 bg-background text-foreground p-6 shrink-0 border-r dark">
+    <aside className="hidden md:flex flex-col w-72 bg-card text-card-foreground p-6 shrink-0 border-r dark">
       <div className="mb-12 flex items-center gap-4">
         <div className="bg-primary p-2 rounded-lg text-primary-foreground">
           <Zap className="h-6 w-6" />
@@ -67,7 +67,7 @@ export default function Sidebar() {
               'w-full justify-start p-4 rounded-lg text-base transition-all flex items-center gap-4 font-black uppercase text-left h-auto',
               pathname === item.href
                 ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                : 'hover:bg-secondary text-muted-foreground hover:text-foreground',
+                : 'hover:bg-secondary text-foreground hover:text-foreground',
               !user && 'opacity-50 cursor-not-allowed'
             )}
           >

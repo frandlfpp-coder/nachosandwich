@@ -1,24 +1,25 @@
-import * as React from "react"
+import { useState, useEffect } from "react";
 
-const MOBILE_BREAKPOINT = 768
+const MOBILE_BREAKPOINT = 768;
 
 export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState(false) // Default to false to avoid SSR mismatch
+  const [isMobile, setIsMobile] = useState(false); // Default to false to avoid SSR mismatch
 
-  React.useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
+  useEffect(() => {
+    // This code runs only on the client
+    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
     
-    // Set initial value
-    setIsMobile(mql.matches)
+    // Set initial value based on the client's screen size
+    setIsMobile(mql.matches);
 
     const onChange = (e: MediaQueryListEvent) => {
-      setIsMobile(e.matches)
-    }
+      setIsMobile(e.matches);
+    };
 
-    mql.addEventListener("change", onChange)
+    mql.addEventListener("change", onChange);
 
-    return () => mql.removeEventListener("change", onChange)
-  }, [])
+    return () => mql.removeEventListener("change", onChange);
+  }, []); // Empty dependency array ensures this runs only once on mount
 
-  return isMobile
+  return isMobile;
 }

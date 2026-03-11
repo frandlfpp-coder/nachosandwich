@@ -91,11 +91,26 @@ module.exports = {
           '0%': { transform: 'scale(0.95)', opacity: '0.7' },
           '100%': { transform: 'scale(1)', opacity: '1' },
         },
+        'ready-pulse': {
+          '0%, 100%': {
+              transform: 'scale(1)',
+              boxShadow: '0 0 0 0 hsl(var(--primary) / 0.7)',
+          },
+          '70%': {
+              transform: 'scale(1)',
+              boxShadow: '0 0 0 10px hsl(var(--primary) / 0)',
+          },
+          '100%': {
+              transform: 'scale(1)',
+              boxShadow: '0 0 0 0 hsl(var(--primary) / 0)',
+          },
+        }
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         'pop': 'pop 0.2s ease-out',
+        'ready-pulse': 'ready-pulse 1.5s infinite',
       },
     },
   },
