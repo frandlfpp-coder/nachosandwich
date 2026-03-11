@@ -184,7 +184,7 @@ export default function DashboardPage() {
                   <p className="text-[10px] text-muted-foreground font-semibold">+ {item.toppings.map(t => t.name).join(', ')}</p>
                 )}
                 {item.notes && (
-                  <p className="text-[10px] text-blue-600 font-semibold italic">Nota: {item.notes}</p>
+                  <p className="text-[10px] text-destructive font-semibold italic">Nota: {item.notes}</p>
                 )}
                 <span className="text-primary font-bold">${(item.finalPrice * item.qty).toLocaleString('es-AR')}</span>
               </div>

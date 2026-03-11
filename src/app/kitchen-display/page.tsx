@@ -19,7 +19,7 @@ export default function KitchenDisplayPage() {
               <div className="text-right">
                 <span className="text-lg font-bold block">{order.customerName}</span>
                  {order.isDelivery && (
-                    <div className="flex items-center justify-end gap-2 mt-1 text-sm font-bold text-blue-600 normal-case">
+                    <div className="flex items-center justify-end gap-2 mt-1 text-sm font-bold text-destructive normal-case">
                         <Bike className="w-4 h-4" />
                         <span>Delivery</span>
                     </div>
@@ -37,7 +37,7 @@ export default function KitchenDisplayPage() {
                         </ul>
                     )}
                     {item.notes && (
-                        <p className="pl-5 text-sm text-blue-400 font-semibold italic">Nota: {item.notes}</p>
+                        <p className="pl-5 text-sm text-destructive font-semibold italic">Nota: {item.notes}</p>
                     )}
                   </li>
                 ) : null

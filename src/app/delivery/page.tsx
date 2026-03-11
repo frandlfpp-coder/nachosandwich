@@ -36,7 +36,7 @@ export default function DeliveryPage() {
             </div>
             <div className="bg-card text-card-foreground p-8 rounded-3xl border">
                 <p className="text-[10px] opacity-40 mb-2 font-black">Entregados Hoy</p>
-                <h3 className="text-4xl tracking-tighter text-blue-600 font-black">{completedDeliveriesThisShift.length}</h3>
+                <h3 className="text-4xl tracking-tighter text-destructive font-black">{completedDeliveriesThisShift.length}</h3>
             </div>
             <div className="bg-zinc-900 text-white p-8 rounded-3xl shadow-xl">
                 <p className="text-[10px] text-primary mb-2 font-black">A Pagar al Repartidor</p>
@@ -86,7 +86,7 @@ export default function DeliveryPage() {
                                       </ul>
                                   )}
                                   {i.notes && (
-                                      <p className="pl-4 text-[10px] text-blue-500 font-semibold normal-case italic">Nota: {i.notes}</p>
+                                      <p className="pl-4 text-[10px] text-destructive font-semibold normal-case italic">Nota: {i.notes}</p>
                                   )}
                                 </li>
                               ) : null
@@ -101,7 +101,7 @@ export default function DeliveryPage() {
                         </div>
                          <div className="bg-slate-100 dark:bg-zinc-800 p-4 rounded-2xl">
                             <p className="text-[10px] opacity-40 font-black">Pago al Delivery</p>
-                            <p className="text-lg font-black text-blue-600">${(o.deliveryFee || 0).toLocaleString('es-AR')}</p>
+                            <p className="text-lg font-black text-destructive">${(o.deliveryFee || 0).toLocaleString('es-AR')}</p>
                         </div>
                     </div>
 
@@ -140,7 +140,7 @@ export default function DeliveryPage() {
                             <span className='text-[8px] opacity-50 font-normal block'>{isClient ? o.updatedAt?.toLocaleTimeString('es-AR') : '...'}</span>
                         </div>
                     </div>
-                    <span className={'text-blue-600'}>
+                    <span className={'text-destructive'}>
                         Pago Delivery: ${(o.deliveryFee || 0).toLocaleString('es-AR')}
                     </span>
                   </div>

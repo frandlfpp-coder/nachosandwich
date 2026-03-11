@@ -24,7 +24,7 @@ export default function KitchenPage() {
                 <div>
                   <h3 className="text-xl font-black">{o.customerName}</h3>
                    {o.isDelivery && (
-                    <div className="flex items-center gap-2 mt-1 text-sm font-bold text-blue-600">
+                    <div className="flex items-center gap-2 mt-1 text-sm font-bold text-destructive">
                         <Bike className="w-4 h-4" />
                         <span>Delivery</span>
                     </div>
@@ -49,7 +49,7 @@ export default function KitchenPage() {
                         </ul>
                     )}
                     {i.notes && (
-                        <p className="pl-4 text-[10px] text-blue-500 font-semibold normal-case italic">Nota: {i.notes}</p>
+                        <p className="pl-4 text-[10px] text-destructive font-semibold normal-case italic">Nota: {i.notes}</p>
                     )}
                   </li>
                 ))}
