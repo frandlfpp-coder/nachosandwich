@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useMemo } from 'react';
-import { Product, CartItem, Order, StockItem, Transaction, Closure, Topping, RankedProduct, RankedCustomer, NewOrderPayload } from '@/lib/types';
+import { Product, CartItem, Order, StockItem, Transaction, Closure, RankedProduct, RankedCustomer, NewOrderPayload } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { 
   useUser, 
@@ -111,15 +111,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const transactions = useMemo(() => (rawTransactionsData ?? []).map(t => ({...t, createdAt: toDateSafe(t.createdAt) })), [rawTransactionsData]);
 
   const closures = useMemo(() => {
-    return (rawClosuresData ?? []).map((c: any) => ({
+    return (rawClosuresData ?? []).map((c: Closure) => ({
       ...c,
       closureDate: toDateSafe(c.closureDate),
-      orders: (c.orders || []).map((o: any) => ({
+      orders: (c.orders || []).map((o: Order) => ({
         ...o,
         createdAt: toDateSafe(o.createdAt),
         updatedAt: toDateSafe(o.updatedAt),
       })),
-      transactions: (c.transactions || []).map((t: any) => ({
+      transactions: (c.transactions || []).map((t: Transaction) => ({
         ...t,
         createdAt: toDateSafe(t.createdAt),
       })),
@@ -514,5 +514,3 @@ export const useApp = () => {
   }
   return context;
 };
-
-    
