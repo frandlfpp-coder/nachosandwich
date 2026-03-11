@@ -144,9 +144,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     });
 
     const sortedProducts: RankedProduct[] = Object.entries(productCounts).map(([id, data]) => ({ id, ...data })).sort((a, b) => b.count - a.count).slice(0, 5);
-    const customers: RankedCustomer[] = Object.values(customerSpending).sort((a, b) => b.totalSpent - a.totalSpent).slice(0, 5);
+    const sortedCustomers: RankedCustomer[] = Object.values(customerSpending).sort((a, b) => b.totalSpent - a.totalSpent).slice(0, 5);
 
-    return { topProducts: sortedProducts, topCustomers: customers };
+    return { topProducts: sortedProducts, topCustomers: sortedCustomers };
   }, [closures]);
   
   const completedDeliveriesThisShift = useMemo(() => {
@@ -162,31 +162,39 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
     setIsSwitchingLocal(true);
     setCart([]);
-    
-    if (auth.currentUser) {
-        await signOut(auth);
-    }
-
-    const password = 'password';
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      toast({ title: `Sesión iniciada como ${local.toUpperCase()}` });
-    } catch (error: any) {
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-        try {
-          await createUserWithEmailAndPassword(auth, email, password);
-          toast({ title: `Cuenta creada para ${local.toUpperCase()}` });
-        } catch (signUpError: any) {
-          console.error("Error creating user:", signUpError);
-          toast({ variant: 'destructive', title: "Error al crear la cuenta", description: signUpError.message });
+        if (auth.currentUser) {
+            await signOut(auth);
         }
-      } else {
-        console.error("Error signing in:", error);
-        toast({ variant: 'destructive', title: "Error al iniciar sesión", description: error.message });
-      }
+
+        const password = 'password';
+
+        try {
+            // 1. Attempt to CREATE the user first.
+            await createUserWithEmailAndPassword(auth, email, password);
+            toast({ title: `Cuenta creada para ${local.toUpperCase()}` });
+        } catch (error: any) {
+            // 2. If creation fails because the user already exists, then sign in.
+            if (error.code === 'auth/email-already-in-use') {
+                try {
+                    await signInWithEmailAndPassword(auth, email, password);
+                    toast({ title: `Sesión iniciada como ${local.toUpperCase()}` });
+                } catch (signInError: any) {
+                    console.error("Error signing in after failed creation:", signInError);
+                    toast({ variant: 'destructive', title: "Error al iniciar sesión", description: signInError.message });
+                }
+            } else {
+                // 3. Handle other creation errors.
+                console.error("Error creating user:", error);
+                toast({ variant: 'destructive', title: "Error al crear la cuenta", description: error.message });
+            }
+        }
+    } catch (signOutError: any) {
+        console.error("Error signing out:", signOutError);
+        toast({ variant: 'destructive', title: "Error al cerrar sesión", description: signOutError.message });
     } finally {
-      setIsSwitchingLocal(false);
+        setIsSwitchingLocal(false);
     }
   };
 
