@@ -100,17 +100,35 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const transactions = useMemo(() => transactionsData?.map(t => ({...t, createdAt: (t.createdAt as Timestamp)?.toDate() })) || [], [transactionsData]);
 
   const closures = useMemo(() => {
+    // Helper to safely convert different timestamp formats to a JS Date
+    const toDateSafe = (value: any): Date | null => {
+        if (!value) return null;
+        // Handles Firestore Timestamps
+        if (value instanceof Timestamp) {
+            return value.toDate();
+        }
+        // Handles cases where it might already be a JS Date
+        if (value instanceof Date) {
+            return value;
+        }
+        // Handles objects serialized from Timestamps { seconds, nanoseconds }
+        if (typeof value === 'object' && typeof value.seconds === 'number') {
+            return new Timestamp(value.seconds, value.nanoseconds || 0).toDate();
+        }
+        return null; // Return null if format is unrecognized
+    }
+
     return closuresData?.map(c => ({
         ...c,
-        closureDate: (c.closureDate as Timestamp)?.toDate(),
+        closureDate: toDateSafe(c.closureDate),
         orders: (c.orders || []).map(o => ({
             ...o,
-            createdAt: (o.createdAt as any)?.toDate(),
-            updatedAt: (o.updatedAt as any)?.toDate(),
+            createdAt: toDateSafe(o.createdAt),
+            updatedAt: toDateSafe(o.updatedAt),
         })),
         transactions: (c.transactions || []).map(t => ({
             ...t,
-            createdAt: (t.createdAt as any)?.toDate(),
+            createdAt: toDateSafe(t.createdAt),
         })),
     })) || [];
   }, [closuresData]);
@@ -155,46 +173,55 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       .sort((a, b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0));
   }, [completedOrders]);
 
-
   const switchLocal = async (local: 'nacho1' | 'nacho2' | 'prueba') => {
-    const email = `${local}@local.com`;
-    if (user?.email === email) return;
+    // Using a new email domain (@local.app) to bypass any old, problematic accounts
+    // that may have been created with an inconsistent password during development.
+    // This effectively provides a clean slate for authentication.
+    const email = `${local}@local.app`;
+    if (user?.email === email) {
+      return; // Already logged into the correct local.
+    }
 
     setIsSwitchingLocal(true);
     setCart([]);
 
+    // Step 1: Ensure the current user is signed out before proceeding.
+    if (auth.currentUser) {
+      await signOut(auth);
+    }
+
+    const password = 'password';
+
     try {
-        if (auth.currentUser) {
-            await signOut(auth);
-        }
-
-        const password = 'password';
-
+      // Step 2: Attempt to CREATE the user. This is the most reliable flow.
+      await createUserWithEmailAndPassword(auth, email, password);
+      toast({ title: `Bienvenido. Cuenta creada para ${local.toUpperCase()}` });
+    } catch (creationError: any) {
+      // Step 3: If creation fails because the user already exists, sign in.
+      if (creationError.code === 'auth/email-already-in-use') {
         try {
-            // 1. Attempt to CREATE the user first.
-            await createUserWithEmailAndPassword(auth, email, password);
-            toast({ title: `Cuenta creada para ${local.toUpperCase()}` });
-        } catch (error: any) {
-            // 2. If creation fails because the user already exists, then sign in.
-            if (error.code === 'auth/email-already-in-use') {
-                try {
-                    await signInWithEmailAndPassword(auth, email, password);
-                    toast({ title: `Sesión iniciada como ${local.toUpperCase()}` });
-                } catch (signInError: any) {
-                    console.error("Error signing in after failed creation:", signInError);
-                    toast({ variant: 'destructive', title: "Error al iniciar sesión", description: signInError.message });
-                }
-            } else {
-                // 3. Handle other creation errors.
-                console.error("Error creating user:", error);
-                toast({ variant: 'destructive', title: "Error al crear la cuenta", description: error.message });
-            }
+          await signInWithEmailAndPassword(auth, email, password);
+          toast({ title: `Sesión iniciada como ${local.toUpperCase()}` });
+        } catch (signInError: any) {
+          // This block indicates a critical error, like a password mismatch on an existing account.
+          console.error('CRITICAL: Sign-in failed for existing user:', signInError);
+          toast({
+            variant: 'destructive',
+            title: 'Error de Autenticación',
+            description: 'La contraseña del local es incorrecta. No se puede iniciar sesión.',
+          });
         }
-    } catch (signOutError: any) {
-        console.error("Error signing out:", signOutError);
-        toast({ variant: 'destructive', title: "Error al cerrar sesión", description: signOutError.message });
+      } else {
+        // Handle other, unexpected creation errors (e.g., network issues).
+        console.error('Error creating user:', creationError);
+        toast({
+          variant: 'destructive',
+          title: 'Error al Crear Cuenta',
+          description: creationError.message,
+        });
+      }
     } finally {
-        setIsSwitchingLocal(false);
+      setIsSwitchingLocal(false);
     }
   };
 
@@ -203,43 +230,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     await signOut(auth);
   };
   
-  const addToCart = (product: Product, options: {toppings: Topping[], notes?: string}) => {
-    const sortedToppingIds = options.toppings.map(t => t.id).sort().join(',');
-    const uniqueItemId = `${product.id}|${sortedToppingIds}|${(options.notes || '').trim()}`;
-    const existingItem = cart.find(item => item.id === uniqueItemId);
-
-    if (existingItem) {
-        updateCartQty(uniqueItemId, 1);
-    } else {
-        const finalPrice = product.price + options.toppings.reduce((total, t) => total + t.price, 0);
-        const newCartItem: CartItem = {
-            id: uniqueItemId, product, qty: 1, toppings: options.toppings, notes: options.notes, finalPrice,
-        };
-        setCart(prevCart => [...prevCart, newCartItem]);
-    }
-    toast({ title: `Añadido: ${product.name}` });
-  };
-
-  const updateCartQty = (cartItemId: string, delta: number) => {
-    setCart(prevCart => {
-      const itemToUpdate = prevCart.find(item => item.id === cartItemId);
-      if (itemToUpdate && itemToUpdate.qty + delta > 0) {
-        return prevCart.map(item => item.id === cartItemId ? { ...item, qty: item.qty + delta } : item);
-      }
-      return prevCart.filter(item => item.id !== cartItemId);
-    });
-  };
-
-  const clearCart = () => setCart([]);
-  
-  const cartTotal = cart.reduce((sum, item) => sum + item.finalPrice * item.qty, 0);
-  const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
-
   const addOrder = (orderData: NewOrderPayload) => {
     if (!user || !firestore) return;
     
-    const allHistoricalOrders = [...orders, ...completedOrders, ...closures.flatMap(c => c.orders || [])];
+    const allHistoricalOrders = closures.flatMap(c => c.orders || []);
     const lastOrderNumber = allHistoricalOrders.reduce((max, order) => Math.max(max, order.orderNumber || 0), 0);
+    const lastOpenOrderNumber = [...orders, ...completedOrders].reduce((max, order) => Math.max(max, order.orderNumber || 0), 0);
 
     const newOrder: Omit<Order, 'id'> = {
       ...orderData,
@@ -247,7 +243,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       status: 'pending',
-      orderNumber: (lastOrderNumber || 0) + 1,
+      orderNumber: Math.max(lastOrderNumber, lastOpenOrderNumber) + 1,
       closureId: null,
     };
     addDocumentNonBlocking(collection(firestore, userPath('orders')!), newOrder);
@@ -322,19 +318,22 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const closeDay = async () => {
     if (!user || !firestore) return;
-    const ordersToClose = [...orders, ...completedOrders].filter(o => o.status === 'completed' || o.status === 'picked-up');
-    const transactionsToClose = transactions;
+    
+    // Use the raw data from Firestore hooks (ordersData, completedOrdersData, transactionsData)
+    // to ensure Firestore Timestamps are preserved when writing the new closure document.
+    const rawOrdersToClose = [...ordersData, ...completedOrdersData].filter(o => o.status === 'completed' || o.status === 'picked-up');
+    const rawTransactionsToClose = transactionsData;
 
-    if (transactionsToClose.length === 0 && ordersToClose.length === 0) {
+    if (rawTransactionsToClose.length === 0 && rawOrdersToClose.length === 0) {
       toast({ title: 'No hay movimientos para cerrar.' });
       return;
     }
     
     const batch = writeBatch(firestore);
     
-    const totalDeliveryFees = ordersToClose.filter(o => o.isDelivery && o.deliveryFee).reduce((sum, o) => sum + (o.deliveryFee || 0), 0);
-    const totalIngresos = transactionsToClose.filter(t => t.type === 'ingreso').reduce((sum, t) => sum + t.amount, 0);
-    const totalEgresos = transactionsToClose.filter(t => t.type === 'egreso').reduce((sum, t) => sum + t.amount, 0);
+    const totalDeliveryFees = rawOrdersToClose.filter(o => o.isDelivery && o.deliveryFee).reduce((sum, o) => sum + (o.deliveryFee || 0), 0);
+    const totalIngresos = rawTransactionsToClose.filter(t => t.type === 'ingreso').reduce((sum, t) => sum + t.amount, 0);
+    const totalEgresos = rawTransactionsToClose.filter(t => t.type === 'egreso').reduce((sum, t) => sum + t.amount, 0);
 
     const newClosureDoc = {
       localId: user.uid,
@@ -342,23 +341,23 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       totalIngresos,
       totalEgresos,
       neto: totalIngresos - totalEgresos,
-      balanceEfectivo: transactionsToClose.filter(t => t.paymentMethod === 'Efectivo').reduce((s,t)=>s+(t.type==='ingreso'?t.amount:-t.amount), 0),
-      balanceTransferencia: transactionsToClose.filter(t => t.paymentMethod === 'Transferencia').reduce((s,t)=>s+(t.type==='ingreso'?t.amount:-t.amount), 0),
-      totalTransacciones: transactionsToClose.length,
+      balanceEfectivo: rawTransactionsToClose.filter(t => t.paymentMethod === 'Efectivo').reduce((s,t)=>s+(t.type==='ingreso'?t.amount:-t.amount), 0),
+      balanceTransferencia: rawTransactionsToClose.filter(t => t.paymentMethod === 'Transferencia').reduce((s,t)=>s+(t.type==='ingreso'?t.amount:-t.amount), 0),
+      totalTransacciones: rawTransactionsToClose.length,
       totalDeliveryFees,
-      orders: ordersToClose, // Embed for historical data
-      transactions: transactionsToClose, // Embed for historical data
+      orders: rawOrdersToClose, // Embed raw data with Timestamps
+      transactions: rawTransactionsToClose, // Embed raw data with Timestamps
     };
     
     const closureRef = doc(collection(firestore, userPath('closures')!));
     batch.set(closureRef, newClosureDoc);
     
-    ordersToClose.forEach(order => {
+    rawOrdersToClose.forEach(order => {
         const orderRef = doc(firestore, userPath('orders')!, order.id);
         batch.update(orderRef, { closureId: closureRef.id });
     });
     
-    transactionsToClose.forEach(transaction => {
+    rawTransactionsToClose.forEach(transaction => {
         const transactionRef = doc(firestore, userPath('transactions')!, transaction.id);
         batch.update(transactionRef, { closureId: closureRef.id });
     });
@@ -438,6 +437,62 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const clearFinancialHistory = async () => {
     toast({ variant: 'destructive', title: "Función no implementada", description: "El borrado masivo debe hacerse desde la consola de Firebase." });
   };
+  
+  const addToCart = (product: Product, options: { toppings: Topping[], notes?: string }) => {
+    const calculatedPrice = product.price + options.toppings.reduce((sum, t) => sum + t.price, 0);
+    
+    // Create a unique ID based on product and toppings to group similar items
+    const toppingIds = options.toppings.map(t => t.id).sort().join('-');
+    const notesIdentifier = options.notes || '';
+    const cartItemId = `${product.id}-${toppingIds}-${notesIdentifier}`;
+
+    setCart(currentCart => {
+      const existingItem = currentCart.find(item => item.id === cartItemId);
+      if (existingItem) {
+        return currentCart.map(item => 
+          item.id === cartItemId ? { ...item, qty: item.qty + 1 } : item
+        );
+      } else {
+        const newItem: CartItem = {
+          id: cartItemId,
+          product: product,
+          qty: 1,
+          toppings: options.toppings,
+          notes: options.notes,
+          finalPrice: calculatedPrice
+        };
+        return [...currentCart, newItem];
+      }
+    });
+    toast({ title: 'Añadido al pedido' });
+  };
+  
+  const updateCartQty = (cartItemId: string, delta: number) => {
+    setCart(currentCart => {
+      const item = currentCart.find(i => i.id === cartItemId);
+      if (!item) return currentCart;
+
+      const newQty = item.qty + delta;
+      if (newQty <= 0) {
+        return currentCart.filter(i => i.id !== cartItemId);
+      } else {
+        return currentCart.map(i => i.id === cartItemId ? { ...i, qty: newQty } : i);
+      }
+    });
+  };
+  
+  const clearCart = () => setCart([]);
+
+  const { cartTotal, cartCount } = useMemo(() => {
+    return cart.reduce(
+      (acc, item) => {
+        acc.cartTotal += item.finalPrice * item.qty;
+        acc.cartCount += item.qty;
+        return acc;
+      },
+      { cartTotal: 0, cartCount: 0 }
+    );
+  }, [cart]);
   
   const value: AppContextType = {
     user, isUserLoading, logout, switchLocal, isSwitchingLocal, 
