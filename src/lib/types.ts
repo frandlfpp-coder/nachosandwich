@@ -87,8 +87,8 @@ export type Closure = {
   balanceTransferencia: number;
   totalTransacciones: number;
   totalDeliveryFees: number;
-  orders: Order[];
-  transactions: Transaction[];
+  orders?: Order[];
+  transactions?: Transaction[];
 };
 
 export type RankedProduct = {
