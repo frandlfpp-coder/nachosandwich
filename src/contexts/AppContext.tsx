@@ -14,8 +14,8 @@ import {
   deleteDocumentNonBlocking,
   commitBatchNonBlocking
 } from '@/firebase';
-import { collection, doc, serverTimestamp, query, where, writeBatch, Timestamp } from 'firebase/firestore';
-import { signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { collection, doc, getDoc, setDoc, serverTimestamp, query, where, writeBatch, Timestamp } from 'firebase/firestore';
+import { signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, UserCredential } from 'firebase/auth';
 
 const APP_ID = 'nacho-plus-pos';
 
@@ -168,8 +168,36 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       .sort((a, b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0));
   }, [completedOrders]);
 
+  const handleAuthSuccess = async (userCredential: UserCredential) => {
+    if (!firestore) {
+      console.error("Firestore service not available for profile creation.");
+      toast({ variant: 'destructive', title: 'Error de Configuración', description: 'No se pudo inicializar la base de datos.' });
+      return;
+    }
+    const newUser = userCredential.user;
+    const userDocRef = doc(firestore, `/artifacts/${APP_ID}/users/${newUser.uid}`);
+    
+    try {
+      const userDocSnap = await getDoc(userDocRef);
+      if (!userDocSnap.exists()) {
+        await setDoc(userDocRef, {
+          id: newUser.uid,
+          email: newUser.email,
+          createdAt: serverTimestamp(),
+        });
+      }
+    } catch (error) {
+      console.error("Failed to create or check user profile in Firestore:", error);
+      toast({ variant: 'destructive', title: 'Error de Perfil', description: 'No se pudo crear el perfil de usuario en la base de datos.' });
+    }
+  };
+
   const switchLocal = async (local: 'nacho1' | 'nacho2' | 'prueba') => {
-    if (!auth) return;
+    if (!auth || !firestore) {
+        toast({ variant: 'destructive', title: 'Servicio no disponible', description: 'La autenticación no está lista. Intente de nuevo.' });
+        return;
+    }
+
     const email = `${local}@local.app`;
     if (user?.email === email) {
       return;
@@ -185,26 +213,24 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const password = 'password';
   
     try {
-      // First, try to create the user. This is safer than trying to sign in.
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      await handleAuthSuccess(userCredential);
       toast({ title: `Bienvenido. Cuenta creada para ${local.toUpperCase()}` });
     } catch (error: any) {
-      // If creation fails because the email is already in use, then sign in.
       if (error.code === 'auth/email-already-in-use') {
         try {
-          await signInWithEmailAndPassword(auth, email, password);
+          const userCredential = await signInWithEmailAndPassword(auth, email, password);
+          await handleAuthSuccess(userCredential);
           toast({ title: `Sesión iniciada como ${local.toUpperCase()}` });
         } catch (signInError: any) {
-          // This is a critical failure - the account exists but the password is wrong.
           console.error('CRITICAL: Sign-in failed for existing user:', signInError);
           toast({
             variant: 'destructive',
             title: 'Error de Autenticación Crítico',
-            description: 'La contraseña del local es incorrecta. No se puede iniciar sesión.',
+            description: 'La contraseña del local es incorrecta.',
           });
         }
       } else {
-        // Handle other creation errors
         console.error('Error creating user:', error);
         toast({
           variant: 'destructive',
@@ -216,7 +242,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       setIsSwitchingLocal(false);
     }
   };
-
+  
   const logout = async () => {
     if (!auth) return;
     setCart([]);
