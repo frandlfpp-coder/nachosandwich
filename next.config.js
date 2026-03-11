@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Asegúrate de que esto NO esté en 'export' si quieres usar App Hosting
-  // output: 'standalone', // Opcional: ayuda a Firebase a empaquetar mejor
+  // Habilitar la salida 'standalone' optimiza la compilación para despliegues.
+  // Es la configuración recomendada para Firebase App Hosting.
+  output: 'standalone',
   reactStrictMode: true,
 };
 
