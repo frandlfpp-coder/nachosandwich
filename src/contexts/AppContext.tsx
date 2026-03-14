@@ -275,7 +275,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (!order) return;
 
     const itemsTotal = (order.items || []).reduce((sum, item) => sum + item.finalPrice * item.qty, 0);
-    const finalAmount = itemsTotal + (order.deliveryFee || 0);
+    const finalAmount = itemsTotal + (order.isDelivery ? (order.deliveryFee || 0) : 0);
 
     addTransaction({
       concept: `VENTA: ${order.customerName}`,
@@ -308,6 +308,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (!item) return;
 
     const currentStock = typeof item.stock === 'number' ? item.stock : parseFloat(String(item.stock) || '0');
+    if(isNaN(currentStock)) return;
     const newStock = currentStock + delta;
     if (newStock < 0) {
         toast({variant: 'destructive', title: 'Stock no puede ser negativo'});
