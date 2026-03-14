@@ -274,10 +274,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const order = [...orders, ...completedOrders].find(o => o.id === orderId);
     if (!order) return;
 
-    const orderTotal = (order.items || []).reduce((sum, item) => sum + item.finalPrice * item.qty, 0);
+    const itemsTotal = (order.items || []).reduce((sum, item) => sum + item.finalPrice * item.qty, 0);
+    const finalAmount = itemsTotal + (order.deliveryFee || 0);
+
     addTransaction({
       concept: `VENTA: ${order.customerName}`,
-      amount: orderTotal,
+      amount: finalAmount,
       paymentMethod: order.paymentMethod || 'Efectivo',
       type: 'ingreso',
     });
@@ -305,8 +307,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const item = stockItems.find(i => i.id === itemId);
     if (!item) return;
 
-    const newStock = item.stock + delta;
-    if(newStock < 0) {
+    const currentStock = typeof item.stock === 'number' ? item.stock : parseFloat(String(item.stock) || '0');
+    const newStock = currentStock + delta;
+    if (newStock < 0) {
         toast({variant: 'destructive', title: 'Stock no puede ser negativo'});
         return;
     }
