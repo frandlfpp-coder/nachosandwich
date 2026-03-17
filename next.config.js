@@ -1,10 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
-  reactStrictMode: true,
-  typescript: {
-    ignoreBuildErrors: true
-  }
+  transpilePackages: ['lucide-react'],
+  experimental: {
+    turbo: {
+      root: '..',
+    },
+  },
 };
-
-module.exports = nextConfig;
+export default nextConfig;
