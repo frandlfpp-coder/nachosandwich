@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode } from 'react';
+import React, { ReactNode, useState, useEffect } from 'react';
 import { useApp } from '@/contexts/AppContext';
 import Sidebar from './Sidebar';
 import MobileHeader from './MobileHeader';
@@ -15,9 +15,26 @@ interface AppShellProps {
 export default function AppShell({ children }: AppShellProps) {
   const { user, isUserLoading, isSwitchingLocal } = useApp();
   const isMobile = useIsMobile();
+  const [showLoading, setShowLoading] = React.useState(true);
 
-  // Show a loading screen while authentication is in progress or local is switching.
-  if (isUserLoading || isSwitchingLocal) {
+  React.useEffect(() => {
+    // Safety timeout: if loading takes more than 5 seconds, stop showing the spinner
+    // and let the component decide what to show (welcome screen or children).
+    const timer = setTimeout(() => {
+      setShowLoading(false);
+    }, 5000);
+
+    if (!isUserLoading && !isSwitchingLocal) {
+      setShowLoading(false);
+    } else {
+        setShowLoading(true);
+    }
+
+    return () => clearTimeout(timer);
+  }, [isUserLoading, isSwitchingLocal]);
+
+  // Show a loading screen while authentication is in progress or local is switching, but only up to the timeout.
+  if (showLoading && (isUserLoading || isSwitchingLocal)) {
     return (
       <div className="fixed inset-0 bg-background flex items-center justify-center">
         <div id="loading-spinner" className="flex flex-col items-center gap-4">

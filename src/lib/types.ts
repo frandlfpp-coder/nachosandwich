@@ -42,7 +42,7 @@ export type Order = {
   isDelivery: boolean;
   customerPhone?: string;
   deliveryFee?: number;
-  closureId?: string;
+  closureId?: string | null;
 };
 
 // Type for the data payload when creating a new order
@@ -73,7 +73,7 @@ export type Transaction = {
   paymentMethod: 'Efectivo' | 'Transferencia';
   type: 'ingreso' | 'egreso';
   createdAt: any;
-  closureId?: string;
+  closureId?: string | null;
 };
 
 export type Closure = {
